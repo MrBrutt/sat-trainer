@@ -88,6 +88,8 @@ const ICONS = {
   alert: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
   eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
   ban: '<circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
 };
 const icon = (n, cls = "") =>
   `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
@@ -301,11 +303,53 @@ function showImporting() {
 
 async function importFile(file) {
   if (!file) return;
+  if (/\.json$/i.test(file.name) || /json$/i.test(file.type)) return restoreProgress(file);
   if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) {
     if (S.set) toast("Нужен PDF-файл"); else showLanding("Нужен PDF-файл.");
     return;
   }
   runImport(new Uint8Array(await file.arrayBuffer()), file.name);
+}
+
+// ---------------------------------------------------------------- progress backup
+
+function backupProgress() {
+  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags] };
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `sat-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast(`Сохранено ответов: ${Object.keys(S.progress).length}`);
+}
+
+async function restoreProgress(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { data = null; }
+  if (!data || data.app !== "sat-trainer" || typeof data.progress !== "object") {
+    toast("Это не файл прогресса SAT Trainer");
+    return;
+  }
+  // merge: for a question answered in both places keep the most recent attempt
+  let added = 0;
+  for (const [id, p] of Object.entries(data.progress)) {
+    if (!p || typeof p !== "object") continue;
+    const mine = S.progress[id];
+    if (!mine || (p.t || 0) > (mine.t || 0)) { S.progress[id] = p; added++; }
+  }
+  (data.flags || []).forEach((id) => S.flags.add(id));
+  saveProgress();
+  saveFlags();
+  if (S.set) renderAll();
+  toast(`Восстановлено ответов: ${added}`);
+}
+
+function keepStorage() {
+  // ask the browser not to evict our data under storage pressure / inactivity
+  try { navigator.storage?.persist?.(); } catch { /* not supported */ }
 }
 
 async function runImport(bytes, fileName, { quiet = false } = {}) {
@@ -366,8 +410,11 @@ function showTrainer() {
       <main class="main" id="main"></main>
     </div>
     <div class="backdrop" data-action="close-sidebar"></div>
-    <input type="file" id="file2" accept="application/pdf,.pdf" hidden>`;
-  $("#file2").addEventListener("change", (e) => importFile(e.target.files[0]));
+    <input type="file" id="file2" accept="application/pdf,.pdf" hidden>
+    <input type="file" id="file3" accept="application/json,.json" hidden>`;
+  $("#file2").addEventListener("change", (e) => { importFile(e.target.files[0]); e.target.value = ""; });
+  $("#file3").addEventListener("change", (e) => { importFile(e.target.files[0]); e.target.value = ""; });
+  keepStorage();
   if (!cur()) ensureCurrent();
   renderAll(true);
 }
@@ -397,6 +444,10 @@ function renderTopbar() {
       <button class="icon-btn" data-action="menu" aria-label="Меню" aria-haspopup="menu" aria-expanded="false">${icon("dots")}</button>
       <div class="menu" id="menu" role="menu" hidden>
         <button role="menuitem" data-action="load-new">${icon("upload")} Загрузить другой PDF</button>
+        <hr>
+        <button role="menuitem" data-action="backup">${icon("download")} Сохранить прогресс в файл</button>
+        <button role="menuitem" data-action="restore">${icon("history")} Восстановить прогресс из файла</button>
+        <hr>
         <button role="menuitem" data-action="reset-progress">${icon("rotate")} Сбросить прогресс</button>
         <hr>
         <button role="menuitem" class="danger" data-action="wipe">${icon("trash")} Удалить данные из браузера</button>
@@ -450,7 +501,8 @@ function renderSidebar() {
     </div>
     <div class="side-foot">
       <span>${icon("file", "icon-sm")} ${esc(S.set.fileName || "PDF")} · ${date}</span>
-      <span>${icon("lock", "icon-sm")} Данные хранятся только в этом браузере</span>
+      <span>${icon("lock", "icon-sm")} Прогресс сохраняется автоматически в этом браузере</span>
+      <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;padding:0 6px;margin-left:-6px" data-action="backup">${icon("download", "icon-sm")} Сохранить копию прогресса</button>
     </div>`;
   $(".qcell.current", $("#sidebar"))?.scrollIntoView({ block: "nearest" });
 }
@@ -701,6 +753,8 @@ const ACTIONS = {
   },
   menu: () => toggleMenu(),
   "load-new": () => { toggleMenu(false); $("#file2").click(); },
+  backup: () => { toggleMenu(false); backupProgress(); },
+  restore: () => { toggleMenu(false); $("#file3").click(); },
   "reset-progress": async () => {
     toggleMenu(false);
     if (!(await confirmDialog("Сбросить прогресс?", "Все ответы и статистика будут удалены. Сами вопросы останутся.", "Сбросить", true))) return;
