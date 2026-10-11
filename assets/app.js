@@ -330,7 +330,7 @@ async function runImport(bytes, fileName, { quiet = false } = {}) {
     console.error(e);
     const msg =
       e.message === "NO_ANSWERS" ? "В этом PDF нет правильных ответов. Экспортируйте вариант «With correct answers and explanations»." :
-      e.message === "NOT_QUESTION_BANK" ? "Не нашёл вопросов. Похоже, это не экспорт College Board Question Bank." :
+      e.message === "NOT_QUESTION_BANK" ? "В этом файле нет вопросов College Board. Нужен оригинальный PDF, скачанный в Question Bank кнопкой Export → «With correct answers and explanations» → Download PDF, а не переделанный или распечатанный файл." :
       "Не удалось прочитать PDF: " + (e.message || e);
     if (S.set) { showTrainer(); toast(msg); } else showLanding(msg);
   }
