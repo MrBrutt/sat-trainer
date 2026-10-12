@@ -1,12 +1,13 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
-import { buildDeck, schedule, previewIntervals, statusOf, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { buildDeck, schedule, previewIntervals, statusOf, termKey, lookupWithRu, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { LEVELS, levelZipf, loadFrequencies, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, lemma } from "./words.js";
 
 const DAY = 86400000;
 const STATUS_LABEL = { new: "новое", learning: "изучаю", mastered: "выучено", known: "знаю" };
-const ROLE_LABEL = { answer: "правильный ответ", target: "слово из текста", distractor: "неверный вариант", mine: "моё слово" };
+const ROLE_LABEL = { answer: "правильный ответ", target: "слово из текста", distractor: "неверный вариант", mine: "моё слово", text: "слово из текста" };
 const DEF_SRC = { cb: "из разбора College Board", dict: "из Wiktionary", ai: "объяснение Claude", user: "моё определение" };
 
-export const VOCAB_DEFAULT = () => ({ srs: {}, user: {}, edits: {}, known: [], daily: { date: "", newCount: 0, extra: 0 }, newPerDay: 20 });
+export const VOCAB_DEFAULT = () => ({ srs: {}, user: {}, edits: {}, known: [], daily: { date: "", newCount: 0, extra: 0 }, newPerDay: 20, level: "middle" });
 
 export function createVocab(ctx) {
   const { S, $, icon, esc, toast, ls, KEY, plural } = ctx;
@@ -14,7 +15,9 @@ export function createVocab(ctx) {
   const pendingLookups = new Set();
   const failedLookups = new Set();
   let auto = [];
+  let textDeck = [];          // hard words from the passages, once word frequencies are loaded
   let addOpen = false;
+  const glossOpen = new Set();
   let openRow = null;
 
   const save = () => ls.set(KEY.vocab, S.vocab);
@@ -29,12 +32,26 @@ export function createVocab(ctx) {
 
   function rebuild() {
     auto = S.set ? buildDeck(S.set.questions) : [];
+    textDeck = [];
+    if (!S.set) return;
+    loadFrequencies().then(() => {
+      if (!S.set) return;
+      textDeck = buildTextDeck(S.set.questions, levelZipf(S.vocab.level));
+      ctx.refreshChrome();
+      if (S.ui.view === "vocab") { renderSidebar(); renderMain(); }
+      else if (S.ui.view === "questions") ctx.refreshQuestion();
+    });
   }
 
   // Every word of the deck, shaped for display (spoiler-free for questions not answered yet).
   function allCards() {
     const map = new Map();
     for (const c of auto) map.set(c.key, { ...c, examples: [...c.examples] });
+    for (const c of textDeck) {
+      const have = map.get(c.key);
+      if (!have) map.set(c.key, { ...c, examples: [...c.examples], qids: [...c.qids] });
+      else { have.examples.push(...c.examples); have.qids = [...new Set([...have.qids, ...c.qids])]; }
+    }
     for (const u of Object.values(S.vocab.user)) {
       const c = map.get(u.key);
       if (c) { c.examples = [...u.examples, ...c.examples]; c.mine = true; }
@@ -45,7 +62,7 @@ export function createVocab(ctx) {
       // Learn words before the questions, but keep each question unspoiled until it is answered:
       // its sentence (with the answer filled in), its number and the word's role stay hidden.
       c.practiced = c.qids.some((id) => S.progress[id]);
-      const shown = c.examples.filter((x) => x.own || !x.qid || S.progress[x.qid]);
+      const shown = c.examples.filter((x) => x.own || x.safe || !x.qid || S.progress[x.qid]);
       c.hiddenExamples = c.examples.length - shown.length;
       c.examples = shown;
       if (c.role === "target" && !c.practiced) c.def = null;   // its gloss is the question's answer
@@ -56,9 +73,11 @@ export function createVocab(ctx) {
       else if (dict[c.key]) {
         const e = dict[c.key];
         c.def = typeof e === "string" ? e : e.d;
-        c.defSrc = typeof e === "string" ? "dict" : e.s;
+        c.defSrc = typeof e === "string" ? "dict" : e.s || "dict";
       }
       else c.defSrc = null;
+      const de = dict[c.key];
+      c.ru = de && typeof de === "object" ? de.ru || "" : "";
       c.st = S.vocab.srs[c.key] || null;
       c.known = known.has(c.key);
       c.status = statusOf(c.st, c.known);
@@ -75,7 +94,8 @@ export function createVocab(ctx) {
   function priority(c) {
     if (c.mine) return 0;
     if (c.qids.some((id) => S.progress[id] && !S.progress[id].ok)) return 1;
-    return 2;
+    if (c.qids.some((id) => !S.progress[id])) return 2;    // words of questions still ahead come first
+    return 3;
   }
 
   function counts(all = cards()) {
@@ -98,7 +118,7 @@ export function createVocab(ctx) {
   function startSession() {
     const { due, mineFresh, autoFresh, newLeft } = counts();
     due.sort((a, b) => a.st.due - b.st.due);
-    autoFresh.sort((a, b) => priority(a) - priority(b) || a.n - b.n || mix(a.key) - mix(b.key));
+    autoFresh.sort((a, b) => priority(a) - priority(b) || a.n - b.n || (a.role === "text" ? 0 : 1) - (b.role === "text" ? 0 : 1) || (b.zipf || 0) - (a.zipf || 0) || mix(a.key) - mix(b.key));
     S.session = {
       queue: [...due.map((c) => c.key), ...mineFresh.map((c) => c.key), ...autoFresh.slice(0, newLeft).map((c) => c.key)],
       revealed: false, reviewed: 0, learnedNew: 0,
@@ -106,19 +126,22 @@ export function createVocab(ctx) {
   }
 
   // Inside claude.ai the page cannot reach other sites, so Claude explains the word instead of Wiktionary.
-  function fetchDef(c) {
+  const splitAi = (t) => { const [d, ...ru] = String(t).split(" — "); return { d: d.trim(), ru: ru.join(" — ").trim(), s: "ai" }; };
+
+  function fetchDef(c, after) {
     if (c.def || dict[c.key] !== undefined || pendingLookups.has(c.key)) return;
     const viaClaude = ctx.inClaude();
     if (viaClaude && !ctx.ai()?.available()) return;
     failedLookups.delete(c.key);
     pendingLookups.add(c.key);
     const ex = c.examples?.[0];
-    const find = viaClaude ? ctx.ai().define(c.term, ex ? ex.before + (ex.term || c.term) + ex.after : "") : lookup(c.term);
-    find.then((def) => {
+    const find = viaClaude ? ctx.ai().define(c.term, ex ? ex.before + (ex.term ?? c.term) + ex.after : "") : lookupWithRu(c.term);
+    find.then((res) => {
       pendingLookups.delete(c.key);
-      if (def === undefined) { failedLookups.add(c.key); return; } // offline: try again next time
-      dict[c.key] = def ? (viaClaude ? { d: def, s: "ai" } : def) : "";
+      if (res === undefined) { failedLookups.add(c.key); after?.(); return; } // offline: try again next time
+      dict[c.key] = !res ? "" : viaClaude ? splitAi(res) : { d: res.d, ru: res.ru || "", s: "dict" };
       saveDict();
+      after?.();
       if (S.ui.view !== "vocab") return;
       if ((S.ui.vtab || "study") === "list") refreshList(); else renderMain();
     });
@@ -147,7 +170,7 @@ export function createVocab(ctx) {
   }
 
   function defHtml(c) {
-    if (c.def) return `<div class="flash-def">${esc(c.def)}</div><div class="def-src">${DEF_SRC[c.defSrc] || ""}</div>`;
+    if (c.def) return `<div class="flash-def">${esc(c.def)}</div>${c.ru ? `<div class="flash-ru">${esc(c.ru)}</div>` : ""}<div class="def-src">${DEF_SRC[c.defSrc] || ""}</div>`;
     if (dict[c.key] === "") return `<div class="flash-def muted">Определение не найдено — впишите своё в заметку ниже</div>`;
     if (ctx.inClaude() && !ctx.ai()?.available()) return `<div class="flash-def muted">Определения нет — впишите своё в заметку ниже</div>`;
     if (failedLookups.has(c.key)) return `<div class="flash-def muted">Не удалось загрузить определение (нет сети?) — попробую ещё раз позже</div>`;
@@ -195,6 +218,13 @@ export function createVocab(ctx) {
           <span><i class="m"></i>выучено ${by("mastered")}</span><span><i class="k"></i>знаю ${by("known")}</span>
           <span><i class="l"></i>изучаю ${by("learning")}</span><span><i></i>новые ${by("new")}</span>
         </div>
+      </div>
+      <div>
+        <div class="side-label">Мой уровень английского</div>
+        <div class="chips">${LEVELS.map((l) => `
+          <button class="chip ${(S.vocab.level || "middle") === l.id ? "active" : ""}" data-action="v-level" data-level="${l.id}">${l.label}</button>`).join("")}
+        </div>
+        <p class="side-hint">От уровня зависит, какие слова в текстах считаются трудными.</p>
       </div>
       <div>
         <div class="side-label">Новых слов в день</div>
@@ -249,7 +279,7 @@ export function createVocab(ctx) {
       </div>
       <article class="card flash">
         <div class="flash-meta">
-          <span class="badge">${c.mine && !auto.some((a) => a.key === c.key) ? ROLE_LABEL.mine : c.practiced ? ROLE_LABEL[c.role] || "" : "слово из вопросов"}</span>
+          <span class="badge">${c.mine && !auto.some((a) => a.key === c.key) && !textDeck.some((a) => a.key === c.key) ? ROLE_LABEL.mine : c.role === "text" ? ROLE_LABEL.text : c.practiced ? ROLE_LABEL[c.role] || "" : "слово из вопросов"}</span>
           ${statusBadge(c)}
           <div class="spacer"></div>
           ${qs.length ? `<span class="mono">вопрос ${qs.join(", ")}</span>` : ""}
@@ -311,7 +341,7 @@ export function createVocab(ctx) {
         <button class="wrow-main" data-action="v-row" data-key="${esc(c.key)}" aria-expanded="${open}">
           <span class="sdot s-${c.status}" title="${STATUS_LABEL[c.status]}"></span>
           <span class="wterm">${esc(c.term)}${c.mine ? ` <span class="mine-tag">моё</span>` : ""}</span>
-          <span class="wdef">${esc(c.def || "—")}${c.note ? ` <span class="wnote">· ${esc(c.note)}</span>` : ""}</span>
+          <span class="wdef">${esc(c.def || "—")}${c.ru ? ` <span class="wnote">· ${esc(c.ru)}</span>` : ""}${c.note ? ` <span class="wnote">· ${esc(c.note)}</span>` : ""}</span>
           <span class="wwhen">${when(c)}</span>
         </button>
         ${open ? `<div class="wrow-body">
@@ -366,6 +396,155 @@ export function createVocab(ctx) {
     </section>`;
   }
 
+  // ---------------------------------------------------------------- hard words while reading
+
+  const known = (key) => {
+    const c = allCards().find((x) => x.key === key);
+    return !!c && (c.known || c.status === "mastered");
+  };
+
+  function hardWordsOf(q) {
+    if (!wordsReady()) return [];
+    const skip = S.progress[q.id] ? new Set() : spoilerWords(q);
+    return hardWordsIn(passageText(q), levelZipf(S.vocab.level), skip).filter((h) => !known(h.key));
+  }
+
+  // Underlines the hard words in the rendered passage and adds the "hard words" list above it.
+  function decoratePassage(q, root) {
+    if (!root || !q) return;
+    const hard = hardWordsOf(q);
+    root.querySelector(".gloss")?.remove();
+    if (!hard.length) return;
+    const forms = new Map(hard.map((h) => [h.form.toLowerCase(), h.key]));
+    const re = new RegExp(`\\b(${[...forms.keys()].sort((a, b) => b.length - a.length).map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi");
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.parentElement.closest(".text-label, .hw, .gloss") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const text = node.nodeValue;
+      re.lastIndex = 0;
+      if (!re.test(text)) continue;
+      re.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      for (const m of text.matchAll(re)) {
+        frag.append(text.slice(last, m.index));
+        const span = document.createElement("span");
+        span.className = "hw";
+        span.dataset.action = "v-word";
+        span.dataset.w = forms.get(m[0].toLowerCase());
+        span.dataset.q = q.id;
+        span.tabIndex = 0;
+        span.setAttribute("role", "button");
+        span.textContent = m[0];
+        frag.append(span);
+        last = m.index + m[0].length;
+      }
+      frag.append(text.slice(last));
+      node.replaceWith(frag);
+    }
+    const open = glossOpen.has(q.id);
+    const bar = document.createElement("div");
+    bar.className = "gloss";
+    bar.innerHTML = `<button class="gloss-toggle" data-action="v-gloss" data-q="${esc(q.id)}" aria-expanded="${open}">
+        ${icon("book", "icon-sm")} Трудные слова · ${hard.length} ${icon("down", "icon-sm")}</button>
+      ${open ? `<div class="gloss-list">${hard.map((h) => glossRow(h)).join("")}</div>` : ""}`;
+    root.prepend(bar);
+    if (open) fillGloss(q, hard);
+  }
+
+  function entry(key) {
+    const e = dict[key];
+    if (!e) return null;
+    return typeof e === "string" ? { d: e, ru: "" } : e;
+  }
+
+  // The list shows the first meaning only; the word's card has the full text.
+  const shortDef = (d) => { const first = d.split(" · ")[0]; return first.length > 130 ? first.slice(0, 127).replace(/\s+\S*$/, "") + "…" : first; };
+
+  function glossRow(h) {
+    const e = entry(h.key);
+    const c = allCards().find((x) => x.key === h.key);
+    const d = c?.def && c.defSrc !== "dict" && c.defSrc !== "ai" ? c.def : e?.d;
+    return `<div class="gloss-row" data-w="${esc(h.key)}">
+      <b>${esc(h.key)}</b>
+      <span class="gloss-def">${d ? esc(shortDef(d)) : dict[h.key] === "" ? "определение не найдено" : `<span class="muted">ищу…</span>`}${e?.ru ? ` <span class="gloss-ru">${esc(e.ru)}</span>` : ""}</span>
+      <button class="btn btn-ghost btn-sm" data-action="v-know" data-w="${esc(h.key)}" title="Убрать подсветку этого слова">знаю</button>
+    </div>`;
+  }
+
+  // Looks up every word of the list: Wiktionary one by one, or Claude in one call inside claude.ai.
+  async function fillGloss(q, hard) {
+    const missing = hard.filter((h) => dict[h.key] === undefined && !pendingLookups.has(h.key));
+    if (!missing.length) return;
+    const redraw = () => { if (ctx.current()?.id === q.id) ctx.refreshQuestion(); };
+    if (ctx.inClaude()) {
+      if (!ctx.ai()?.available()) return;
+      missing.forEach((h) => pendingLookups.add(h.key));
+      const res = await ctx.ai().defineMany(missing.map((h) => ({ term: h.key, sentence: `${h.before}${h.form}${h.after}` })));
+      missing.forEach((h, i) => {
+        pendingLookups.delete(h.key);
+        const r = res.find((x) => String(x?.w || "").toLowerCase() === h.key) || res[i];
+        if (r?.d) dict[h.key] = { d: String(r.d), ru: String(r.ru || ""), s: "ai" };
+      });
+      saveDict();
+      redraw();
+      return;
+    }
+    let i = 0;
+    const worker = async () => {
+      while (i < missing.length) {
+        const h = missing[i++];
+        await new Promise((res) => fetchDef({ key: h.key, term: h.key, examples: [] }, res));
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+    redraw();
+  }
+
+  // A small card next to a highlighted word.
+  const wordPop = document.createElement("div");
+  wordPop.className = "wordpop";
+  wordPop.hidden = true;
+  wordPop.setAttribute("role", "dialog");
+  document.body.append(wordPop);
+  let wordAt = null;
+
+  function showWord(el) {
+    const key = el.dataset.w;
+    const q = S.set.questions.find((x) => x.id === el.dataset.q);
+    const h = q ? hardWordsIn(passageText(q), 9, new Set()).find((x) => x.key === key) : null;
+    wordAt = { key, el, q, sentence: h ? `${h.before}${h.form}${h.after}` : "" };
+    const c = allCards().find((x) => x.key === key);
+    const e = entry(key);
+    const d = c?.def && c.defSrc !== "dict" && c.defSrc !== "ai" ? c.def : e?.d;
+    const mine = c?.mine || c?.st?.last;
+    wordPop.innerHTML = `
+      <div class="wp-head"><b>${esc(key)}</b>${c?.status && c.status !== "new" ? statusBadge(c) : ""}
+        <button class="icon-btn" data-action="v-word-close" aria-label="Закрыть">${icon("x", "icon-sm")}</button></div>
+      <div class="wp-def">${d ? esc(d) : dict[key] === "" ? `<span class="muted">Определение не найдено</span>` : `<span class="muted">Ищу определение…</span>`}</div>
+      ${e?.ru ? `<div class="wp-ru">${esc(e.ru)}</div>` : ""}
+      <div class="wp-actions">
+        <button class="btn btn-primary btn-sm" data-action="v-word-add" ${mine ? "disabled" : ""}>${icon(mine ? "check" : "plus", "icon-sm")} ${mine ? "Уже учу" : "Учить"}</button>
+        <button class="btn btn-ghost btn-sm" data-action="v-know" data-w="${esc(key)}">Знаю</button>
+        ${ctx.ai()?.available() ? `<button class="btn btn-ghost btn-sm" data-action="v-word-ai">${icon("sparkles", "icon-sm")} Подробнее</button>` : ""}
+      </div>`;
+    wordPop.hidden = false;
+    const r = el.getBoundingClientRect();
+    const w = Math.min(320, document.documentElement.clientWidth - 16);
+    wordPop.style.width = `${w}px`;
+    wordPop.style.left = `${Math.min(Math.max(8, r.left + r.width / 2 - w / 2), document.documentElement.clientWidth - w - 8)}px`;
+    wordPop.style.top = `${r.bottom + window.scrollY + 8}px`;
+    if (!d && dict[key] === undefined) fetchDef({ key, term: key, examples: wordAt.sentence ? [{ before: wordAt.sentence, term: "", after: "" }] : [] }, () => { if (wordAt?.key === key && !wordPop.hidden) showWord(el); });
+  }
+  const hideWord = () => { wordPop.hidden = true; wordAt = null; };
+  document.addEventListener("click", (e) => {
+    if (!wordPop.hidden && !e.target.closest(".wordpop, .hw")) hideWord();
+  });
+  addEventListener("scroll", () => { if (!wordPop.hidden && wordAt && !wordAt.el.isConnected) hideWord(); }, { passive: true });
+
   // ---------------------------------------------------------------- adding words
 
   function addWord(term, { text = "", qid = null, n = null, def = "", note = "" } = {}) {
@@ -373,7 +552,7 @@ export function createVocab(ctx) {
     const key = termKey(term);
     if (!key) return;
     const existing = allCards().find((c) => c.key === key);
-    if (existing) {
+    if (existing && (existing.mine || existing.st?.last)) {
       if (existing.known) S.vocab.known = S.vocab.known.filter((k) => k !== key);
       save();
       toast(`«${existing.term}» уже в словаре`);
@@ -511,6 +690,37 @@ export function createVocab(ctx) {
       addWord(p.term, { text: p.text, qid: p.qid, n: p.n });
     },
     "v-open-q": (el) => ctx.openQuestion(el.dataset.id),
+    "v-word": (el) => showWord(el),
+    "v-word-close": hideWord,
+    "v-word-add": () => {
+      if (!wordAt) return;
+      const { key, q, sentence } = wordAt;
+      addWord(key, { text: sentence, qid: q?.id, n: q?.n });
+      hideWord();
+    },
+    "v-word-ai": () => {
+      if (!wordAt) return;
+      const { key, sentence } = wordAt;
+      hideWord();
+      ctx.ai()?.explainSelection(key, sentence);
+    },
+    "v-know": (el) => {
+      markKnown(el.dataset.w, true);
+      hideWord();
+      toast(`«${el.dataset.w}» больше не подсвечивается`);
+      ctx.refreshQuestion();
+    },
+    "v-gloss": (el) => {
+      glossOpen.has(el.dataset.q) ? glossOpen.delete(el.dataset.q) : glossOpen.add(el.dataset.q);
+      ctx.refreshQuestion();
+    },
+    "v-level": (el) => {
+      S.vocab.level = el.dataset.level;
+      save();
+      S.session = null;
+      if (wordsReady()) textDeck = buildTextDeck(S.set.questions, levelZipf(S.vocab.level));
+      renderSidebar(); renderMain(); ctx.refreshChrome();
+    },
     "ai-explain-sel": () => {
       if (!pending) return;
       const p = pending;
@@ -585,7 +795,7 @@ export function createVocab(ctx) {
   const currentKey = () => ((S.ui.vtab || "study") === "study" && S.session?.queue.length ? S.session.queue[0] : openRow);
 
   return {
-    rebuild, renderSidebar, renderMain, questionWordsHtml, dueTotal, actions, onInput, onSubmit, onKey, merge,
+    rebuild, renderSidebar, renderMain, questionWordsHtml, dueTotal, actions, onInput, onSubmit, onKey, merge, decoratePassage, hideWord,
     hidePop, resetSession: () => { S.session = null; },
     card: (key) => cards().find((c) => c.key === key) || null,
     studied: () => cards().filter((c) => c.known || c.st?.last).length,

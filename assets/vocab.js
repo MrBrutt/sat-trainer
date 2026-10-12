@@ -279,6 +279,36 @@ async function freeDictionary(word) {
   return d ? `${m.partOfSpeech ? m.partOfSpeech + ": " : ""}${d}` : null;
 }
 
+// Russian translations from Wiktionary's translation tables (first sense first), stress marks removed.
+async function wiktionaryRu(word) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(`https://en.wiktionary.org/api/rest_v1/page/html/${encodeURIComponent(word)}`, { signal: ctl.signal });
+    if (!r.ok) return null;
+    const doc = new DOMParser().parseFromString(await r.text(), "text/html");
+    const out = [];
+    for (const el of doc.querySelectorAll('[lang="ru"]')) {
+      const t = el.textContent.normalize("NFD").replace(/\u0301/g, "").normalize("NFC").trim();
+      if (/[а-яё]/i.test(t) && t.length < 40 && !out.includes(t)) out.push(t);
+      if (out.length >= 4) break;
+    }
+    return out.length ? out.join(", ") : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Definition (and, when Wiktionary has one, a Russian translation) for a word: {d, ru} | null | undefined.
+export async function lookupWithRu(term) {
+  const d = await lookup(term);
+  if (!d) return d;
+  const base = (d.match(/\(форма слова ([A-Za-z-]+)\)$/) || [])[1] || stripArticle(term.trim().toLowerCase());
+  return { d, ru: await wiktionaryRu(base) };
+}
+
 export async function lookup(term) {
   const t = term.trim().toLowerCase();
   // "subsumed in" -> also try "subsumed"; "an arduous" -> "arduous"

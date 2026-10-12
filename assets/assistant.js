@@ -412,6 +412,22 @@ ${sentence ? `It appears in this sentence: "${sentence}"\n` : ""}Reply with exac
     }
   }
 
+  // Several words at once (the "hard words" list of a passage): one quick call, JSON back.
+  async function defineMany(items) {
+    if (!available() || !items.length) return [];
+    const prompt = `For each English word below, give a short plain-English definition as it is used in its sentence (at most 12 words) and a Russian translation (1-3 words).
+Reply with only a JSON array of objects {"w": word, "d": definition, "ru": translation}, in the same order.
+
+${items.map((x, i) => `${i + 1}. ${x.term} — "${x.sentence}"`).join("\n")}`;
+    try {
+      const arr = await sample.json(prompt, { modelTier: "quick", cache: { gcTime: 86400000 } });
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      if (FATAL.has(e?.code)) disabledReason = ERRORS[e.code] || "Claude недоступен на этой странице.";
+      return [];
+    }
+  }
+
   // ---------------------------------------------------------------- actions
 
   const actions = {
@@ -464,7 +480,7 @@ ${sentence ? `It appears in this sentence: "${sentence}"\n` : ""}Reply with exac
   function wipe() { threads = {}; ls.del(KEY.chats); close(); }
 
   return {
-    init, available, actions, explainSelection, follow, hasThread, define, merge, wipe, close,
+    init, available, actions, explainSelection, follow, hasThread, define, defineMany, merge, wipe, close,
     isOpen: () => !!panel && !panel.hidden,
     threads: () => threads,
   };

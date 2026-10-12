@@ -541,6 +541,35 @@ kbd {
 .selpop b { font-weight: 600; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .selpop.exists { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); cursor: default; }
 
+/* ---------------------------------------------------------------- hard words while reading */
+.hw { text-decoration: underline dotted color-mix(in srgb, var(--primary) 70%, transparent); text-decoration-thickness: 1.5px; text-underline-offset: 4px; cursor: help; border-radius: 3px; }
+.hw:hover, .hw:focus-visible { background: color-mix(in srgb, var(--primary) 10%, transparent); outline: none; }
+.gloss { margin: -6px 0 16px; font: 14px/1.5 var(--font-ui); }
+.gloss-toggle {
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); font: 500 13px var(--font-ui);
+}
+.gloss-toggle[aria-expanded="true"] .icon:last-child { transform: rotate(180deg); }
+.gloss-list { margin-top: 10px; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.gloss-row { display: grid; grid-template-columns: minmax(90px, 150px) 1fr auto; gap: 10px; align-items: baseline; padding: 8px 12px; font-size: 13.5px; color: var(--text-2); }
+.gloss-row + .gloss-row { border-top: 1px solid var(--border); }
+.gloss-row b { font: 600 15px var(--font-read); color: var(--text); overflow-wrap: anywhere; }
+.gloss-ru, .flash-ru, .wp-ru { color: var(--primary); }
+.gloss-row .btn { height: 26px; padding: 0 8px; font-size: 12px; }
+.flash-ru { font: 16px/1.5 var(--font-ui); margin-top: 4px; }
+.side-hint { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.wordpop {
+  position: absolute; z-index: 75; padding: 12px 14px; border-radius: 14px; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: fadein .15s ease;
+}
+.wp-head { display: flex; align-items: center; gap: 8px; }
+.wp-head b { font: 600 20px var(--font-read); flex: 1; }
+.wp-head .icon-btn { width: 28px; height: 28px; }
+.wp-def { margin-top: 4px; font-size: 14.5px; line-height: 1.5; color: var(--text-2); }
+.wp-ru { margin-top: 4px; font-size: 14px; }
+.wp-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+@media (max-width: 600px) { .gloss-row { grid-template-columns: 1fr auto; } .gloss-row .gloss-def { grid-column: 1 / -1; grid-row: 2; } }
+
 /* ---------------------------------------------------------------- daily routine */
 .tab-badge.warn { background: var(--warn); color: var(--on-solid); }
 .tab-done { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); }

@@ -176,6 +176,7 @@ const vocab = createVocab({
   ai: () => ai,
   inClaude: () => !!window.claude,   // inside claude.ai the page cannot reach other sites
   onWordDone: () => today.log("w"),
+  refreshQuestion: () => { if (S.set && $("#main") && S.ui.view === "questions") renderQuestion(); },
 });
 ai = createAssistant({
   S, $, icon, esc, toast, ls, KEY, confirmDialog,
@@ -903,6 +904,7 @@ function renderQuestion(scrollTop = false) {
     </div>
   </div>`;
   S.anim = null;
+  if (!orig) vocab.decoratePassage(q, main.querySelector(".passage"));
   timerTick();
   ai.follow();
   if (orig || (pr && isOriginal(q))) fillOriginals(q);
@@ -936,6 +938,7 @@ async function fillOriginals(q) {
 // ---------------------------------------------------------------- actions
 
 function go(id, scroll = true) {
+  vocab.hideWord();
   S.ui.cur = id;
   saveUi();
   document.body.classList.remove("sidebar-open");
@@ -1102,6 +1105,7 @@ const ACTIONS = {
     showLanding();
   },
   view: (el) => {
+    vocab.hideWord();
     S.ui.view = el.dataset.view;
     saveUi();
     document.body.classList.remove("sidebar-open");
