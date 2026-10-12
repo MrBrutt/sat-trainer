@@ -436,6 +436,7 @@ export function createVocab(ctx) {
     s.reviewed++;
     s.revealed = false;
     save();
+    ctx.onWordDone?.();
     renderMain();
     renderSidebar();
     ctx.refreshChrome();
@@ -467,6 +468,7 @@ export function createVocab(ctx) {
       const key = s.queue.shift();
       markKnown(key, true);
       s.revealed = false;
+      ctx.onWordDone?.();
       renderMain(); renderSidebar(); ctx.refreshChrome();
       toast("Слово убрано из повторений");
     },
@@ -573,6 +575,7 @@ export function createVocab(ctx) {
     rebuild, renderSidebar, renderMain, questionWordsHtml, dueTotal, actions, onInput, onSubmit, onKey, merge,
     hidePop, resetSession: () => { S.session = null; },
     card: (key) => cards().find((c) => c.key === key) || null,
+    studied: () => cards().filter((c) => c.known || c.st?.last).length,
     currentKey,
   };
 }

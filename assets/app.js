@@ -1,6 +1,7 @@
 import { parseQuestionBank, openPdf, renderRegion, plain } from "./parser.js";
 import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 import { createAssistant } from "./assistant.js";
+import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, REVIEW_DAYS, dayKey } from "./today.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -14,6 +15,8 @@ const KEY = {
   vocab: "sat-trainer:vocab:v1",
   dict: "sat-trainer:dict:v1",
   chats: "sat-trainer:chats:v1",
+  review: "sat-trainer:review:v1",
+  activity: "sat-trainer:activity:v1",
   aiTier: "sat-trainer:ai-tier",
 };
 const PALETTE = ["#3b82f6", "#14b8a6", "#8b5cf6", "#f59e0b", "#ec4899", "#22c55e", "#ef4444", "#0ea5e9", "#a855f7", "#84cc16"];
@@ -62,6 +65,9 @@ const S = {
   flags: new Set(ls.get(KEY.flags, [])),
   ui: Object.assign({ skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" }, ls.get(KEY.ui, {})),
   vocab: Object.assign(VOCAB_DEFAULT(), ls.get(KEY.vocab, {})),
+  review: ls.get(KEY.review, {}),              // id -> spaced review of a mistake
+  activity: Object.assign(ACTIVITY_DEFAULT(), ls.get(KEY.activity, {})),
+  attempt: {},                                 // answers given while reviewing (this visit)
   session: null,                               // current flashcard session
   struck: {},                                  // id -> Set of crossed-out letters (this session)
   explainOpen: {},
@@ -71,6 +77,7 @@ const S = {
 };
 const saveProgress = () => ls.set(KEY.progress, S.progress);
 const saveFlags = () => ls.set(KEY.flags, [...S.flags]);
+const saveReview = () => ls.set(KEY.review, S.review);
 const saveUi = () => ls.set(KEY.ui, { ...S.ui, vq: "" }); // search text is not kept between visits
 S.ui.vq = "";
 
@@ -105,6 +112,12 @@ const ICONS = {
   sparkles: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/>',
   arrowUp: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
   stop: '<rect x="7" y="7" width="10" height="10" rx="2"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  today: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/>',
+  target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
 };
@@ -158,14 +171,22 @@ const vocab = createVocab({
   refreshChrome: () => renderTopbar(),
   ai: () => ai,
   inClaude: () => !!window.claude,   // inside claude.ai the page cannot reach other sites
+  onWordDone: () => today.log("w"),
 });
 ai = createAssistant({
   S, $, icon, esc, toast, ls, KEY, confirmDialog,
   current: () => (S.set ? cur() : null),
   currentCardKey: () => vocab.currentKey(),
   vocabCard: (key) => vocab.card(key),
+  answerOf: (id) => { const q = S.set?.questions.find((x) => x.id === id); return q ? answerOf(q) : null; },
   onAvailable: () => { if (S.set && $("#main")) renderAll(); },
-  onThreadsChanged: () => { if (S.set && $("#main") && S.ui.view !== "vocab") renderQuestion(); },
+  onThreadsChanged: () => { if (S.set && $("#main") && S.ui.view === "questions") renderQuestion(); },
+});
+const today = createToday({
+  S, $, icon, esc, toast, ls, KEY, plural,
+  vocabDue: () => vocab.dueTotal(),
+  wordsStudied: () => vocab.studied(),
+  refreshChrome: () => renderTopbar(),
 });
 
 // ---------------------------------------------------------------- rich text
@@ -353,7 +374,7 @@ async function importFile(file) {
 // ---------------------------------------------------------------- progress backup
 
 async function backupProgress() {
-  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags], vocab: S.vocab, chats: ai.threads() };
+  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags], vocab: S.vocab, chats: ai.threads(), review: S.review, activity: S.activity };
   const json = JSON.stringify(data, null, 1);
   const filename = `sat-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
   if (window.claude) {
@@ -393,6 +414,12 @@ async function restoreProgress(file) {
   (data.flags || []).forEach((id) => S.flags.add(id));
   const words = vocab.merge(data.vocab);
   ai.merge(data.chats);
+  for (const [id, r] of Object.entries(data.review || {})) {
+    const mine = S.review[id];
+    if (!mine || (r.last || r.added || 0) > (mine.last || mine.added || 0)) S.review[id] = r;
+  }
+  saveReview();
+  today.merge(data.activity);
   saveProgress();
   saveFlags();
   if (S.set) renderAll();
@@ -438,11 +465,16 @@ const skillOf = (q) => S.set.skills.find((s) => s.name === q.skill) || { color: 
 const cur = () => S.set.questions.find((q) => q.id === S.ui.cur);
 const statusOf = (id) => (!S.progress[id] ? "todo" : S.progress[id].ok ? "right" : "wrong");
 const isOriginal = (q) => S.ui.original[q.id] ?? q.hasFigure;
+// Reviewing a mistake shows the question fresh; the first answer stays in S.progress for the statistics.
+const inReview = (q) => S.ui.status === "review" && (isDue(S.review[q.id]) || !!S.attempt[q.id]);
+const answerOf = (q) => (inReview(q) ? S.attempt[q.id] || null : S.progress[q.id]);
+const dueReviewCount = () => S.set.questions.filter((q) => isDue(S.review[q.id])).length;
 
 function matches(q) {
   if (S.ui.skill !== "all" && q.skill !== S.ui.skill) return false;
   if (S.ui.status === "all") return true;
   if (S.ui.status === "flag") return S.flags.has(q.id);
+  if (S.ui.status === "review") return isDue(S.review[q.id]) || !!S.attempt[q.id];
   return statusOf(q.id) === S.ui.status;
 }
 // The open question stays in the list even after it stops matching (e.g. answered while filtering "todo").
@@ -469,12 +501,26 @@ function showTrainer() {
   keepStorage();
   vocab.rebuild();
   S.session = null;
+  let added = false;
+  for (const q of S.set.questions) {
+    const p = S.progress[q.id];
+    if (p && !p.ok && !S.review[q.id]) { S.review[q.id] = enqueueReview(null, Date.now(), true); added = true; }
+  }
+  if (added) saveReview();
+  if (S.ui.lastDay !== dayKey()) { S.ui.view = "today"; S.ui.lastDay = dayKey(); saveUi(); }
   if (!cur()) ensureCurrent();
   renderAll(true);
 }
 
 function renderAll(scrollTop = false) {
   renderTopbar();
+  if (S.ui.view === "today") {
+    vocab.hidePop();
+    $("#sidebar").setAttribute("aria-label", "Обзор");
+    today.renderSidebar();
+    today.renderMain(scrollTop);
+    return;
+  }
   if (S.ui.view === "vocab") {
     vocab.hidePop();
     $("#sidebar").setAttribute("aria-label", "Словарь");
@@ -497,10 +543,12 @@ function renderTopbar() {
     <div class="brand">${LOGO}<span>SAT Trainer</span></div>
     <div class="set-title"><span class="set-name">${esc(S.set.title)}</span><span class="set-sub">${esc(S.set.subtitle)}</span></div>
     <nav class="tabs" aria-label="Разделы">
-      <button class="tab ${S.ui.view !== "vocab" ? "active" : ""}" data-action="view" data-view="questions" aria-current="${S.ui.view !== "vocab"}">${icon("book", "icon-sm")}<span>Вопросы</span></button>
+      <button class="tab ${S.ui.view === "today" ? "active" : ""}" data-action="view" data-view="today" aria-current="${S.ui.view === "today"}">${icon("today", "icon-sm")}<span>Сегодня</span>${(() => { const n = today.remaining(); return n ? `<span class="tab-badge" title="Задач на сегодня">${n}</span>` : `<span class="tab-done" title="День закрыт">${icon("check", "icon-sm")}</span>`; })()}</button>
+      <button class="tab ${S.ui.view === "questions" ? "active" : ""}" data-action="view" data-view="questions" aria-current="${S.ui.view === "questions"}">${icon("book", "icon-sm")}<span>Вопросы</span>${(() => { const n = dueReviewCount(); return n ? `<span class="tab-badge warn" title="Ошибок на повтор">${n}</span>` : ""; })()}</button>
       <button class="tab ${S.ui.view === "vocab" ? "active" : ""}" data-action="view" data-view="vocab" aria-current="${S.ui.view === "vocab"}">${icon("cards", "icon-sm")}<span>Словарь</span>${(() => { const n = vocab.dueTotal(); return n ? `<span class="tab-badge" title="Карточек на сегодня">${n}</span>` : ""; })()}</button>
     </nav>
     <div class="spacer"></div>
+    ${(() => { const n = today.streak(); return `<button class="streak-chip ${n ? "on" : ""} ${today.isClosed(dayKey()) ? "closed" : ""}" data-action="view" data-view="today" title="${n ? `Серия: ${n} ${plural(n, "день", "дня", "дней")} подряд` : "Закройте день, чтобы начать серию"}">${icon("flame", "icon-sm")}<b>${n}</b></button>`; })()}
     <div class="score" title="Решено ${answered} из ${qs.length}, верно ${right}">
       <div class="ring" style="--p:${answered / qs.length};--ok-p:${right / qs.length}"></div>
       <div><b>${answered}</b>/${qs.length}<span class="label"> решено</span>${answered ? ` · <b>${acc}%</b><span class="label"> верно</span>` : ""}</div>
@@ -524,10 +572,10 @@ function renderTopbar() {
 function renderSidebar() {
   const qs = S.set.questions;
   const inSkill = (q) => S.ui.skill === "all" || q.skill === S.ui.skill;
-  const count = (st) => qs.filter((q) => inSkill(q) && (st === "all" || (st === "flag" ? S.flags.has(q.id) : statusOf(q.id) === st))).length;
+  const count = (st) => qs.filter((q) => inSkill(q) && (st === "all" || (st === "flag" ? S.flags.has(q.id) : st === "review" ? isDue(S.review[q.id]) : statusOf(q.id) === st))).length;
   const list = visible();
   const skills = [{ name: "all", label: "Все навыки", count: qs.length, color: "var(--text-2)" }, ...S.set.skills];
-  const statuses = [["all", "Все"], ["todo", "Не решены"], ["wrong", "Ошибки"], ["right", "Верно"], ["flag", "Отмеченные"]];
+  const statuses = [["all", "Все"], ["review", "Повторить"], ["todo", "Не решены"], ["wrong", "Ошибки"], ["right", "Верно"], ["flag", "Отмеченные"]];
   const stats = S.set.skills.map((s) => {
     const sq = qs.filter((q) => q.skill === s.name);
     const ok = sq.filter((q) => S.progress[q.id]?.ok).length;
@@ -550,14 +598,18 @@ function renderSidebar() {
     <div>
       <div class="side-label">Статус</div>
       <div class="chips">${statuses.map(([k, label]) => `
-        <button class="chip ${S.ui.status === k ? "active" : ""}" data-action="status" data-status="${k}" aria-pressed="${S.ui.status === k}">${label}<span class="count">${count(k)}</span></button>`).join("")}
+        <button class="chip ${S.ui.status === k ? "active" : ""} ${k === "review" && count(k) ? "chip-warn" : ""}" data-action="status" data-status="${k}" aria-pressed="${S.ui.status === k}">${k === "review" ? icon("clock", "icon-sm") : ""}${label}<span class="count">${count(k)}</span></button>`).join("")}
       </div>
     </div>
     <div>
       <div class="side-label"><span>Вопросы</span><span>${list.length}</span></div>
       <div class="qgrid">${list.map((q) => {
         const st = statusOf(q.id);
-        const cls = [st === "right" ? "ok" : st === "wrong" ? "bad" : "", q.id === S.ui.cur ? "current" : "", S.flags.has(q.id) ? "flag" : ""].join(" ");
+        const rv = S.review[q.id];
+        const at = S.ui.status === "review" ? S.attempt[q.id] : null;
+        const cls = [at ? (at.ok ? "ok" : "bad") : st === "right" ? "ok" : st === "wrong" ? "bad" : "",
+          rv && !rv.done ? "rq" : "", rv?.done ? "fixed" : "",
+          q.id === S.ui.cur ? "current" : "", S.flags.has(q.id) ? "flag" : ""].join(" ");
         return `<button class="qcell ${cls}" style="--c:${skillOf(q).color}" data-action="go" data-id="${q.id}" aria-label="Вопрос ${q.n}"${q.id === S.ui.cur ? ' aria-current="true"' : ""}>${q.n}</button>`;
       }).join("")}</div>
     </div>
@@ -598,6 +650,16 @@ function choicesHtml(q, pr, orig) {
   }).join("")}</div>`;
 }
 
+function reviewBanner(q, pr) {
+  const r = S.review[q.id];
+  if (!pr) {
+    return `<div class="review-banner">${icon("clock", "icon-sm")}<span><b>Повторение ошибки</b> · верных подряд: ${r?.step || 0} из ${REVIEW_DAYS.length}. Решите вопрос заново — прошлый ответ скрыт.</span></div>`;
+  }
+  const next = r?.done ? "Закреплено — вопрос больше не будет повторяться." :
+    pr.ok ? `Следующий повтор через ${REVIEW_DAYS[r.step]} ${plural(REVIEW_DAYS[r.step], "день", "дня", "дней")}.` : "Повторим завтра.";
+  return `<div class="review-banner ${r?.done ? "fixed" : pr.ok ? "ok" : "bad"}">${icon(r?.done ? "trophy" : "clock", "icon-sm")}<span><b>${r?.done ? "Ошибка исправлена!" : "Повторение"}</b> · ${next}</span></div>`;
+}
+
 function feedbackHtml(q, pr) {
   if (!pr) return "";
   const answer = q.correct || esc(q.correctText);
@@ -608,7 +670,7 @@ function feedbackHtml(q, pr) {
   const head = pr.revealed ? "Ответ показан" : `Неверно${pr.c ? ` — вы выбрали ${esc(pr.c)}` : ""}`;
   return `<div class="feedback bad" role="status"><div class="fic">${icon("x")}</div>
     <div class="ftext"><strong>${head}</strong>Правильный ответ — ${answer}</div>
-    <button class="btn btn-outline btn-sm" data-action="retry">${icon("rotate", "icon-sm")} Ещё раз</button></div>`;
+    ${inReview(q) ? "" : `<button class="btn btn-outline btn-sm" data-action="retry">${icon("rotate", "icon-sm")} Ещё раз</button>`}</div>`;
 }
 
 function explainHtml(q, pr) {
@@ -638,10 +700,12 @@ function renderQuestion(scrollTop = false) {
     return;
   }
   const pos = list.indexOf(q);
-  const pr = S.progress[q.id];
+  const review = inReview(q);
+  const pr = answerOf(q);
   const orig = isOriginal(q);
   const sk = skillOf(q);
   main.innerHTML = `<div class="qwrap">
+    ${review ? reviewBanner(q, pr) : ""}
     <div class="qhead">
       <div class="qnum">Вопрос ${q.n} <span>· ${pos + 1} из ${list.length}</span></div>
       <span class="badge badge-skill" style="--c:${sk.color}"><span class="dot"></span>${esc(q.skill)}</span>
@@ -664,7 +728,7 @@ function renderQuestion(scrollTop = false) {
     <nav class="qnav" aria-label="Навигация по вопросам">
       <button class="btn btn-outline" data-action="prev" ${pos <= 0 ? "disabled" : ""} aria-label="Предыдущий вопрос">${icon("left")}<span class="btn-label">Назад</span></button>
       <div class="spacer"></div>
-      ${pr ? `<button class="btn btn-ghost" data-action="retry" aria-label="Решить заново">${icon("rotate")}<span class="btn-label">Решить заново</span></button>` : ""}
+      ${pr && !review ? `<button class="btn btn-ghost" data-action="retry" aria-label="Решить заново">${icon("rotate")}<span class="btn-label">Решить заново</span></button>` : ""}
       <button class="btn btn-primary" data-action="next" ${pos >= list.length - 1 ? "disabled" : ""} aria-label="Следующий вопрос"><span class="btn-label">Далее</span>${icon("right")}</button>
     </nav>
     <div class="hints">
@@ -717,11 +781,25 @@ function step(d) {
   if (next) go(next.id);
 }
 
+// Records an answer: a review attempt reschedules the mistake, a first attempt may start a review.
+function record(q, result) {
+  if (inReview(q)) {
+    S.attempt[q.id] = result;
+    S.review[q.id] = gradeReview(S.review[q.id], result.ok);
+    saveReview();
+    today.log("r", result.ok);
+    return;
+  }
+  S.progress[q.id] = result;
+  saveProgress();
+  if (!result.ok) { S.review[q.id] = enqueueReview(S.review[q.id]); saveReview(); }
+  today.log("q", result.ok);
+}
+
 function answer(letter) {
   const q = cur();
-  if (!q || S.progress[q.id] || !q.choices.some((c) => c.letter === letter)) return;
-  S.progress[q.id] = { c: letter, ok: letter === q.correct, t: Date.now() };
-  saveProgress();
+  if (!q || answerOf(q) || !q.choices.some((c) => c.letter === letter)) return;
+  record(q, { c: letter, ok: letter === q.correct, t: Date.now() });
   S.anim = { id: q.id, letter };
   S.explainOpen[q.id] = true;
   renderAll();
@@ -734,14 +812,13 @@ function checkSpr() {
   if (!q || !val) return;
   const norm = (s) => s.replace(/\s+/g, "").replace(/^\+/, "").toLowerCase();
   const ok = String(q.correctText || "").split(/[,;]| or /).map(norm).filter(Boolean).includes(norm(val));
-  S.progress[q.id] = { c: val, ok, t: Date.now() };
-  saveProgress();
+  record(q, { c: val, ok, t: Date.now() });
   renderAll();
 }
 
 function retry() {
   const q = cur();
-  if (!q) return;
+  if (!q || inReview(q)) return;
   delete S.progress[q.id];
   delete S.struck[q.id];
   saveProgress();
@@ -750,7 +827,7 @@ function retry() {
 
 function strike(letter) {
   const q = cur();
-  if (!q || S.progress[q.id]) return;
+  if (!q || answerOf(q)) return;
   const set = (S.struck[q.id] ||= new Set());
   set.has(letter) ? set.delete(letter) : set.add(letter);
   renderQuestion();
@@ -778,10 +855,9 @@ const ACTIONS = {
   "check-spr": checkSpr,
   reveal: () => {
     const q = cur();
-    if (!q || S.progress[q.id]) return;
-    S.progress[q.id] = { c: null, ok: false, revealed: true, t: Date.now() };
+    if (!q || answerOf(q)) return;
+    record(q, { c: null, ok: false, revealed: true, t: Date.now() });
     S.explainOpen[q.id] = true;
-    saveProgress();
     renderAll();
   },
   retry,
@@ -809,7 +885,7 @@ const ACTIONS = {
   },
   "toggle-explain": () => {
     const q = cur();
-    if (!q || !S.progress[q.id]) return;
+    if (!q || !answerOf(q)) return;
     S.explainOpen[q.id] = S.explainOpen[q.id] === false;
     renderQuestion();
   },
@@ -829,7 +905,10 @@ const ACTIONS = {
     if (!(await confirmDialog("Сбросить прогресс?", "Все ответы и статистика по вопросам будут удалены. Вопросы и словарь останутся.", "Сбросить", true))) return;
     S.progress = {};
     S.struck = {};
+    S.review = {};
+    S.attempt = {};
     saveProgress();
+    saveReview();
     renderAll();
     toast("Прогресс сброшен");
   },
@@ -837,9 +916,9 @@ const ACTIONS = {
     toggleMenu(false);
     if (!(await confirmDialog("Удалить все данные?", "Из браузера будут удалены загруженный PDF, вопросы, прогресс и отметки.", "Удалить", true))) return;
     try { await db.clear(); } catch { /* nothing stored */ }
-    [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict].forEach(ls.del);
+    [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict, KEY.review, KEY.activity].forEach(ls.del);
     ai.wipe();
-    Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdf: null, pdfBytes: null, vocab: VOCAB_DEFAULT(), session: null });
+    Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdf: null, pdfBytes: null, vocab: VOCAB_DEFAULT(), session: null, review: {}, activity: ACTIVITY_DEFAULT(), attempt: {} });
     S.ui = { skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" };
     showLanding();
   },
@@ -851,6 +930,10 @@ const ACTIONS = {
   },
   ...vocab.actions,
   ...ai.actions,
+  ...today.actions,
+  "today-review": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "review"); },
+  "today-new": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "todo"); },
+  "today-words": () => { S.ui.view = "vocab"; S.ui.vtab = "study"; S.session = null; saveUi(); renderAll(true); },
   "open-sidebar": () => document.body.classList.add("sidebar-open"),
   "close-sidebar": () => document.body.classList.remove("sidebar-open"),
 };
@@ -866,6 +949,10 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (!S.set || !$("#main") || e.metaKey || e.ctrlKey || e.altKey) return;
   const inField = e.target instanceof Element && !!e.target.closest("input, textarea, select, dialog");
+  if (S.ui.view === "today") {
+    if (e.key === "Escape") { document.body.classList.remove("sidebar-open"); ai.close(); document.querySelector(".celebrate")?.remove(); }
+    return;
+  }
   if (S.ui.view === "vocab") {
     if (e.key === "Escape") { document.body.classList.remove("sidebar-open"); ai.close(); }
     else if (!inField && vocab.onKey(e)) e.preventDefault();
@@ -880,11 +967,11 @@ document.addEventListener("keydown", (e) => {
   if (letter) { e.shiftKey ? strike(letter) : answer(letter); }
   else if (k === "arrowright") step(1);
   else if (k === "arrowleft") step(-1);
-  else if (k === "enter" && cur() && S.progress[cur().id]) step(1);
+  else if (k === "enter" && cur() && answerOf(cur())) step(1);
   else if (k === "e") ACTIONS["toggle-explain"]();
   else if (k === "f") ACTIONS.flag();
   else if (k === "o") ACTIONS.original();
-  else if (k === "r" && cur() && S.progress[cur().id]) retry();
+  else if (k === "r" && cur() && answerOf(cur())) retry();
   else if (k === "escape") { toggleMenu(false); document.body.classList.remove("sidebar-open"); ai.close(); }
   else return;
   e.preventDefault();

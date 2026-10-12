@@ -165,7 +165,7 @@ export function createAssistant(ctx) {
     if (th.kind === "q") {
       const q = S.set?.questions.find((x) => x.id === th.ref);
       if (!q) return "No question context (the question set is not loaded).";
-      const pr = S.progress[q.id];
+      const pr = ctx.answerOf ? ctx.answerOf(q.id) : S.progress[q.id];
       const out = [
         `SAT ${q.section || "Reading and Writing"} question #${q.n} — ${q.domain} › ${q.skill}, difficulty ${q.difficulty || "unknown"}.`,
         "PASSAGE:\n" + q.stem.map((p) => marked(p.runs)).join("\n\n"),
@@ -193,7 +193,7 @@ export function createAssistant(ctx) {
   function statusKind(th) {
     if (th.kind === "w") return "word";
     if (th.kind !== "q") return "general";
-    const pr = S.progress[th.ref];
+    const pr = ctx.answerOf ? ctx.answerOf(th.ref) : S.progress[th.ref];
     return !pr ? "todo" : pr.ok ? "right" : "wrong";
   }
 
@@ -278,7 +278,7 @@ export function createAssistant(ctx) {
   function introHtml(th) {
     if (disabledReason) return `<div class="ai-intro">${esc(disabledReason)}</div>`;
     if (th.kind === "q") {
-      const answered = !!S.progress[th.ref];
+      const answered = !!(ctx.answerOf ? ctx.answerOf(th.ref) : S.progress[th.ref]);
       return `<div class="ai-intro"><p>Спросите что угодно про этот вопрос: слово, перевод, логику ответа.</p>
         ${answered ? "" : "<p>Пока вы не ответили, Claude не будет подсказывать правильный вариант — только помогать рассуждать.</p>"}</div>`;
     }
