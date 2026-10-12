@@ -123,7 +123,7 @@ export function buildDeck(questions) {
     term = stripArticle(term);
     const key = termKey(term);
     if (!key || key.length > 40) return;
-    const card = deck.get(key) || { key, term, def: null, examples: [], qids: [], role: "distractor", src: "auto" };
+    const card = deck.get(key) || { key, term, def: null, examples: [], qids: [], role: "distractor", src: "auto", qnum: data.n };
     if (!card.def && data.def) card.def = data.def;
     if (data.example && !card.examples.some((e) => e.before + e.term + e.after === data.example.before + data.example.term + data.example.after)) {
       card.examples.push(data.example);
@@ -146,7 +146,7 @@ export function buildDeck(questions) {
       const answer = q.choices.find((c) => c.letter === q.correct);
       const ex = example(sentenceWith(stemText, word), word, { qid: q.id, n: q.n, kind: "passage" });
       const meaning = answer ? plain(answer).replace(/^./, (ch) => ch.toLowerCase()) : null;
-      add(word, { def: meaning ? `в этом тексте ≈ ${meaning}` : findDefinition(word, rat), example: ex, qid: q.id, role: "target" });
+      add(word, { def: meaning ? `в этом тексте ≈ ${meaning}` : findDefinition(word, rat), example: ex, qid: q.id, n: q.n, role: "target" });
       continue;
     }
 
@@ -164,7 +164,7 @@ export function buildDeck(questions) {
       } else {
         ex = example(sentenceWith(rat, term), term, { qid: q.id, n: q.n, kind: "rationale" });
       }
-      add(term, { def, example: ex, qid: q.id, role: c.letter === q.correct ? "answer" : "distractor" });
+      add(term, { def, example: ex, qid: q.id, n: q.n, role: c.letter === q.correct ? "answer" : "distractor" });
     }
   }
   return [...deck.values()];

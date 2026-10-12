@@ -31,7 +31,7 @@ export function createVocab(ctx) {
     auto = S.set ? buildDeck(S.set.questions) : [];
   }
 
-  // Every word, including ones still locked behind an unanswered question.
+  // Every word of the deck, shaped for display (spoiler-free for questions not answered yet).
   function allCards() {
     const map = new Map();
     for (const c of auto) map.set(c.key, { ...c, examples: [...c.examples] });
@@ -42,6 +42,13 @@ export function createVocab(ctx) {
     }
     const known = new Set(S.vocab.known);
     for (const c of map.values()) {
+      // Learn words before the questions, but keep each question unspoiled until it is answered:
+      // its sentence (with the answer filled in), its number and the word's role stay hidden.
+      c.practiced = c.qids.some((id) => S.progress[id]);
+      const shown = c.examples.filter((x) => x.own || !x.qid || S.progress[x.qid]);
+      c.hiddenExamples = c.examples.length - shown.length;
+      c.examples = shown;
+      if (c.role === "target" && !c.practiced) c.def = null;   // its gloss is the question's answer
       const e = S.vocab.edits[c.key] || {};
       c.note = e.note || "";
       if (e.def) { c.def = e.def; c.defSrc = "user"; }
@@ -55,24 +62,20 @@ export function createVocab(ctx) {
       c.st = S.vocab.srs[c.key] || null;
       c.known = known.has(c.key);
       c.status = statusOf(c.st, c.known);
-      c.n = c.examples.find((x) => x.n)?.n ?? 9999;
-      // A word from a question opens only after that question is answered — otherwise the deck
-      // teaches the answer before the student has tried it. Own words and words already studied stay open.
-      c.locked = !(c.mine || c.known || c.st?.last || c.qids.some((id) => S.progress[id]));
+      c.n = c.qnum ?? 9999;
     }
     return [...map.values()];
   }
 
-  const cards = () => allCards().filter((c) => !c.locked);
-  const lockedCount = () => allCards().filter((c) => c.locked).length;
-  const lockedNote = (n) => n ? `<div class="vlocked">${icon("lock", "icon-sm")}<span>Ещё ${words(n)} откроются, когда вы ответите на их вопросы — так слова не подсказывают ответ заранее.</span></div>` : "";
+  const cards = allCards;
 
-  // words the user picked, then words from questions they got wrong, then answers, then distractors
+  // Own words first, then words from questions answered wrong, then question by question.
+  // Within a question the four choices come in a fixed shuffled order, so the answer is never first.
+  const mix = (k) => { let h = 2166136261; for (const ch of k) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
   function priority(c) {
     if (c.mine) return 0;
     if (c.qids.some((id) => S.progress[id] && !S.progress[id].ok)) return 1;
-    if (c.role === "answer" || c.role === "target") return 2;
-    return 3;
+    return 2;
   }
 
   function counts(all = cards()) {
@@ -95,7 +98,7 @@ export function createVocab(ctx) {
   function startSession() {
     const { due, mineFresh, autoFresh, newLeft } = counts();
     due.sort((a, b) => a.st.due - b.st.due);
-    autoFresh.sort((a, b) => priority(a) - priority(b) || a.n - b.n);
+    autoFresh.sort((a, b) => priority(a) - priority(b) || a.n - b.n || mix(a.key) - mix(b.key));
     S.session = {
       queue: [...due.map((c) => c.key), ...mineFresh.map((c) => c.key), ...autoFresh.slice(0, newLeft).map((c) => c.key)],
       revealed: false, reviewed: 0, learnedNew: 0,
@@ -134,8 +137,9 @@ export function createVocab(ctx) {
   }
 
   function examplesHtml(c, limit = 2) {
-    if (!c.examples.length) return "";
-    return `<div class="examples">${c.examples.slice(0, limit).map((e) => `
+    const later = c.hiddenExamples ? `<p class="ex-later">${icon("lock", "icon-sm")} Пример из вопроса появится, когда вы его решите — чтобы слово не подсказывало ответ.</p>` : "";
+    if (!c.examples.length) return later;
+    return `${later}<div class="examples">${c.examples.slice(0, limit).map((e) => `
       <figure class="ex">
         <blockquote>${esc(e.before)}<mark>${esc(e.term || c.term)}</mark>${esc(e.after)}</blockquote>
         <figcaption>${e.kind === "rationale" ? "из разбора" : "из текста"}${e.n ? ` · <button class="linkish" data-action="v-open-q" data-id="${esc(e.qid)}">вопрос ${e.n} →</button>` : ""}</figcaption>
@@ -191,7 +195,6 @@ export function createVocab(ctx) {
           <span><i class="m"></i>выучено ${by("mastered")}</span><span><i class="k"></i>знаю ${by("known")}</span>
           <span><i class="l"></i>изучаю ${by("learning")}</span><span><i></i>новые ${by("new")}</span>
         </div>
-        ${lockedNote(lockedCount())}
       </div>
       <div>
         <div class="side-label">Новых слов в день</div>
@@ -222,14 +225,6 @@ export function createVocab(ctx) {
 
   function studyHtml() {
     const all = cards();
-    if (!all.length && lockedCount()) {
-      return `<div class="vwrap"><div class="card done-card">
-        <div class="done-icon">${icon("lock")}</div>
-        <h2>Слова появятся после вопросов</h2>
-        <p>Ответьте на вопросы Words in Context — слова из каждого решённого вопроса попадут сюда с определениями и примерами.</p>
-        <div class="row"><button class="btn btn-primary" data-action="view" data-view="questions">${icon("book", "icon-sm")} К вопросам</button></div>
-      </div></div>`;
-    }
     if (!all.length) {
       return `<div class="vwrap"><div class="empty"><h3>Словарь пуст</h3>
         <p>В этом наборе нет вопросов Words in Context. Добавляйте слова сами: выделите слово в тексте вопроса.</p></div></div>`;
@@ -245,7 +240,7 @@ export function createVocab(ctx) {
     const pct = Math.round((s.reviewed / (s.reviewed + left)) * 100);
     const newInQueue = s.queue.filter((k) => !byKey.get(k).st?.last).length;
     const iv = previewIntervals(c.st);
-    const qs = [...new Set(c.examples.filter((e) => e.n).map((e) => e.n))];
+    const qs = c.practiced ? [...new Set(c.examples.filter((e) => e.n).map((e) => e.n))] : [];
     return `<div class="vwrap">
       <div class="sess-top">
         <span class="sess-count">Осталось <b>${left}</b></span>
@@ -254,7 +249,7 @@ export function createVocab(ctx) {
       </div>
       <article class="card flash">
         <div class="flash-meta">
-          <span class="badge">${ROLE_LABEL[c.mine && !auto.some((a) => a.key === c.key) ? "mine" : c.role] || ""}</span>
+          <span class="badge">${c.mine && !auto.some((a) => a.key === c.key) ? ROLE_LABEL.mine : c.practiced ? ROLE_LABEL[c.role] || "" : "слово из вопросов"}</span>
           ${statusBadge(c)}
           <div class="spacer"></div>
           ${qs.length ? `<span class="mono">вопрос ${qs.join(", ")}</span>` : ""}
@@ -350,7 +345,7 @@ export function createVocab(ctx) {
         <div class="row"><button class="btn btn-primary" type="submit">Добавить</button><button class="btn btn-ghost" type="button" data-action="v-add-open">Отмена</button></div>
       </form>` : ""}
       <div class="wcount" id="wcount">${words(list.length)}</div>
-      ${lockedNote(lockedCount())}
+
       <div class="wlist" id="wlist">${rowsHtml(list)}</div>
     </div>`;
   }
@@ -378,13 +373,13 @@ export function createVocab(ctx) {
     const key = termKey(term);
     if (!key) return;
     const existing = allCards().find((c) => c.key === key);
-    if (existing && !existing.locked) {
+    if (existing) {
       if (existing.known) S.vocab.known = S.vocab.known.filter((k) => k !== key);
       save();
       toast(`«${existing.term}» уже в словаре`);
       return;
     }
-    const ex = text ? makeExample(text, term, { qid, n, kind: "passage" }) : null;
+    const ex = text ? makeExample(text, term, { qid, n, kind: "passage", own: true }) : null;
     S.vocab.user[key] = { key, term, def: null, examples: ex ? [ex] : [], qids: qid ? [qid] : [], role: "mine", src: "user", added: Date.now() };
     if (def || note) S.vocab.edits[key] = { ...(S.vocab.edits[key] || {}), ...(def ? { def } : {}), ...(note ? { note } : {}) };
     save();
