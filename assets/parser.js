@@ -462,6 +462,7 @@ export async function renderRegion(pdf, region, cssWidth) {
   await page.render({
     canvasContext: ctx,
     viewport: vp,
+    intent: "print", // no requestAnimationFrame: finishes even while the tab is in the background
     transform: [1, 0, 0, 1, -x0 * scale, -region.y0 * scale],
   }).promise;
   canvas.style.width = "100%";

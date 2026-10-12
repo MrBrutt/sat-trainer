@@ -27,6 +27,7 @@ const SKILL_ORDER = [
   "Rhetorical Synthesis", "Transitions", "Boundaries", "Form, Structure, and Sense",
 ];
 const DIFF_LEVEL = { easy: 1, medium: 2, hard: 3 };
+const DIFF_RU = { easy: "Лёгкие", medium: "Средние", hard: "Сложные" };
 
 // ---------------------------------------------------------------- storage
 
@@ -57,6 +58,7 @@ const db = {
   get(k) { return this.tx("readonly", (s) => s.get(k)); },
   set(k, v) { return this.tx("readwrite", (s) => s.put(v, k)); },
   clear() { return this.tx("readwrite", (s) => s.clear()); },
+  del(k) { return this.tx("readwrite", (s) => s.delete(k)); },
 };
 
 const S = {
@@ -72,8 +74,7 @@ const S = {
   struck: {},                                  // id -> Set of crossed-out letters (this session)
   explainOpen: {},
   anim: null,
-  pdf: null,
-  pdfBytes: null,
+  pdfs: new Map(),                             // opened PDFs by source, for the original view
 };
 const saveProgress = () => ls.set(KEY.progress, S.progress);
 const saveFlags = () => ls.set(KEY.flags, [...S.flags]);
@@ -287,32 +288,75 @@ function diffBars(d) {
 
 // ---------------------------------------------------------------- set preparation
 
-function prepareSet(parsed, fileName) {
-  const first = new Map();
-  parsed.questions.forEach((q, i) => { if (!first.has(q.skill)) first.set(q.skill, i); });
-  const rank = (s) => {
-    const k = SKILL_ORDER.findIndex((x) => x.toLowerCase() === s.toLowerCase());
-    return k >= 0 ? k : 100 + first.get(s);
-  };
-  const questions = parsed.questions
-    .map((q, i) => ({ ...q, order: i }))
-    .sort((a, b) => rank(a.skill) - rank(b.skill) || a.order - b.order);
-  questions.forEach((q, i) => (q.n = i + 1));
+// Questions from several PDF exports live in one set. Each PDF is stored separately (for the
+// "original PDF" view); questions keep their number for good, new ones are numbered after the last.
+const LEGACY = "legacy";                                   // the single PDF of sets made before multi-PDF
+const pdfKey = (id) => (id === LEGACY ? "pdf" : `pdf:${id}`);
+const sourceOf = (q) => q.src?.pdf || LEGACY;
+
+function skillRank(name, firstSeen) {
+  const k = SKILL_ORDER.findIndex((x) => x.toLowerCase() === name.toLowerCase());
+  return k >= 0 ? k : 100 + (firstSeen.get(name) ?? 0);
+}
+
+function normalizeSet(set) {
+  if (!set.sources) {
+    set.sources = [{ id: LEGACY, fileName: set.fileName, importedAt: set.importedAt, count: set.questions.length, added: set.questions.length }];
+  }
+  return set;
+}
+
+function finishSet(questions, sources, oldSkills = []) {
+  questions.sort((a, b) => a.n - b.n);
   const uniq = (k) => [...new Set(questions.map((q) => q[k]).filter(Boolean))];
-  const skills = uniq("skill").map((name, i) => ({
-    name, color: PALETTE[i % PALETTE.length], count: questions.filter((q) => q.skill === name).length,
-  }));
+  const first = new Map();
+  questions.forEach((q, i) => { if (!first.has(q.skill)) first.set(q.skill, i); });
+  // keep the colour a skill already had; new skills take colours nobody uses yet
+  const colors = new Map(oldSkills.map((sk) => [sk.name, sk.color]));
+  const free = PALETTE.filter((c) => ![...colors.values()].includes(c));
+  const skills = uniq("skill")
+    .sort((a, b) => skillRank(a, first) - skillRank(b, first))
+    .map((name, i) => {
+      if (!colors.has(name)) colors.set(name, free.shift() || PALETTE[i % PALETTE.length]);
+      const qs = questions.filter((q) => q.skill === name);
+      return { name, color: colors.get(name), count: qs.length, domain: qs[0].domain || "" };
+    });
   const domains = uniq("domain");
   const diffs = uniq("difficulty").sort((a, b) => (DIFF_LEVEL[a.toLowerCase()] || 9) - (DIFF_LEVEL[b.toLowerCase()] || 9));
+  const last = sources[sources.length - 1] || {};
   return {
     version: SET_VERSION,
-    fileName,
-    importedAt: Date.now(),
-    title: domains.length === 1 ? domains[0] : uniq("section")[0] || "Question Bank",
-    subtitle: [uniq("assessment").join(", "), uniq("section").join(", "), diffs.join(" · ")].filter(Boolean).join(" · "),
+    fileName: last.fileName,
+    importedAt: last.importedAt || Date.now(),
+    title: domains.length === 1 ? domains[0] : uniq("section").length === 1 ? uniq("section")[0] : "Question Bank",
+    subtitle: [uniq("assessment").join(", "), domains.length > 1 ? `${domains.length} ${plural(domains.length, "домен", "домена", "доменов")}` : uniq("section").join(", "), diffs.join(" · ")].filter(Boolean).join(" · "),
     skills,
+    difficulties: diffs,
     questions,
+    sources,
   };
+}
+
+// Adds a parsed PDF to a set (or starts one). `numbers` pins numbers when a set is rebuilt.
+function addQuestions(base, parsed, source, numbers = null) {
+  const byId = new Map((base?.questions || []).map((q) => [q.id, q]));
+  const taken = [...byId.values()].map((q) => q.n).concat(numbers ? [...numbers.values()] : []);
+  let next = Math.max(0, ...taken) + 1;
+  const first = new Map();
+  parsed.questions.forEach((q, i) => { if (!first.has(q.skill)) first.set(q.skill, i); });
+  const incoming = parsed.questions
+    .map((q, i) => ({ ...q, order: i, src: { ...q.src, pdf: source.id } }))
+    .sort((a, b) => skillRank(a.skill, first) - skillRank(b.skill, first) || a.order - b.order);
+  let added = 0, same = 0;
+  for (const q of incoming) {
+    const prev = byId.get(q.id);
+    if (prev) { byId.set(q.id, { ...q, n: prev.n }); same++; }
+    else { byId.set(q.id, { ...q, n: numbers?.get(q.id) ?? next++ }); added++; }
+  }
+  const questions = [...byId.values()];
+  const used = new Set(questions.map(sourceOf));
+  const sources = [...(base?.sources || []), { ...source, count: parsed.questions.length, added }].filter((s) => used.has(s.id));
+  return { set: finishSet(questions, sources, base?.skills), added, same };
 }
 
 // ---------------------------------------------------------------- landing & import
@@ -368,7 +412,9 @@ async function importFile(file) {
     if (S.set) toast("Нужен PDF-файл"); else showLanding("Нужен PDF-файл.");
     return;
   }
-  runImport(new Uint8Array(await file.arrayBuffer()), file.name);
+  const mode = S.importMode || "add";
+  S.importMode = null;
+  runImport(new Uint8Array(await file.arrayBuffer()), file.name, { mode });
 }
 
 // ---------------------------------------------------------------- progress backup
@@ -431,31 +477,72 @@ function keepStorage() {
   try { navigator.storage?.persist?.(); } catch { /* not supported */ }
 }
 
-async function runImport(bytes, fileName, { quiet = false } = {}) {
+const importError = (e) =>
+  e.message === "NO_ANSWERS" ? "В этом PDF нет правильных ответов. Экспортируйте вариант «With correct answers and explanations»." :
+  e.message === "NOT_QUESTION_BANK" ? "В этом файле нет вопросов College Board. Нужен оригинальный PDF, скачанный в Question Bank кнопкой Export → «With correct answers and explanations» → Download PDF, а не переделанный или распечатанный файл." :
+  "Не удалось прочитать PDF: " + (e.message || e);
+
+const parseWithProgress = (bytes, label = "Читаю PDF") => parseQuestionBank(bytes, (p) => {
+  const pct = Math.round(p * 100);
+  const bar = $("#imp-bar"), title = $("#imp-title");
+  if (bar) bar.style.width = pct + "%";
+  if (title) title.textContent = `${label}… ${pct}%`;
+});
+
+async function saveSet(set, previous) {
+  const used = new Set(set.sources.map((src) => src.id));
+  try {
+    await db.set("set", set);
+    for (const src of previous?.sources || []) if (!used.has(src.id)) await db.del(pdfKey(src.id));
+  } catch (e) { console.warn("IndexedDB unavailable", e); }
+}
+
+// mode "add" puts the PDF's questions next to the ones already here; "replace" starts over.
+async function runImport(bytes, fileName, { mode = "add" } = {}) {
+  const base = mode === "add" && S.set ? normalizeSet(S.set) : null;
   showImporting();
   try {
-    const parsed = await parseQuestionBank(bytes, (p) => {
-      const pct = Math.round(p * 100);
-      const bar = $("#imp-bar"), title = $("#imp-title");
-      if (bar) bar.style.width = pct + "%";
-      if (title) title.textContent = `Читаю PDF… ${pct}%`;
-    });
-    const set = prepareSet(parsed, fileName);
+    const parsed = await parseWithProgress(bytes);
+    const source = { id: `s${Date.now().toString(36)}`, fileName, importedAt: Date.now() };
+    const { set, added, same } = addQuestions(base, parsed, source);
+    try { await db.set(pdfKey(source.id), bytes); } catch (e) { console.warn("IndexedDB unavailable", e); }
+    await saveSet(set, S.set);
     S.set = set;
-    S.pdf = null;
-    S.pdfBytes = bytes;
-    try { await db.set("set", set); await db.set("pdf", bytes); } catch (e) { console.warn("IndexedDB unavailable", e); }
-    if (!quiet) S.ui = { ...S.ui, skill: "all", status: "all", cur: null };
+    S.pdfs = new Map();
+    if (!base) S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null };
     saveUi();
     showTrainer();
-    if (!quiet) toast(`Готово: ${qWord(set.questions.length)}`);
+    if (!base) toast(`Готово: ${qWord(set.questions.length)}`);
+    else if (!added) toast(`Новых вопросов нет: все ${parsed.questions.length} уже есть в тренажёре`);
+    else toast(`Добавлено ${qWord(added)}${same ? ` · ${same} уже были` : ""} · всего ${set.questions.length}`);
   } catch (e) {
     console.error(e);
-    const msg =
-      e.message === "NO_ANSWERS" ? "В этом PDF нет правильных ответов. Экспортируйте вариант «With correct answers and explanations»." :
-      e.message === "NOT_QUESTION_BANK" ? "В этом файле нет вопросов College Board. Нужен оригинальный PDF, скачанный в Question Bank кнопкой Export → «With correct answers and explanations» → Download PDF, а не переделанный или распечатанный файл." :
-      "Не удалось прочитать PDF: " + (e.message || e);
-    if (S.set) { showTrainer(); toast(msg); } else showLanding(msg);
+    if (S.set) { showTrainer(); toast(importError(e)); } else showLanding(importError(e));
+  }
+}
+
+// After a parser update every stored PDF is read again; question numbers stay as they were.
+async function rebuildSet(saved) {
+  normalizeSet(saved);
+  const numbers = new Map(saved.questions.map((q) => [q.id, q.n]));
+  showImporting();
+  let acc = null;
+  try {
+    for (const [i, src] of saved.sources.entries()) {
+      const bytes = await db.get(pdfKey(src.id));
+      if (!bytes) continue;
+      const parsed = await parseWithProgress(bytes, saved.sources.length > 1 ? `Обновляю PDF ${i + 1} из ${saved.sources.length}` : "Обновляю вопросы");
+      acc = addQuestions(acc, parsed, { id: src.id, fileName: src.fileName, importedAt: src.importedAt }, numbers).set;
+    }
+    if (!acc) return showLanding();
+    acc.skills = finishSet(acc.questions, acc.sources, saved.skills).skills;
+    await saveSet(acc, saved);
+    S.set = acc;
+    S.pdfs = new Map();
+    showTrainer();
+  } catch (e) {
+    console.error(e);
+    showLanding(importError(e));
   }
 }
 
@@ -480,6 +567,7 @@ const upcomingReviews = () => S.set.questions
 
 function matches(q) {
   if (S.ui.skill !== "all" && q.skill !== S.ui.skill) return false;
+  if (S.ui.diff && S.ui.diff !== "all" && q.difficulty !== S.ui.diff) return false;
   if (S.ui.status === "all") return true;
   if (S.ui.status === "flag") return S.flags.has(q.id);
   if (S.ui.status === "review") return isDue(S.review[q.id]) || !!S.attempt[q.id];
@@ -565,7 +653,8 @@ function renderTopbar() {
     <div class="menu-wrap">
       <button class="icon-btn" data-action="menu" aria-label="Меню" aria-haspopup="menu" aria-expanded="false">${icon("dots")}</button>
       <div class="menu" id="menu" role="menu" hidden>
-        <button role="menuitem" data-action="load-new">${icon("upload")} Загрузить другой PDF</button>
+        <button role="menuitem" data-action="load-new">${icon("upload")} Добавить ещё PDF</button>
+        <button role="menuitem" data-action="load-replace">${icon("file")} Начать заново с другим PDF</button>
         <hr>
         <button role="menuitem" data-action="backup">${icon("download")} Сохранить прогресс в файл</button>
         <button role="menuitem" data-action="restore">${icon("history")} Восстановить прогресс из файла</button>
@@ -579,10 +668,12 @@ function renderTopbar() {
 
 function renderSidebar() {
   const qs = S.set.questions;
-  const inSkill = (q) => S.ui.skill === "all" || q.skill === S.ui.skill;
+  const inSkill = (q) => (S.ui.skill === "all" || q.skill === S.ui.skill) && (!S.ui.diff || S.ui.diff === "all" || q.difficulty === S.ui.diff);
   const count = (st) => qs.filter((q) => inSkill(q) && (st === "all" || (st === "flag" ? S.flags.has(q.id) : st === "review" ? isDue(S.review[q.id]) : statusOf(q.id) === st))).length;
   const list = visible();
   const skills = [{ name: "all", label: "Все навыки", count: qs.length, color: "var(--text-2)" }, ...S.set.skills];
+  const multiDomain = new Set(S.set.skills.map((sk) => sk.domain)).size > 1;
+  const diffs = S.set.difficulties || [];
   const statuses = [["all", "Все"], ["review", "Повторить"], ["todo", "Не решены"], ["wrong", "Ошибки"], ["right", "Верно"], ["flag", "Отмеченные"]];
   const stats = S.set.skills.map((s) => {
     const sq = qs.filter((q) => q.skill === s.name);
@@ -597,12 +688,19 @@ function renderSidebar() {
   $("#sidebar").innerHTML = `
     <div>
       <div class="side-label">Навык</div>
-      <div class="skill-list">${skills.map((s) => `
+      <div class="skill-list">${skills.map((s, i) => `
+        ${multiDomain && s.domain && s.domain !== skills[i - 1]?.domain ? `<div class="skill-domain">${esc(s.domain)}</div>` : ""}
         <button class="skill-item ${S.ui.skill === s.name ? "active" : ""}" data-action="skill" data-skill="${esc(s.name)}" aria-pressed="${S.ui.skill === s.name}">
           <span class="dot" style="--c:${s.color}"></span><span class="name">${esc(s.label || s.name)}</span><span class="count">${s.count}</span>
         </button>`).join("")}
       </div>
     </div>
+    ${diffs.length > 1 ? `<div>
+      <div class="side-label">Сложность</div>
+      <div class="chips">${["all", ...diffs].map((d) => `
+        <button class="chip ${(S.ui.diff || "all") === d ? "active" : ""}" data-action="diff" data-diff="${esc(d)}" aria-pressed="${(S.ui.diff || "all") === d}">${d === "all" ? "Любая" : `${diffBars(d)} ${esc(DIFF_RU[d.toLowerCase()] || d)}`}<span class="count">${d === "all" ? qs.length : qs.filter((q) => q.difficulty === d).length}</span></button>`).join("")}
+      </div>
+    </div>` : ""}
     <div>
       <div class="side-label">Статус</div>
       <div class="chips">${statuses.map(([k, label]) => `
@@ -627,7 +725,8 @@ function renderSidebar() {
       <div class="stat-rows">${stats}</div>
     </div>
     <div class="side-foot">
-      <span>${icon("file", "icon-sm")} ${esc(S.set.fileName || "PDF")} · ${date}</span>
+      <span title="${esc(S.set.sources.map((src) => `${src.fileName} — ${src.count} вопр.`).join("\n"))}">${icon("file", "icon-sm")} ${S.set.sources.length > 1 ? `${S.set.sources.length} ${plural(S.set.sources.length, "файл", "файла", "файлов")} PDF · ${qWord(qs.length)}` : `${esc(S.set.fileName || "PDF")} · ${date}`}</span>
+      <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;padding:0 6px;margin-left:-6px" data-action="load-new">${icon("upload", "icon-sm")} Добавить ещё PDF</button>
       <span>${icon("lock", "icon-sm")} Прогресс сохраняется автоматически в этом браузере</span>
       <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;padding:0 6px;margin-left:-6px" data-action="backup">${icon("download", "icon-sm")} Сохранить копию прогресса</button>
     </div>`;
@@ -781,15 +880,17 @@ async function fillOriginals(q) {
   const els = [...document.querySelectorAll("#main [data-region]")];
   if (!els.length) return;
   try {
-    if (!S.pdf) {
-      S.pdfBytes ||= await db.get("pdf");
-      if (!S.pdfBytes) throw new Error("no pdf");
-      S.pdf = await openPdf(S.pdfBytes);
+    S.pdfs ||= new Map();
+    const id = sourceOf(q);
+    if (!S.pdfs.has(id)) {
+      const bytes = await db.get(pdfKey(id));
+      if (!bytes) throw new Error("no pdf");
+      S.pdfs.set(id, await openPdf(bytes));
     }
     for (const el of els) {
       const key = el.dataset.region;
       const region = key === "question" ? q.src.question : q.src.rationale[+key.split("-")[1]];
-      const canvas = await renderRegion(S.pdf, region, el.clientWidth - 28);
+      const canvas = await renderRegion(S.pdfs.get(id), region, el.clientWidth - 28);
       if (cur()?.id !== q.id) return;
       el.replaceChildren(canvas);
     }
@@ -900,8 +1001,9 @@ const ACTIONS = {
   prev: () => step(-1),
   go: (el) => go(el.dataset.id),
   skill: (el) => setFilter("skill", el.dataset.skill),
+  diff: (el) => setFilter("diff", el.dataset.diff),
   status: (el) => setFilter("status", el.dataset.status),
-  "clear-filters": () => { S.ui.status = "all"; setFilter("skill", "all"); },
+  "clear-filters": () => { S.ui.status = "all"; S.ui.diff = "all"; setFilter("skill", "all"); },
   flag: () => {
     const q = cur();
     if (!q) return;
@@ -932,7 +1034,13 @@ const ACTIONS = {
     if (cur() && isOriginal(cur())) renderQuestion();
   },
   menu: () => toggleMenu(),
-  "load-new": () => { toggleMenu(false); $("#file2").click(); },
+  "load-new": () => { toggleMenu(false); S.importMode = "add"; $("#file2").click(); },
+  "load-replace": async () => {
+    toggleMenu(false);
+    if (!(await confirmDialog("Начать с другого PDF?", "Текущие вопросы уберутся из тренажёра, их место займёт новый файл. Ответы, ошибки и словарь сохранятся — если позже добавить старый PDF снова, прогресс по нему вернётся.", "Выбрать PDF"))) return;
+    S.importMode = "replace";
+    $("#file2").click();
+  },
   backup: () => { toggleMenu(false); backupProgress(); },
   restore: () => { toggleMenu(false); $("#file3").click(); },
   "reset-progress": async () => {
@@ -953,7 +1061,7 @@ const ACTIONS = {
     try { await db.clear(); } catch { /* nothing stored */ }
     [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict, KEY.review, KEY.activity].forEach(ls.del);
     ai.wipe();
-    Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdf: null, pdfBytes: null, vocab: VOCAB_DEFAULT(), session: null, review: {}, activity: ACTIVITY_DEFAULT(), attempt: {} });
+    Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdfs: new Map(), vocab: VOCAB_DEFAULT(), session: null, review: {}, activity: ACTIVITY_DEFAULT(), attempt: {} });
     S.ui = { skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" };
     showLanding();
   },
@@ -1015,7 +1123,7 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("input", (e) => { if (S.set) vocab.onInput(e); });
 document.addEventListener("submit", (e) => { if (S.set) vocab.onSubmit(e); });
 
-// a PDF dropped anywhere replaces the current set
+// a PDF dropped anywhere is added to the questions already here
 window.addEventListener("dragover", (e) => { if (S.set) e.preventDefault(); });
 window.addEventListener("drop", (e) => {
   if (!S.set) return;
@@ -1047,26 +1155,26 @@ async function freshen() {
 
 (async function boot() {
   if (await freshen()) return;
-  const src = new URLSearchParams(location.search).get("src");
+  const params = new URLSearchParams(location.search);
+  const src = params.get("src");
   if (src) {
     const url = new URL(src, location.href);
     history.replaceState(null, "", location.pathname);
     if (url.origin === location.origin) {
       const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
-      return runImport(bytes, url.pathname.split("/").pop());
+      let saved = null;
+      try { saved = await db.get("set"); } catch { /* IndexedDB unavailable */ }
+      if (saved?.version === SET_VERSION) S.set = normalizeSet(saved);
+      return runImport(bytes, url.pathname.split("/").pop(), { mode: params.get("mode") || "add" });
     }
   }
   let saved = null;
   try { saved = await db.get("set"); } catch { /* IndexedDB unavailable */ }
   if (saved && saved.version === SET_VERSION) {
-    S.set = saved;
+    S.set = normalizeSet(saved);
     showTrainer();
     return;
   }
-  if (saved) {
-    let bytes = null;
-    try { bytes = await db.get("pdf"); } catch { /* IndexedDB unavailable */ }
-    if (bytes) return runImport(bytes, saved.fileName, { quiet: true });
-  }
+  if (saved) return rebuildSet(saved);
   showLanding();
 })();
