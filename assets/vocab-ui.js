@@ -4,7 +4,7 @@ import { buildDeck, schedule, previewIntervals, statusOf, termKey, lookup, makeE
 const DAY = 86400000;
 const STATUS_LABEL = { new: "новое", learning: "изучаю", mastered: "выучено", known: "знаю" };
 const ROLE_LABEL = { answer: "правильный ответ", target: "слово из текста", distractor: "неверный вариант", mine: "моё слово" };
-const DEF_SRC = { cb: "из разбора College Board", dict: "из Wiktionary", user: "моё определение" };
+const DEF_SRC = { cb: "из разбора College Board", dict: "из Wiktionary", ai: "объяснение Claude", user: "моё определение" };
 
 export const VOCAB_DEFAULT = () => ({ srs: {}, user: {}, edits: {}, known: [], daily: { date: "", newCount: 0, extra: 0 }, newPerDay: 20 });
 
@@ -45,7 +45,11 @@ export function createVocab(ctx) {
       c.note = e.note || "";
       if (e.def) { c.def = e.def; c.defSrc = "user"; }
       else if (c.def) c.defSrc = "cb";
-      else if (dict[c.key]) { c.def = dict[c.key]; c.defSrc = "dict"; }
+      else if (dict[c.key]) {
+        const e = dict[c.key];
+        c.def = typeof e === "string" ? e : e.d;
+        c.defSrc = typeof e === "string" ? "dict" : e.s;
+      }
       else c.defSrc = null;
       c.st = S.vocab.srs[c.key] || null;
       c.known = known.has(c.key);
@@ -90,14 +94,19 @@ export function createVocab(ctx) {
     };
   }
 
+  // Inside claude.ai the page cannot reach other sites, so Claude explains the word instead of Wiktionary.
   function fetchDef(c) {
     if (c.def || dict[c.key] !== undefined || pendingLookups.has(c.key)) return;
+    const viaClaude = ctx.inClaude();
+    if (viaClaude && !ctx.ai()?.available()) return;
     failedLookups.delete(c.key);
     pendingLookups.add(c.key);
-    lookup(c.term).then((def) => {
+    const ex = c.examples?.[0];
+    const find = viaClaude ? ctx.ai().define(c.term, ex ? ex.before + (ex.term || c.term) + ex.after : "") : lookup(c.term);
+    find.then((def) => {
       pendingLookups.delete(c.key);
       if (def === undefined) { failedLookups.add(c.key); return; } // offline: try again next time
-      dict[c.key] = def || "";
+      dict[c.key] = def ? (viaClaude ? { d: def, s: "ai" } : def) : "";
       saveDict();
       if (S.ui.view !== "vocab") return;
       if ((S.ui.vtab || "study") === "list") refreshList(); else renderMain();
@@ -128,6 +137,7 @@ export function createVocab(ctx) {
   function defHtml(c) {
     if (c.def) return `<div class="flash-def">${esc(c.def)}</div><div class="def-src">${DEF_SRC[c.defSrc] || ""}</div>`;
     if (dict[c.key] === "") return `<div class="flash-def muted">Определение не найдено — впишите своё в заметку ниже</div>`;
+    if (ctx.inClaude() && !ctx.ai()?.available()) return `<div class="flash-def muted">Определения нет — впишите своё в заметку ниже</div>`;
     if (failedLookups.has(c.key)) return `<div class="flash-def muted">Не удалось загрузить определение (нет сети?) — попробую ещё раз позже</div>`;
     return `<div class="flash-def muted">Ищу определение в словаре…</div>`;
   }
@@ -198,6 +208,7 @@ export function createVocab(ctx) {
     </div>`;
     main.innerHTML = seg + (tab === "list" ? listHtml() : studyHtml());
     if (scrollTop) window.scrollTo({ top: 0 });
+    ctx.ai()?.follow();
   }
 
   function studyHtml() {
@@ -245,7 +256,10 @@ export function createVocab(ctx) {
           <button class="grade ${cls}" data-action="v-grade" data-g="${i + 1}"><span>${label}</span><small>${iv[i]}</small><kbd>${i + 1}</kbd></button>`).join("")}
       </div>` : ""}
       <div class="flash-foot">
-        <button class="btn btn-ghost btn-sm" data-action="v-known" title="Убрать из повторений (K)">${icon("check", "icon-sm")} Уже знаю это слово</button>
+        <span class="row">
+          <button class="btn btn-ghost btn-sm" data-action="v-known" title="Убрать из повторений (K)">${icon("check", "icon-sm")} Уже знаю это слово</button>
+          ${ctx.ai()?.available() ? `<button class="btn btn-ghost btn-sm ai-only" data-action="ai-ask-word" data-key="${esc(c.key)}">${icon("sparkles", "icon-sm")} Спросить Claude</button>` : ""}
+        </span>
         <span class="hints"><span><kbd>Пробел</kbd> показать</span><span><kbd>1</kbd>–<kbd>4</kbd> оценка</span><span><kbd>K</kbd> знаю</span></span>
       </div>
     </div>`;
@@ -297,6 +311,7 @@ export function createVocab(ctx) {
           <div class="row">
             <button class="btn btn-outline btn-sm" data-action="v-toggle-known" data-key="${esc(c.key)}">${c.known ? `${icon("rotate", "icon-sm")} Вернуть в изучение` : `${icon("check", "icon-sm")} Уже знаю`}</button>
             ${c.st?.last ? `<button class="btn btn-ghost btn-sm" data-action="v-reset-card" data-key="${esc(c.key)}">Начать заново</button>` : ""}
+            ${ctx.ai()?.available() ? `<button class="btn btn-ghost btn-sm" data-action="ai-ask-word" data-key="${esc(c.key)}">${icon("sparkles", "icon-sm")} Спросить Claude</button>` : ""}
             ${c.mine && !auto.some((a) => a.key === c.key) ? `<button class="btn btn-ghost btn-sm danger-text" data-action="v-delete" data-key="${esc(c.key)}">${icon("trash", "icon-sm")} Удалить</button>` : ""}
           </div>
         </div>` : ""}
@@ -361,15 +376,21 @@ export function createVocab(ctx) {
     ctx.refreshChrome();
   }
 
-  const pop = document.createElement("button");
+  const pop = document.createElement("div");
   pop.className = "selpop";
   pop.hidden = true;
-  pop.dataset.action = "v-add-sel";
   pop.addEventListener("mousedown", (e) => e.preventDefault()); // keep the selection alive
   document.body.append(pop);
   let pending = null;
   let selTimer = null;
   const hidePop = () => { pop.hidden = true; pending = null; };
+
+  // blanks are drawn as empty lines on the page; put "______" back for the text we keep
+  function textWithBlanks(el) {
+    const copy = el.cloneNode(true);
+    copy.querySelectorAll(".blank").forEach((b) => b.replaceWith("______"));
+    return copy.textContent;
+  }
 
   function onSelection() {
     if (!S.set || S.ui.view !== "questions") return hidePop();
@@ -383,9 +404,11 @@ export function createVocab(ctx) {
     const q = ctx.current();
     if (!q) return hidePop();
     const exists = cards().some((c) => c.key === termKey(raw));
-    pending = { term: raw, text: host.textContent, qid: q.id, n: q.n };
-    pop.innerHTML = exists ? `${icon("check", "icon-sm")} Уже в словаре` : `${icon("plus", "icon-sm")} В словарь: <b>${esc(raw)}</b>`;
-    pop.classList.toggle("exists", exists);
+    pending = { term: raw, text: textWithBlanks(host), qid: q.id, n: q.n };
+    pop.innerHTML = (exists
+      ? `<span class="selpop-note">${icon("check", "icon-sm")} В словаре</span>`
+      : `<button type="button" data-action="v-add-sel">${icon("plus", "icon-sm")} В словарь: <b>${esc(raw)}</b></button>`)
+      + (ctx.ai()?.available() ? `<button type="button" data-action="ai-explain-sel">${icon("sparkles", "icon-sm")} Объяснить</button>` : "");
     pop.hidden = false;
     const r = sel.getRangeAt(0).getBoundingClientRect();
     const touch = matchMedia("(pointer: coarse)").matches;
@@ -473,6 +496,14 @@ export function createVocab(ctx) {
       addWord(p.term, { text: p.text, qid: p.qid, n: p.n });
     },
     "v-open-q": (el) => ctx.openQuestion(el.dataset.id),
+    "ai-explain-sel": () => {
+      if (!pending) return;
+      const p = pending;
+      const sentence = makeExample(p.text, p.term, {});
+      window.getSelection()?.removeAllRanges();
+      hidePop();
+      ctx.ai()?.explainSelection(p.term, sentence ? sentence.before + sentence.term + sentence.after : "");
+    },
   };
 
   function refreshList() {
@@ -481,6 +512,7 @@ export function createVocab(ctx) {
     if (!wl) return renderMain();
     wl.innerHTML = rowsHtml(list);
     wc.textContent = words(list.length);
+    ctx.ai()?.follow();
   }
 
   let noteTimer = null;
@@ -535,8 +567,12 @@ export function createVocab(ctx) {
     return n;
   }
 
+  const currentKey = () => ((S.ui.vtab || "study") === "study" && S.session?.queue.length ? S.session.queue[0] : openRow);
+
   return {
     rebuild, renderSidebar, renderMain, questionWordsHtml, dueTotal, actions, onInput, onSubmit, onKey, merge,
     hidePop, resetSession: () => { S.session = null; },
+    card: (key) => cards().find((c) => c.key === key) || null,
+    currentKey,
   };
 }

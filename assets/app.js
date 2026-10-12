@@ -1,5 +1,6 @@
 import { parseQuestionBank, openPdf, renderRegion, plain } from "./parser.js";
 import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
+import { createAssistant } from "./assistant.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -12,6 +13,8 @@ const KEY = {
   theme: "sat-trainer:theme",
   vocab: "sat-trainer:vocab:v1",
   dict: "sat-trainer:dict:v1",
+  chats: "sat-trainer:chats:v1",
+  aiTier: "sat-trainer:ai-tier",
 };
 const PALETTE = ["#3b82f6", "#14b8a6", "#8b5cf6", "#f59e0b", "#ec4899", "#22c55e", "#ef4444", "#0ea5e9", "#a855f7", "#84cc16"];
 // College Board's own ordering of Reading and Writing skills
@@ -99,6 +102,9 @@ const ICONS = {
   list: '<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>',
   book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  sparkles: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/>',
+  arrowUp: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+  stop: '<rect x="7" y="7" width="10" height="10" rx="2"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
 };
@@ -138,14 +144,28 @@ function confirmDialog(title, text, okLabel, danger = false) {
   });
 }
 
-const isDark = () => document.documentElement.dataset.theme === "dark";
+const isDark = () => {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+};
 
+let ai = null;
 const vocab = createVocab({
   S, $, icon, esc, toast, ls, KEY, plural, confirmDialog,
   saveUi: () => saveUi(),
   current: () => cur(),
   openQuestion: (id) => { S.ui.view = "questions"; saveUi(); renderTopbar(); go(id); },
   refreshChrome: () => renderTopbar(),
+  ai: () => ai,
+  inClaude: () => !!window.claude,   // inside claude.ai the page cannot reach other sites
+});
+ai = createAssistant({
+  S, $, icon, esc, toast, ls, KEY, confirmDialog,
+  current: () => (S.set ? cur() : null),
+  currentCardKey: () => vocab.currentKey(),
+  vocabCard: (key) => vocab.card(key),
+  onAvailable: () => { if (S.set && $("#main")) renderAll(); },
+  onThreadsChanged: () => { if (S.set && $("#main") && S.ui.view !== "vocab") renderQuestion(); },
 });
 
 // ---------------------------------------------------------------- rich text
@@ -332,12 +352,23 @@ async function importFile(file) {
 
 // ---------------------------------------------------------------- progress backup
 
-function backupProgress() {
-  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags], vocab: S.vocab };
-  const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+async function backupProgress() {
+  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags], vocab: S.vocab, chats: ai.threads() };
+  const json = JSON.stringify(data, null, 1);
+  const filename = `sat-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
+  if (window.claude) {
+    // inside claude.ai plain download links are inert; the viewer confirms the save instead
+    let downloads = null;
+    try { downloads = await window.claude.use?.("downloads"); } catch { /* not served here */ }
+    if (!downloads) { toast("Сохранение файлов здесь недоступно"); return; }
+    try { await downloads.save({ filename, data: json }); toast(`Сохранено ответов: ${Object.keys(S.progress).length}`); }
+    catch (e) { if (e?.code !== "declined") toast("Не удалось сохранить файл"); }
+    return;
+  }
+  const blob = new Blob([json], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `sat-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = filename;
   document.body.append(a);
   a.click();
   a.remove();
@@ -361,6 +392,7 @@ async function restoreProgress(file) {
   }
   (data.flags || []).forEach((id) => S.flags.add(id));
   const words = vocab.merge(data.vocab);
+  ai.merge(data.chats);
   saveProgress();
   saveFlags();
   if (S.set) renderAll();
@@ -619,6 +651,7 @@ function renderQuestion(scrollTop = false) {
       <div class="qtools">
         <button class="icon-btn" data-action="flag" aria-pressed="${S.flags.has(q.id)}" title="Отметить вопрос (F)" aria-label="Отметить вопрос">${icon("flag")}</button>
         <button class="icon-btn" data-action="original" aria-pressed="${orig}" title="Оригинальная вёрстка PDF (O)" aria-label="Оригинальная вёрстка PDF">${icon("image")}</button>
+        ${ai.available() ? `<button class="btn btn-outline btn-sm ai-q ${ai.hasThread(`q:${q.id}`) ? "has-thread" : ""}" data-action="ai-ask-question" title="Спросить Claude про этот вопрос">${icon("sparkles", "icon-sm")}<span class="btn-label">Спросить Claude</span></button>` : ""}
       </div>
     </div>
     ${orig
@@ -640,6 +673,7 @@ function renderQuestion(scrollTop = false) {
     </div>
   </div>`;
   S.anim = null;
+  ai.follow();
   if (orig || (pr && isOriginal(q))) fillOriginals(q);
   if (scrollTop) window.scrollTo({ top: 0 });
 }
@@ -804,6 +838,7 @@ const ACTIONS = {
     if (!(await confirmDialog("Удалить все данные?", "Из браузера будут удалены загруженный PDF, вопросы, прогресс и отметки.", "Удалить", true))) return;
     try { await db.clear(); } catch { /* nothing stored */ }
     [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict].forEach(ls.del);
+    ai.wipe();
     Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdf: null, pdfBytes: null, vocab: VOCAB_DEFAULT(), session: null });
     S.ui = { skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" };
     showLanding();
@@ -815,6 +850,7 @@ const ACTIONS = {
     renderAll(true);
   },
   ...vocab.actions,
+  ...ai.actions,
   "open-sidebar": () => document.body.classList.add("sidebar-open"),
   "close-sidebar": () => document.body.classList.remove("sidebar-open"),
 };
@@ -831,7 +867,7 @@ document.addEventListener("keydown", (e) => {
   if (!S.set || !$("#main") || e.metaKey || e.ctrlKey || e.altKey) return;
   const inField = e.target instanceof Element && !!e.target.closest("input, textarea, select, dialog");
   if (S.ui.view === "vocab") {
-    if (e.key === "Escape") document.body.classList.remove("sidebar-open");
+    if (e.key === "Escape") { document.body.classList.remove("sidebar-open"); ai.close(); }
     else if (!inField && vocab.onKey(e)) e.preventDefault();
     return;
   }
@@ -849,7 +885,7 @@ document.addEventListener("keydown", (e) => {
   else if (k === "f") ACTIONS.flag();
   else if (k === "o") ACTIONS.original();
   else if (k === "r" && cur() && S.progress[cur().id]) retry();
-  else if (k === "escape") { toggleMenu(false); document.body.classList.remove("sidebar-open"); }
+  else if (k === "escape") { toggleMenu(false); document.body.classList.remove("sidebar-open"); ai.close(); }
   else return;
   e.preventDefault();
 });
@@ -866,6 +902,8 @@ window.addEventListener("drop", (e) => {
 });
 
 // ---------------------------------------------------------------- boot
+
+ai.init();
 
 (async function boot() {
   const src = new URLSearchParams(location.search).get("src");
