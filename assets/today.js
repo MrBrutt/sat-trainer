@@ -52,6 +52,8 @@ export function createToday(ctx) {
     const now = Date.now();
     const d = S.activity.days[today()] || {};
     const dueReviews = qs.filter((q) => isDue(S.review[q.id], now)).length;
+    const tomorrowEnd = startOfDay(now) + 2 * DAY;
+    const tomorrowReviews = qs.filter((q) => { const r = S.review[q.id]; return r && !r.done && r.due > now && r.due < tomorrowEnd; }).length;
     const reviewTotal = (d.r || 0) + dueReviews;
     const cardsLeft = ctx.vocabDue();
     const cardsTotal = (d.w || 0) + cardsLeft;
@@ -62,7 +64,8 @@ export function createToday(ctx) {
         id: "review", icon: "clock", title: "Повторить ошибки",
         done: dueReviews === 0, cur: d.r || 0, total: reviewTotal,
         sub: dueReviews ? `${dueReviews} ${plural(dueReviews, "вопрос ждёт", "вопроса ждут", "вопросов ждут")} повторения`
-          : reviewTotal ? "Все повторы на сегодня сделаны" : "Сегодня повторять нечего",
+          : (reviewTotal ? "Все повторы на сегодня сделаны" : "Сегодня повторять нечего")
+            + (tomorrowReviews ? ` · завтра ${plural(tomorrowReviews, "вернётся", "вернутся", "вернутся")} ${tomorrowReviews}` : ""),
         action: "today-review", cta: "Повторять",
       },
       {

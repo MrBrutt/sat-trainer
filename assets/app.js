@@ -469,6 +469,14 @@ const isOriginal = (q) => S.ui.original[q.id] ?? q.hasFigure;
 const inReview = (q) => S.ui.status === "review" && (isDue(S.review[q.id]) || !!S.attempt[q.id]);
 const answerOf = (q) => (inReview(q) ? S.attempt[q.id] || null : S.progress[q.id]);
 const dueReviewCount = () => S.set.questions.filter((q) => isDue(S.review[q.id])).length;
+function whenDue(r) {
+  const days = Math.round((r.due - new Date().setHours(0, 0, 0, 0)) / 864e5);
+  return days <= 0 ? "сегодня" : days === 1 ? "завтра" : `через ${days} ${plural(days, "день", "дня", "дней")}`;
+}
+// Mistakes waiting for a later day, soonest first.
+const upcomingReviews = () => S.set.questions
+  .filter((q) => S.review[q.id] && !S.review[q.id].done && !isDue(S.review[q.id]))
+  .sort((a, b) => S.review[a.id].due - S.review[b.id].due || a.n - b.n);
 
 function matches(q) {
   if (S.ui.skill !== "all" && q.skill !== S.ui.skill) return false;
@@ -613,6 +621,7 @@ function renderSidebar() {
         return `<button class="qcell ${cls}" style="--c:${skillOf(q).color}" data-action="go" data-id="${q.id}" aria-label="Вопрос ${q.n}"${q.id === S.ui.cur ? ' aria-current="true"' : ""}>${q.n}</button>`;
       }).join("")}</div>
     </div>
+    ${S.ui.status === "review" ? upcomingHtml() : ""}
     <div>
       <div class="side-label">Статистика</div>
       <div class="stat-rows">${stats}</div>
@@ -623,6 +632,23 @@ function renderSidebar() {
       <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;padding:0 6px;margin-left:-6px" data-action="backup">${icon("download", "icon-sm")} Сохранить копию прогресса</button>
     </div>`;
   $(".qcell.current", $("#sidebar"))?.scrollIntoView({ block: "nearest" });
+}
+
+function upcomingHtml() {
+  const list = upcomingReviews();
+  if (!list.length) return "";
+  const groups = new Map();
+  for (const q of list) {
+    const label = whenDue(S.review[q.id]);
+    groups.set(label, [...(groups.get(label) || []), q]);
+  }
+  return `<div>
+    <div class="side-label"><span>Скоро в повторении</span><span>${list.length}</span></div>
+    <div class="upcoming">${[...groups].map(([label, qs]) => `
+      <div class="up-row"><span class="up-when">${label}</span>
+        <span class="up-nums">${qs.map((q) => `<span class="up-num" style="--c:${skillOf(q).color}" title="${esc(q.skill)}">${q.n}</span>`).join("")}</span></div>`).join("")}
+    </div>
+  </div>`;
 }
 
 function choicesHtml(q, pr, orig) {
@@ -668,8 +694,10 @@ function feedbackHtml(q, pr) {
       <div class="ftext"><strong>Верно!</strong>Правильный ответ — ${answer}</div></div>`;
   }
   const head = pr.revealed ? "Ответ показан" : `Неверно${pr.c ? ` — вы выбрали ${esc(pr.c)}` : ""}`;
+  const queued = !inReview(q) && S.review[q.id] && !S.review[q.id].done;
   return `<div class="feedback bad" role="status"><div class="fic">${icon("x")}</div>
-    <div class="ftext"><strong>${head}</strong>Правильный ответ — ${answer}</div>
+    <div class="ftext"><strong>${head}</strong>Правильный ответ — ${answer}
+      ${queued ? `<span class="fnote">${icon("clock", "icon-sm")} Вопрос добавлен в повторение ошибок — вернётся ${whenDue(S.review[q.id])}.</span>` : ""}</div>
     ${inReview(q) ? "" : `<button class="btn btn-outline btn-sm" data-action="retry">${icon("rotate", "icon-sm")} Ещё раз</button>`}</div>`;
 }
 
@@ -695,6 +723,13 @@ function renderQuestion(scrollTop = false) {
   const list = visible();
   const q = cur();
   if (!q || !list.length) {
+    if (S.ui.status === "review") {
+      const next = upcomingReviews();
+      main.innerHTML = `<div class="empty"><h3>На сегодня повторять нечего</h3>
+        <p>${next.length ? `Ошибки возвращаются на следующий день после ответа. Ближайшие: ${next.slice(0, 8).map((x) => `№${x.n} — ${whenDue(S.review[x.id])}`).join(", ")}${next.length > 8 ? "…" : ""}.` : "Все ошибки закреплены или их пока нет."}</p>
+        <button class="btn btn-outline" data-action="today-new">Решать новые вопросы</button></div>`;
+      return;
+    }
     main.innerHTML = `<div class="empty"><h3>Здесь пусто</h3><p>По выбранным фильтрам вопросов нет.</p>
       <button class="btn btn-outline" data-action="clear-filters">Сбросить фильтры</button></div>`;
     return;
