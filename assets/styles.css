@@ -564,6 +564,18 @@ kbd {
 .review-banner .icon { color: var(--warn); }
 .fnote { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px; color: var(--text-2); }
 .fnote .icon { color: var(--warn); }
+.fnote.time .icon { color: var(--muted); }
+.fnote.time.fast .icon { color: var(--ok); }
+.fnote.time.over .icon { color: var(--bad); }
+.qtimer {
+  display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px;
+  font: 600 12.5px var(--font-ui); font-variant-numeric: tabular-nums; color: var(--text-2);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.qtimer .icon { color: var(--ok); }
+.qtimer.over .icon, .qtimer.over b { color: var(--warn); }
+.qtimer.paused { opacity: .55; }
+.qtimer.paused .icon { color: var(--muted); }
 .upcoming { display: flex; flex-direction: column; gap: 8px; }
 .up-row { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: start; font-size: 12.5px; }
 .up-when { color: var(--muted); padding-top: 3px; }

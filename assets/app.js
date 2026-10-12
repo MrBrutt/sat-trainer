@@ -2,6 +2,7 @@ import { parseQuestionBank, openPdf, renderRegion, plain } from "./parser.js";
 import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 import { createAssistant } from "./assistant.js";
 import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, REVIEW_DAYS, dayKey } from "./today.js";
+import { createTimer, fmtTime, paceFor } from "./timer.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -17,6 +18,7 @@ const KEY = {
   chats: "sat-trainer:chats:v1",
   review: "sat-trainer:review:v1",
   activity: "sat-trainer:activity:v1",
+  timing: "sat-trainer:timing:v1",
   aiTier: "sat-trainer:ai-tier",
 };
 const PALETTE = ["#3b82f6", "#14b8a6", "#8b5cf6", "#f59e0b", "#ec4899", "#22c55e", "#ef4444", "#0ea5e9", "#a855f7", "#84cc16"];
@@ -119,6 +121,7 @@ const ICONS = {
   today: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/>',
   target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
   bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  timer: '<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
 };
@@ -183,6 +186,7 @@ ai = createAssistant({
   onAvailable: () => { if (S.set && $("#main")) renderAll(); },
   onThreadsChanged: () => { if (S.set && $("#main") && S.ui.view === "questions") renderQuestion(); },
 });
+const timer = createTimer({ ls, KEY, onTick: () => timerTick() });
 const today = createToday({
   S, $, icon, esc, toast, ls, KEY, plural,
   vocabDue: () => vocab.dueTotal(),
@@ -552,6 +556,30 @@ const skillOf = (q) => S.set.skills.find((s) => s.name === q.skill) || { color: 
 const cur = () => S.set.questions.find((q) => q.id === S.ui.cur);
 const statusOf = (id) => (!S.progress[id] ? "todo" : S.progress[id].ok ? "right" : "wrong");
 const isOriginal = (q) => S.ui.original[q.id] ?? q.hasFigure;
+// Each attempt is timed on its own: a first answer and a review of the same question.
+const timingKey = (q) => (inReview(q) ? `r:${q.id}` : q.id);
+function timerTick() {
+  const q = S.set && S.ui.view === "questions" ? cur() : null;
+  timer.sync(q && !answerOf(q) ? timingKey(q) : null);
+  const el = document.getElementById("qtimer");
+  if (!el || !q) return;
+  const st = timer.state();
+  el.querySelector("b").textContent = fmtTime(st.ms);
+  el.classList.toggle("paused", !st.running);
+  el.classList.toggle("over", st.ms > paceFor(q));
+  el.title = st.running ? `Время на вопрос · темп SAT ${fmtTime(paceFor(q))}` : st.idle ? "Пауза: 3 минуты без действий" : "Пауза: вкладка не активна";
+}
+// Average time of first answers (optionally for one skill).
+function avgTime(pred = () => true) {
+  const ms = S.set.questions.filter((q) => pred(q) && S.progress[q.id]?.ms > 0).map((q) => S.progress[q.id].ms);
+  return ms.length ? ms.reduce((a, b) => a + b, 0) / ms.length : 0;
+}
+function timeNote(q, pr) {
+  if (!pr?.ms) return "";
+  const pace = paceFor(q), avg = avgTime();
+  const cls = pr.ms <= pace ? "fast" : pr.ms <= pace * 1.5 ? "slow" : "over";
+  return `<span class="fnote time ${cls}">${icon("timer", "icon-sm")} ${fmtTime(pr.ms)} на вопрос${avg ? ` · в среднем ${fmtTime(avg)}` : ""} · темп SAT ${fmtTime(pace)}</span>`;
+}
 // Reviewing a mistake shows the question fresh; the first answer stays in S.progress for the statistics.
 const inReview = (q) => S.ui.status === "review" && (isDue(S.review[q.id]) || !!S.attempt[q.id]);
 const answerOf = (q) => (inReview(q) ? S.attempt[q.id] || null : S.progress[q.id]);
@@ -610,6 +638,7 @@ function showTrainer() {
 
 function renderAll(scrollTop = false) {
   renderTopbar();
+  queueMicrotask(timerTick);
   if (S.ui.view === "today") {
     vocab.hidePop();
     $("#sidebar").setAttribute("aria-label", "Обзор");
@@ -680,7 +709,8 @@ function renderSidebar() {
     const ok = sq.filter((q) => S.progress[q.id]?.ok).length;
     const bad = sq.filter((q) => S.progress[q.id] && !S.progress[q.id].ok).length;
     const pct = ok + bad ? Math.round((ok / (ok + bad)) * 100) + "%" : "—";
-    return `<div class="stat-row"><div class="top"><span class="dot" style="--c:${s.color}"></span><span class="name">${esc(s.name)}</span><span class="num">${ok + bad}/${sq.length} · ${pct}</span></div>
+    const t = avgTime((q) => q.skill === s.name);
+    return `<div class="stat-row"><div class="top"><span class="dot" style="--c:${s.color}"></span><span class="name">${esc(s.name)}</span><span class="num">${ok + bad}/${sq.length} · ${pct}${t ? ` · ⌀${fmtTime(t)}` : ""}</span></div>
       <div class="split-bar"><span class="ok" style="width:${(ok / sq.length) * 100}%"></span><span class="bad" style="width:${(bad / sq.length) * 100}%"></span></div></div>`;
   }).join("");
   const date = new Date(S.set.importedAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
@@ -790,12 +820,13 @@ function feedbackHtml(q, pr) {
   const answer = q.correct || esc(q.correctText);
   if (pr.ok) {
     return `<div class="feedback ok" role="status"><div class="fic">${icon("check")}</div>
-      <div class="ftext"><strong>Верно!</strong>Правильный ответ — ${answer}</div></div>`;
+      <div class="ftext"><strong>Верно!</strong>Правильный ответ — ${answer}${timeNote(q, pr)}</div></div>`;
   }
   const head = pr.revealed ? "Ответ показан" : `Неверно${pr.c ? ` — вы выбрали ${esc(pr.c)}` : ""}`;
   const queued = !inReview(q) && S.review[q.id] && !S.review[q.id].done;
   return `<div class="feedback bad" role="status"><div class="fic">${icon("x")}</div>
     <div class="ftext"><strong>${head}</strong>Правильный ответ — ${answer}
+      ${timeNote(q, pr)}
       ${queued ? `<span class="fnote">${icon("clock", "icon-sm")} Вопрос добавлен в повторение ошибок — вернётся ${whenDue(S.review[q.id])}.</span>` : ""}</div>
     ${inReview(q) ? "" : `<button class="btn btn-outline btn-sm" data-action="retry">${icon("rotate", "icon-sm")} Ещё раз</button>`}</div>`;
 }
@@ -842,6 +873,7 @@ function renderQuestion(scrollTop = false) {
     ${review ? reviewBanner(q, pr) : ""}
     <div class="qhead">
       <div class="qnum">Вопрос ${q.n} <span>· ${pos + 1} из ${list.length}</span></div>
+      ${!pr && !S.ui.hideTimer ? `<span class="qtimer" id="qtimer">${icon("timer", "icon-sm")}<b>0:00</b></span>` : ""}
       <span class="badge badge-skill" style="--c:${sk.color}"><span class="dot"></span>${esc(q.skill)}</span>
       ${q.difficulty ? `<span class="badge">${diffBars(q.difficulty)} ${esc(q.difficulty)}</span>` : ""}
       <div class="spacer"></div>
@@ -871,6 +903,7 @@ function renderQuestion(scrollTop = false) {
     </div>
   </div>`;
   S.anim = null;
+  timerTick();
   ai.follow();
   if (orig || (pr && isOriginal(q))) fillOriginals(q);
   if (scrollTop) window.scrollTo({ top: 0 });
@@ -919,17 +952,18 @@ function step(d) {
 
 // Records an answer: a review attempt reschedules the mistake, a first attempt may start a review.
 function record(q, result) {
+  result = { ...result, ms: timer.take(timingKey(q)) };
   if (inReview(q)) {
     S.attempt[q.id] = result;
-    S.review[q.id] = gradeReview(S.review[q.id], result.ok);
+    S.review[q.id] = { ...gradeReview(S.review[q.id], result.ok), lastMs: result.ms };
     saveReview();
-    today.log("r", result.ok);
+    today.log("r", result.ok, result.ms);
     return;
   }
   S.progress[q.id] = result;
   saveProgress();
   if (!result.ok) { S.review[q.id] = enqueueReview(S.review[q.id]); saveReview(); }
-  today.log("q", result.ok);
+  today.log("q", result.ok, result.ms);
 }
 
 function answer(letter) {
@@ -957,6 +991,7 @@ function retry() {
   if (!q || inReview(q)) return;
   delete S.progress[q.id];
   delete S.struck[q.id];
+  timer.reset(q.id);   // a new attempt starts from zero
   saveProgress();
   renderAll();
 }
@@ -1056,6 +1091,7 @@ const ACTIONS = {
     toast("Прогресс сброшен");
   },
   wipe: async () => {
+    ls.del(KEY.timing);
     toggleMenu(false);
     if (!(await confirmDialog("Удалить все данные?", "Из браузера будут удалены загруженный PDF, вопросы, прогресс и отметки.", "Удалить", true))) return;
     try { await db.clear(); } catch { /* nothing stored */ }
@@ -1075,6 +1111,7 @@ const ACTIONS = {
   ...ai.actions,
   ...today.actions,
   "today-review": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "review"); },
+  "timer-visible": () => { S.ui.hideTimer = !S.ui.hideTimer; saveUi(); renderAll(); toast(S.ui.hideTimer ? "Таймер скрыт — время всё равно считается" : "Таймер показан"); },
   "today-new": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "todo"); },
   "today-words": () => { S.ui.view = "vocab"; S.ui.vtab = "study"; S.session = null; saveUi(); renderAll(true); },
   "open-sidebar": () => document.body.classList.add("sidebar-open"),

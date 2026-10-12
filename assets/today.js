@@ -1,5 +1,6 @@
 // Daily routine: spaced review of mistakes, the "Today" plan, streaks, activity calendar and achievements.
 import { startOfDay } from "./vocab.js";
+import { fmtTime, paceFor } from "./timer.js";
 
 const DAY = 86400000;
 export const REVIEW_DAYS = [1, 3, 7];   // a mistake comes back after 1, 3, then 7 days; 3 right in a row = fixed
@@ -106,8 +107,9 @@ export function createToday(ctx) {
     checkAchievements();
   }
 
-  function log(kind, ok) {
+  function log(kind, ok, ms = 0) {
     const d = day();
+    if (ms > 0 && kind !== "w") { d.ms = (d.ms || 0) + ms; d.tq = (d.tq || 0) + 1; }
     if (kind === "q") { d.q++; if (ok) d.ok++; }
     if (kind === "r") { d.r++; if (ok) d.rok++; }
     if (kind === "w") d.w++;
@@ -320,6 +322,13 @@ export function createToday(ctx) {
           <div class="chips">${[5, 10, 15, 20, 30].map((k) => `<button class="chip ${S.activity.goalNew === k ? "active" : ""}" data-action="today-goal" data-n="${k}">${k}</button>`).join("")}</div>
         </div>
         <div class="setting">
+          <span>Таймер во время решения</span>
+          <div class="chips">
+            <button class="chip ${S.ui.hideTimer ? "" : "active"}" ${S.ui.hideTimer ? 'data-action="timer-visible"' : ""}>Показывать</button>
+            <button class="chip ${S.ui.hideTimer ? "active" : ""}" ${S.ui.hideTimer ? "" : 'data-action="timer-visible"'}>Скрыть</button>
+          </div>
+        </div>
+        <div class="setting">
           <span>Ежедневное напоминание</span>
           ${inClaude
             ? `<span class="muted">Поставьте повторяющееся напоминание в Календаре или Напоминаниях на телефоне — например, на ${esc(S.activity.remind)}.</span>`
@@ -332,6 +341,22 @@ export function createToday(ctx) {
     const hm = main.querySelector(".hm-wrap");
     if (hm) hm.scrollLeft = hm.scrollWidth;
     if (scrollTop) window.scrollTo({ top: 0 });
+  }
+
+  function timeBlock(row) {
+    const timed = S.set.questions.filter((q) => S.progress[q.id]?.ms > 0);
+    if (!timed.length) return "";
+    const avg = timed.reduce((a, q) => a + S.progress[q.id].ms, 0) / timed.length;
+    const inPace = timed.filter((q) => S.progress[q.id].ms <= paceFor(q)).length;
+    const d = S.activity.days[today()];
+    return `<div>
+      <div class="side-label">Время на вопрос</div>
+      <div class="ov">
+        ${row("В среднем", fmtTime(avg), `темп SAT ${fmtTime(paceFor(timed[0]))}`)}
+        ${d?.tq ? row("Сегодня", fmtTime(d.ms / d.tq), `${d.tq} ${plural(d.tq, "ответ", "ответа", "ответов")}`) : ""}
+        ${row("Уложились в темп", `${Math.round((inPace / timed.length) * 100)}%`)}
+      </div>
+    </div>`;
   }
 
   function renderSidebar() {
@@ -363,6 +388,7 @@ export function createToday(ctx) {
           ${row("На неделе", weekReviews, "повторов")}
         </div>
       </div>
+      ${timeBlock(row)}
       <div>
         <div class="side-label">Словарь</div>
         <div class="ov">${row("Пройдено слов", ctx.wordsStudied())}${row("На сегодня", ctx.vocabDue(), "карточек")}</div>
@@ -383,7 +409,8 @@ export function createToday(ctx) {
     for (const [k, d] of Object.entries(incoming.days)) {
       const mine = S.activity.days[k];
       S.activity.days[k] = mine
-        ? { q: Math.max(mine.q, d.q || 0), ok: Math.max(mine.ok, d.ok || 0), r: Math.max(mine.r, d.r || 0), rok: Math.max(mine.rok, d.rok || 0), w: Math.max(mine.w, d.w || 0), closed: mine.closed || d.closed }
+        ? { q: Math.max(mine.q, d.q || 0), ok: Math.max(mine.ok, d.ok || 0), r: Math.max(mine.r, d.r || 0), rok: Math.max(mine.rok, d.rok || 0), w: Math.max(mine.w, d.w || 0),
+            ms: Math.max(mine.ms || 0, d.ms || 0), tq: Math.max(mine.tq || 0, d.tq || 0), closed: mine.closed || d.closed }
         : d;
     }
     S.activity.bestRun = Math.max(S.activity.bestRun || 0, incoming.bestRun || 0);
