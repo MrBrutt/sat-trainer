@@ -992,7 +992,26 @@ window.addEventListener("drop", (e) => {
 
 ai.init();
 
+// GitHub Pages lets browsers keep files for 10 minutes. On start, compare with the deployed
+// version and reload once when a newer one is out (the claude.ai build is always served fresh).
+async function freshen() {
+  const mine = document.querySelector('meta[name="app-version"]')?.content;
+  if (window.claude || !mine || mine === "0") return false;
+  try {
+    const res = await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" });
+    const { version } = await res.json();
+    if (!version || version === mine || sessionStorage.getItem("sat-trainer:reloaded") === version) return false;
+    sessionStorage.setItem("sat-trainer:reloaded", version);
+    await fetch(location.pathname, { cache: "reload" });   // refresh the cached page itself
+    location.reload();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 (async function boot() {
+  if (await freshen()) return;
   const src = new URLSearchParams(location.search).get("src");
   if (src) {
     const url = new URL(src, location.href);
