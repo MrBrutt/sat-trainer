@@ -758,7 +758,7 @@ function renderSidebar() {
         const at = S.ui.status === "review" ? S.attempt[q.id] : null;
         const g = !answerOf(q) && vocab.gateOf(q);
         const cls = [at ? (at.ok ? "ok" : "bad") : st === "right" ? "ok" : st === "wrong" ? "bad" : "",
-          rv && !rv.done ? "rq" : "", rv?.done ? "fixed" : "", g && !g.loading && g.missing.length ? "locked" : "",
+          rv && !rv.done ? "rq" : "", rv?.done ? "fixed" : "", g && !g.loading && g.missing.length ? "closed" : "",
           q.id === S.ui.cur ? "current" : "", S.flags.has(q.id) ? "flag" : ""].join(" ");
         const lockNote = g && !g.loading && g.missing.length ? `, сначала ${g.missing.length} ${plural(g.missing.length, "слово", "слова", "слов")}` : "";
         return `<button class="qcell ${cls}" style="--c:${skillOf(q).color}" data-action="go" data-id="${q.id}" aria-label="Вопрос ${q.n}${lockNote}" title="${lockNote ? `Вопрос ${q.n}${lockNote}` : ""}"${q.id === S.ui.cur ? ' aria-current="true"' : ""}>${q.n}</button>`;

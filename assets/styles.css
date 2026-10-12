@@ -559,8 +559,8 @@ kbd {
 .flash-sample { margin: 10px 0 0; font: italic 16px/1.55 var(--font-read); color: var(--text-2); }
 
 /* ---------------------------------------------------------------- words before a question */
-.qcell.locked { border-style: dashed; color: var(--muted); background: transparent; }
-.qcell.locked::before { opacity: .3; }
+.qcell.closed { border-style: dashed; color: var(--muted); background: transparent; }   /* not .locked: that one is the explanation placeholder */
+.qcell.closed::before { opacity: .3; }
 .prep { padding: 24px 26px 22px; }
 .prep-loading { display: flex; gap: 10px; align-items: center; color: var(--muted); }
 .prep-head { display: flex; gap: 14px; align-items: flex-start; }
