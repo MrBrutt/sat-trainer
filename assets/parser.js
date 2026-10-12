@@ -70,7 +70,8 @@ async function analyzePage(page, fontStats) {
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  // "print" intent renders without requestAnimationFrame, so import keeps going in a background tab
+  await page.render({ canvasContext: ctx, viewport: vp, intent: "print" }).promise;
 
   const W = canvas.width, H = canvas.height;
   const rgba = ctx.getImageData(0, 0, W, H).data;

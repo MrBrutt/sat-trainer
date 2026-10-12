@@ -1,4 +1,5 @@
 import { parseQuestionBank, openPdf, renderRegion, plain } from "./parser.js";
+import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -9,6 +10,8 @@ const KEY = {
   flags: "sat-trainer:flags:v1",
   ui: "sat-trainer:ui:v1",
   theme: "sat-trainer:theme",
+  vocab: "sat-trainer:vocab:v1",
+  dict: "sat-trainer:dict:v1",
 };
 const PALETTE = ["#3b82f6", "#14b8a6", "#8b5cf6", "#f59e0b", "#ec4899", "#22c55e", "#ef4444", "#0ea5e9", "#a855f7", "#84cc16"];
 // College Board's own ordering of Reading and Writing skills
@@ -54,7 +57,9 @@ const S = {
   set: null,
   progress: ls.get(KEY.progress, {}),          // id -> { c, ok, t, revealed? }
   flags: new Set(ls.get(KEY.flags, [])),
-  ui: Object.assign({ skill: "all", status: "all", cur: null, original: {} }, ls.get(KEY.ui, {})),
+  ui: Object.assign({ skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" }, ls.get(KEY.ui, {})),
+  vocab: Object.assign(VOCAB_DEFAULT(), ls.get(KEY.vocab, {})),
+  session: null,                               // current flashcard session
   struck: {},                                  // id -> Set of crossed-out letters (this session)
   explainOpen: {},
   anim: null,
@@ -63,7 +68,8 @@ const S = {
 };
 const saveProgress = () => ls.set(KEY.progress, S.progress);
 const saveFlags = () => ls.set(KEY.flags, [...S.flags]);
-const saveUi = () => ls.set(KEY.ui, S.ui);
+const saveUi = () => ls.set(KEY.ui, { ...S.ui, vq: "" }); // search text is not kept between visits
+S.ui.vq = "";
 
 // ---------------------------------------------------------------- helpers
 
@@ -88,6 +94,11 @@ const ICONS = {
   alert: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
   eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
   ban: '<circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  cards: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+  list: '<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>',
+  book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
 };
@@ -128,6 +139,14 @@ function confirmDialog(title, text, okLabel, danger = false) {
 }
 
 const isDark = () => document.documentElement.dataset.theme === "dark";
+
+const vocab = createVocab({
+  S, $, icon, esc, toast, ls, KEY, plural, confirmDialog,
+  saveUi: () => saveUi(),
+  current: () => cur(),
+  openQuestion: (id) => { S.ui.view = "questions"; saveUi(); renderTopbar(); go(id); },
+  refreshChrome: () => renderTopbar(),
+});
 
 // ---------------------------------------------------------------- rich text
 
@@ -314,7 +333,7 @@ async function importFile(file) {
 // ---------------------------------------------------------------- progress backup
 
 function backupProgress() {
-  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags] };
+  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags], vocab: S.vocab };
   const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -341,10 +360,11 @@ async function restoreProgress(file) {
     if (!mine || (p.t || 0) > (mine.t || 0)) { S.progress[id] = p; added++; }
   }
   (data.flags || []).forEach((id) => S.flags.add(id));
+  const words = vocab.merge(data.vocab);
   saveProgress();
   saveFlags();
   if (S.set) renderAll();
-  toast(`Восстановлено ответов: ${added}`);
+  toast(`Восстановлено ответов: ${added}${words ? `, слов: ${words}` : ""}`);
 }
 
 function keepStorage() {
@@ -415,12 +435,22 @@ function showTrainer() {
   $("#file2").addEventListener("change", (e) => { importFile(e.target.files[0]); e.target.value = ""; });
   $("#file3").addEventListener("change", (e) => { importFile(e.target.files[0]); e.target.value = ""; });
   keepStorage();
+  vocab.rebuild();
+  S.session = null;
   if (!cur()) ensureCurrent();
   renderAll(true);
 }
 
 function renderAll(scrollTop = false) {
   renderTopbar();
+  if (S.ui.view === "vocab") {
+    vocab.hidePop();
+    $("#sidebar").setAttribute("aria-label", "Словарь");
+    vocab.renderSidebar();
+    vocab.renderMain(scrollTop);
+    return;
+  }
+  $("#sidebar").setAttribute("aria-label", "Список вопросов");
   renderSidebar();
   renderQuestion(scrollTop);
 }
@@ -434,6 +464,10 @@ function renderTopbar() {
     <button class="icon-btn only-mobile" data-action="open-sidebar" aria-label="Список вопросов">${icon("menu")}</button>
     <div class="brand">${LOGO}<span>SAT Trainer</span></div>
     <div class="set-title"><span class="set-name">${esc(S.set.title)}</span><span class="set-sub">${esc(S.set.subtitle)}</span></div>
+    <nav class="tabs" aria-label="Разделы">
+      <button class="tab ${S.ui.view !== "vocab" ? "active" : ""}" data-action="view" data-view="questions" aria-current="${S.ui.view !== "vocab"}">${icon("book", "icon-sm")}<span>Вопросы</span></button>
+      <button class="tab ${S.ui.view === "vocab" ? "active" : ""}" data-action="view" data-view="vocab" aria-current="${S.ui.view === "vocab"}">${icon("cards", "icon-sm")}<span>Словарь</span>${(() => { const n = vocab.dueTotal(); return n ? `<span class="tab-badge" title="Карточек на сегодня">${n}</span>` : ""; })()}</button>
+    </nav>
     <div class="spacer"></div>
     <div class="score" title="Решено ${answered} из ${qs.length}, верно ${right}">
       <div class="ring" style="--p:${answered / qs.length};--ok-p:${right / qs.length}"></div>
@@ -593,6 +627,7 @@ function renderQuestion(scrollTop = false) {
     ${choicesHtml(q, pr, orig)}
     ${feedbackHtml(q, pr)}
     ${explainHtml(q, pr)}
+    ${pr ? vocab.questionWordsHtml(q) : ""}
     <nav class="qnav" aria-label="Навигация по вопросам">
       <button class="btn btn-outline" data-action="prev" ${pos <= 0 ? "disabled" : ""} aria-label="Предыдущий вопрос">${icon("left")}<span class="btn-label">Назад</span></button>
       <div class="spacer"></div>
@@ -757,7 +792,7 @@ const ACTIONS = {
   restore: () => { toggleMenu(false); $("#file3").click(); },
   "reset-progress": async () => {
     toggleMenu(false);
-    if (!(await confirmDialog("Сбросить прогресс?", "Все ответы и статистика будут удалены. Сами вопросы останутся.", "Сбросить", true))) return;
+    if (!(await confirmDialog("Сбросить прогресс?", "Все ответы и статистика по вопросам будут удалены. Вопросы и словарь останутся.", "Сбросить", true))) return;
     S.progress = {};
     S.struck = {};
     saveProgress();
@@ -768,11 +803,18 @@ const ACTIONS = {
     toggleMenu(false);
     if (!(await confirmDialog("Удалить все данные?", "Из браузера будут удалены загруженный PDF, вопросы, прогресс и отметки.", "Удалить", true))) return;
     try { await db.clear(); } catch { /* nothing stored */ }
-    [KEY.progress, KEY.flags, KEY.ui].forEach(ls.del);
-    Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdf: null, pdfBytes: null });
-    S.ui = { skill: "all", status: "all", cur: null, original: {} };
+    [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict].forEach(ls.del);
+    Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdf: null, pdfBytes: null, vocab: VOCAB_DEFAULT(), session: null });
+    S.ui = { skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" };
     showLanding();
   },
+  view: (el) => {
+    S.ui.view = el.dataset.view;
+    saveUi();
+    document.body.classList.remove("sidebar-open");
+    renderAll(true);
+  },
+  ...vocab.actions,
   "open-sidebar": () => document.body.classList.add("sidebar-open"),
   "close-sidebar": () => document.body.classList.remove("sidebar-open"),
 };
@@ -787,7 +829,13 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if (!S.set || !$("#main") || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.target.closest("input, textarea, select, dialog")) {
+  const inField = e.target instanceof Element && !!e.target.closest("input, textarea, select, dialog");
+  if (S.ui.view === "vocab") {
+    if (e.key === "Escape") document.body.classList.remove("sidebar-open");
+    else if (!inField && vocab.onKey(e)) e.preventDefault();
+    return;
+  }
+  if (inField) {
     if (e.key === "Enter" && e.target.id === "spr") checkSpr();
     return;
   }
@@ -805,6 +853,9 @@ document.addEventListener("keydown", (e) => {
   else return;
   e.preventDefault();
 });
+
+document.addEventListener("input", (e) => { if (S.set) vocab.onInput(e); });
+document.addEventListener("submit", (e) => { if (S.set) vocab.onSubmit(e); });
 
 // a PDF dropped anywhere replaces the current set
 window.addEventListener("dragover", (e) => { if (S.set) e.preventDefault(); });
