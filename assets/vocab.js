@@ -1,8 +1,6 @@
 // Vocabulary: builds a word deck from "Words in Context" questions and schedules reviews.
 import { plain } from "./parser.js";
 
-const Q = `["“”]`;                     // straight or curly quote
-const NOT_Q = `[^"“”]`;
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const termKey = (t) => t.trim().toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, " ");
@@ -20,79 +18,7 @@ function sentences(text) {
   return out.map((s) => s.trim()).filter(Boolean);
 }
 
-function cleanDef(d) {
-  if (!d) return null;
-  d = d.trim()
-    .replace(/^that\s+/i, "")
-    .replace(/[“”"]/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/[\s,;:—–-]+$/, "")
-    .replace(/\.$/, "");
-  if (d.length < 2 || d.length > 160) return null;
-  // explanations of why a choice fails are not definitions
-  if (/n[’']t\b|\bmake sense\b|\bthe text\b|\bthe author\b/i.test(d)) return null;
-  if (/^(?:they|it|he|she|this|these|those|there|we)\b/i.test(d)) return null;
-  return d;
-}
-
-// Keeps "carried out, entrusted, or promised" together but stops before ", until researchers found …".
-function trimClause(s) {
-  const parts = s.split(/,\s+/);
-  let out = parts[0];
-  for (let i = 1; i < parts.length; i++) {
-    const p = parts[i], words = p.split(/\s+/).length;
-    const listItem = /^or\s/i.test(p) ? words <= 6 : words <= 3 && i + 1 < parts.length && /^or\s/i.test(parts[i + 1]);
-    if (!listItem) break;
-    out += ", " + p;
-  }
-  return out;
-}
-
 export const stripArticle = (t) => t.trim().replace(/^(?:an?|the)\s+/i, "");
-
-// Finds College Board's own gloss for a term inside rationale text.
-export function findDefinition(term, text) {
-  for (const form of new Set([term.trim(), stripArticle(term)])) {
-    const d = glossFor(form, text);
-    if (d) return d;
-  }
-  return null;
-}
-
-function glossFor(term, text) {
-  const t = esc(term).replace(/\s+/g, "\\s+");
-  const qt = `${Q}${t}[,.]?${Q}`;
-  const END = `[^.;—–]+`;
-  const person = new RegExp(`(?:A\\s+person|Someone)\\s+who\\s+is\\s+${qt}\\s+(${END})`, "i");
-  const patterns = [
-    // In this context, "inertia" means a tendency …  /  "appropriate," which means suitable
-    new RegExp(`${qt}\\s*,?\\s*(?:which\\s+)?(?:in\\s+this\\s+context\\s+)?(?:would\\s+)?(?:most\\s+nearly\\s+)?means?\\s+(${END})`, "i"),
-    // "desultory," which in this context would mean …
-    new RegExp(`${qt}\\s*,?\\s*which\\s+[^.]{0,30}?mean\\s+(${END})`, "i"),
-    // "spurious," or false, …   /   "a contentious" one, or one causing controversy
-    new RegExp(`${qt}(?:\\s+one)?\\s*,?\\s+or\\s+(?:that\\s+)?(${END})`, "i"),
-    // subsumed in (meaning included in)
-    new RegExp(`(?:${qt}|\\b${t})\\s*\\((?:meaning|i\\.e\\.,?)\\s+([^)]+)\\)`, "i"),
-    // "a discernible" explanation—meaning an explanation capable of …
-    new RegExp(`${qt}[^.]{0,30}?[—–-]\\s*meaning\\s+(${END})`, "i"),
-    // "summations" would be final conclusions …  /  "deterrents to" something would mean …
-    new RegExp(`${qt}(?:\\s+(?:something|someone|one|\\w+))?\\s+would\\s+(?:most\\s+nearly\\s+)?(?:mean|be|suggest)\\s+(?!that\\b)(${END})`, "i"),
-    // A person who is "dogmatic" believes strongly …
-    person,
-    // A scheme is a plan or systematic arrangement …  /  "Succinctly" describes …
-    new RegExp(`(?:^|[.!?]\\s+)(?:An?\\s+|The\\s+)?${Q}?${t}${Q}?\\s+(?:is|are|means|describes)\\s+(${END})`, "i"),
-    // "an inconclusive" explanation—an explanation that does not resolve …
-    new RegExp(`${qt}(?:\\s+\\w+)?\\s*[—–]\\s*(an?\\s+${END})`, "i"),
-    // "to say … was "approximate" would mean that …"
-    new RegExp(`${qt}\\s+would\\s+(?:most\\s+nearly\\s+)?mean\\s+(${END})`, "i"),
-  ];
-  for (const re of patterns) {
-    const m = text.match(re);
-    const d = m && cleanDef(trimClause(m[1]));
-    if (d) return re === person ? `someone who ${d}` : d;
-  }
-  return null;
-}
 
 // Context sentence for a word the user picked themselves.
 export function makeExample(text, term, extra) {
@@ -117,6 +43,9 @@ function example(sentence, term, extra) {
   return { before: sentence.slice(0, m.index), term: m[0], after: sentence.slice(m.index + m[0].length), ...extra };
 }
 
+// Every answer choice of a "Words in Context" question becomes a card, and so does the word asked
+// about in "what does the word X most nearly mean". Definitions come from assets/data/defs.txt.
+// Sentences from a question are examples only once it is answered (the UI hides them before).
 export function buildDeck(questions) {
   const deck = new Map();
   const add = (term, data) => {
@@ -124,7 +53,6 @@ export function buildDeck(questions) {
     const key = termKey(term);
     if (!key || key.length > 40) return;
     const card = deck.get(key) || { key, term, def: null, examples: [], qids: [], role: "distractor", src: "auto", qnum: data.n };
-    if (!card.def && data.def) card.def = data.def;
     if (data.example && !card.examples.some((e) => e.before + e.term + e.after === data.example.before + data.example.term + data.example.after)) {
       card.examples.push(data.example);
     }
@@ -135,36 +63,26 @@ export function buildDeck(questions) {
 
   for (const q of questions) {
     if (!/words in context/i.test(q.skill) || !q.choices.length) continue;
-    const rat = q.rationale.map(plain).join(" ");
     const stemText = q.stem.map(plain).join(" ");
-    const prompt = plain(q.prompt);
-    const target = prompt.match(/the word ["“]([^"”]+)["”]/i);
-
+    const target = plain(q.prompt).match(/the word ["“]([^"”]+)["”]/i);
     if (target) {
       // "As used in the text, what does the word X most nearly mean?"
       const word = target[1];
-      const answer = q.choices.find((c) => c.letter === q.correct);
-      const ex = example(sentenceWith(stemText, word), word, { qid: q.id, n: q.n, kind: "passage" });
-      const meaning = answer ? plain(answer).replace(/^./, (ch) => ch.toLowerCase()) : null;
-      add(word, { def: meaning ? `в этом тексте ≈ ${meaning}` : findDefinition(word, rat), example: ex, qid: q.id, n: q.n, role: "target" });
-      continue;
+      add(word, { example: example(sentenceWith(stemText, word), word, { qid: q.id, n: q.n, kind: "passage" }), qid: q.id, n: q.n, role: "target" });
     }
-
     for (const c of q.choices) {
       const term = plain(c).trim();
       if (!term || term.split(/\s+/).length > 4) continue;
-      const def = findDefinition(term, rat);
-      let ex;
-      if (c.letter === q.correct) {
+      let ex = null;
+      if (!target && c.letter === q.correct) {
         // the passage sentence with the blank filled in
         const blankSentence = sentences(stemText).find((s) => /_{3,}/.test(s));
-        ex = blankSentence
-          ? (() => { const [b, ...rest] = blankSentence.split(/_{3,}/); return { before: b, term, after: rest.join("____"), qid: q.id, n: q.n, kind: "passage" }; })()
-          : null;
-      } else {
-        ex = example(sentenceWith(rat, term), term, { qid: q.id, n: q.n, kind: "rationale" });
+        if (blankSentence) {
+          const [b, ...rest] = blankSentence.split(/_{3,}/);
+          ex = { before: b, term, after: rest.join("____"), qid: q.id, n: q.n, kind: "passage" };
+        }
       }
-      add(term, { def, example: ex, qid: q.id, n: q.n, role: c.letter === q.correct ? "answer" : "distractor" });
+      add(term, { example: ex, qid: q.id, n: q.n, role: c.letter === q.correct ? "answer" : "distractor" });
     }
   }
   return [...deck.values()];
@@ -227,6 +145,7 @@ export function statusOf(st, known) {
 }
 
 // ---------------------------------------------------------------- dictionary fallback
+// Used for words the trainer has no definition for (e.g. a word the student adds).
 // Only the word itself is sent. Returns a string, null (no entry anywhere) or undefined (network trouble — try later).
 
 async function getJson(url, ms = 7000) {
@@ -277,36 +196,6 @@ async function freeDictionary(word) {
   const m = data?.[0]?.meanings?.[0];
   const d = m?.definitions?.[0]?.definition;
   return d ? `${m.partOfSpeech ? m.partOfSpeech + ": " : ""}${d}` : null;
-}
-
-// Russian translations from Wiktionary's translation tables (first sense first), stress marks removed.
-async function wiktionaryRu(word) {
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 8000);
-  try {
-    const r = await fetch(`https://en.wiktionary.org/api/rest_v1/page/html/${encodeURIComponent(word)}`, { signal: ctl.signal });
-    if (!r.ok) return null;
-    const doc = new DOMParser().parseFromString(await r.text(), "text/html");
-    const out = [];
-    for (const el of doc.querySelectorAll('[lang="ru"]')) {
-      const t = el.textContent.normalize("NFD").replace(/\u0301/g, "").normalize("NFC").trim();
-      if (/[а-яё]/i.test(t) && t.length < 40 && !out.includes(t)) out.push(t);
-      if (out.length >= 4) break;
-    }
-    return out.length ? out.join(", ") : null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-// Definition (and, when Wiktionary has one, a Russian translation) for a word: {d, ru} | null | undefined.
-export async function lookupWithRu(term) {
-  const d = await lookup(term);
-  if (!d) return d;
-  const base = (d.match(/\(форма слова ([A-Za-z-]+)\)$/) || [])[1] || stripArticle(term.trim().toLowerCase());
-  return { d, ru: await wiktionaryRu(base) };
 }
 
 export async function lookup(term) {

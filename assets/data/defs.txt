@@ -1,0 +1,1958 @@
+# SAT Trainer word definitions, written for this trainer (not taken from College Board materials).
+# key|part of speech|definition|example
+proficient|adj.|very good at something because of skill and practice|She became proficient in Spanish after two years abroad.
+dogmatic|adj.|sure that your own beliefs are right and unwilling to consider other views|He was so dogmatic that no argument could change his mind.
+ambiguous|adj.|having more than one possible meaning; unclear|The ending of the film is ambiguous, so viewers argue about it.
+unpretentious|adj.|simple and modest; not trying to seem more important or impressive than it is|They ate at an unpretentious little café near the station.
+surmised|v.|guessed or concluded something from limited evidence (past of surmise)|Seeing the wet umbrella, she surmised that it was raining.
+contrived|adj.|obviously planned or artificial rather than natural; not believable|The plot felt contrived, full of lucky coincidences.
+questioned|v.|1) asked someone questions; 2) expressed doubt about whether something is true or right|Several scientists questioned the accuracy of the results.
+regretted|v.|felt sorry or sad about something you did or did not do (past of regret)|He regretted not studying harder for the test.
+supplemental to|phr.|added to something to complete it or make it stronger; extra|The videos are supplemental to the textbook, not a replacement for it.
+predictive of|phr.|showing what is likely to happen; able to signal a future result|Early reading habits are often predictive of later success in school.
+independent of|phr.|not connected to or affected by something else|The two experiments were run independent of each other.
+subsumed in|phr.|included within something larger, as one part of it|Their small company was subsumed in a large international firm.
+circumvent|v.|to find a way around a rule, problem, or obstacle; to avoid|They built a new road to circumvent the busy town center.
+corroborate|v.|to support or confirm a claim with new evidence|A second witness corroborated her account of the accident.
+disseminate|v.|to spread information or ideas widely|The health agency disseminated the guidelines to every school.
+implement|v.|to put a plan, decision, or system into action|The city will implement the new recycling program in May.
+adorn|v.|to decorate; to make more beautiful by adding something|Lanterns adorned the streets during the festival.
+optimize|v.|to make something work as well or effectively as possible|Engineers optimized the engine to use less fuel.
+endorse|v.|to publicly approve of or support someone or something|The famous chef endorsed the new brand of knives.
+counteract|v.|to reduce or stop the effect of something by doing the opposite|Drinking water helps counteract the effects of the heat.
+desultory|adj.|done without a plan, purpose, or enthusiasm; jumping from one thing to another|They made desultory conversation while waiting for the bus.
+spurious|adj.|false or fake, although it may look genuine; not based on good reasoning|The study found a spurious link that disappeared in larger samples.
+veritable|adj.|real; used to stress that a description is accurate (a true example of)|After the storm, the garden was a veritable swamp.
+notional|adj.|existing only as an idea or theory, not in reality|The plan had only notional support; no one actually funded it.
+summations|n.|summaries of the main points, especially at the end of a discussion|The lawyers gave their summations to the jury on Friday.
+conjectures|n.|guesses or opinions formed without complete evidence|Without data, his ideas about the cause remain conjectures.
+conclusions|n.|1) final judgments reached by reasoning; 2) ends of something|The team drew different conclusions from the same data.
+exemplifications|n.|examples that illustrate something; the act of showing by example|The museum's paintings are exemplifications of early modern style.
+repudiates|v.|rejects something as untrue or refuses to accept it (form of repudiate)|The author repudiates the rumor that she copied the story.
+proclaims|v.|announces something publicly and proudly (form of proclaim)|The banner proclaims the town the best place to live.
+foretells|v.|predicts what will happen in the future (form of foretell)|In the legend, an old woman foretells the king's fall.
+recants|v.|publicly takes back a statement or belief one held before (form of recant)|Under pressure, the witness recants his earlier testimony.
+unvarying|adj.|never changing; always the same|His unvarying routine began with a walk at six a.m.
+musical|adj.|1) related to music; 2) having a pleasant sound like music|Her laugh had a soft, musical quality.
+exclusive|adj.|1) limited to a particular person or group; 2) expensive and not open to everyone|The interview was exclusive to one newspaper.
+modest|adj.|1) not large or great; moderate; 2) not boasting about yourself|The company made a modest profit this year.
+imaginative|adj.|having or showing creativity and new ideas|The children built an imaginative castle from cardboard.
+superficial|adj.|only on the surface; not deep or thorough|He had only a superficial knowledge of the subject.
+exhaustive|adj.|complete and very thorough; covering every detail|The report includes an exhaustive list of sources.
+questionable|adj.|causing doubt; possibly wrong, untrue, or dishonest|The study used questionable methods, so few trust its results.
+transposed with|phr.|switched in position or order with something else|In the typo, the letter "e" was transposed with the letter "i".
+mediated by|phr.|1) passing through or controlled by something in between; 2) settled with the help of a go-between|The effect of the drug is mediated by a protein in the liver.
+decoupled from|phr.|separated from something it used to be connected with|In the new system, salaries are decoupled from years of service.
+antecedent to|phr.|happening or existing before something else|The early drafts were antecedent to the published novel.
+contentious|adj.|causing or likely to cause strong disagreement|The new tax was a contentious issue in the election.
+prudent|adj.|careful and sensible, especially about avoiding risk|It is prudent to save some money for emergencies.
+unworkable|adj.|not able to function or succeed in practice|The plan looked good on paper but proved unworkable.
+optimistic|adj.|hopeful and expecting good things to happen|She is optimistic about her chances of getting the job.
+haphazard|adj.|done without order, plan, or method; random|Books were stacked in a haphazard way all over the floor.
+ineffectual|adj.|not producing the intended result; lacking the ability to get things done|His ineffectual complaints changed nothing.
+arduous|adj.|very difficult and tiring; needing a lot of effort|The climb to the summit was long and arduous.
+authenticated by|phr.|proven to be genuine or true by someone or something|The painting was authenticated by an expert in Dutch art.
+habituated to|phr.|used to something because of long exposure|The birds have become habituated to people and no longer fly away.
+contemporary with|phr.|living or happening at the same time as|Shakespeare was contemporary with Cervantes.
+concentrated among|phr.|gathered mostly within one group rather than spread widely|Wealth in the region is concentrated among a few families.
+overlooked|v./adj.|1) failed to notice or consider; 2) not given the attention it deserves|Her early work was overlooked by critics for decades.
+powerful|adj.|having great strength, influence, or effect|The speech had a powerful effect on the audience.
+routine|adj./n.|1) ordinary and regular, done as a normal part of things; 2) a fixed way of doing things|The doctor said it was just a routine check-up.
+variable|adj./n.|1) likely to change; not consistent; 2) a factor that can change in an experiment|The weather in spring is highly variable.
+stymie|v.|to block or prevent progress; to hinder|A lack of funding stymied the research project.
+compound|v./n./adj.|v. to make a problem worse by adding to it; n. a mixture of two or more parts; adj. made of several parts|Missing the bus compounded his bad morning.
+disparage|v.|to speak about someone or something as if it has little value; to belittle|He often disparages other people's ideas in meetings.
+outstrip|v.|to become larger, faster, or more successful than something else; to exceed|Demand for the toy quickly outstripped supply.
+deceptive|adj.|giving a false impression; misleading|The calm water was deceptive; the current was very strong.
+innocuous|adj.|harmless; not likely to offend or cause trouble|The question seemed innocuous, but it upset her.
+novel|adj./n.|adj. new and original, unlike anything before; n. a long fictional book|The scientists used a novel method to measure the temperature.
+impractical|adj.|not sensible or realistic to do or use in real life|High heels are impractical for a long hike.
+exploit|v./n.|v. 1) to use something fully to gain benefit; 2) to treat someone unfairly for your own gain; n. a bold, exciting act|The company exploited a gap in the market.
+discern|v.|to notice, recognize, or understand something that is not obvious|It was hard to discern any pattern in the data.
+prioritize|v.|to treat something as more important than other things|During exams, she prioritized sleep over social media.
+yield|v./n.|v. 1) to produce or provide a result; 2) to give way or surrender; n. the amount produced|The experiment yielded surprising results.
+realized|v./adj.|1) became aware of something; 2) made real; achieved|Her dream of opening a bakery was finally realized.
+perceptible|adj.|able to be noticed or felt, often only slightly|There was a barely perceptible change in his voice.
+situated|adj.|located in a particular place or position|The hotel is situated near the beach.
+dwindling|adj./v.|becoming gradually smaller or fewer|The village has a dwindling population as young people leave.
+arguing about|phr.|disagreeing with someone about a topic, often angrily, or giving reasons for or against it|The brothers were arguing about who should drive.
+disapproving of|phr.|having a negative opinion of; not thinking something is good or right|Her parents were disapproving of her plan to quit school.
+asserting possession of|phr.|claiming that something belongs to you|Both countries are asserting possession of the small island.
+providing resistance to|phr.|acting against or opposing something; slowing or stopping it|The thick walls provided resistance to the cold wind.
+modesty|n.|1) not talking proudly about your abilities; 2) behaving or dressing so as not to attract attention|With typical modesty, she gave credit to her team.
+misgiving|n.|a feeling of doubt or worry about something|He had misgivings about lending his car to a stranger.
+constraint|n.|1) a limit or restriction; 2) a controlled, restrained manner of behaving|Time constraints forced us to shorten the meeting.
+composure|n.|the state of being calm and in control of your emotions|Despite the noise, the speaker kept her composure.
+inertia|n.|1) a tendency to stay unchanged or inactive; 2) in physics, an object's resistance to changes in motion|Political inertia meant the old law stayed in place.
+decisiveness|n.|the ability to make decisions quickly and firmly|Her decisiveness helped the team act fast in a crisis.
+evasion|n.|avoiding something, such as a duty, question, or person|His answer was an evasion, not a real reply.
+turnover|n.|1) the rate at which people or things are replaced; 2) the total sales of a business|The restaurant has high staff turnover.
+conclude|v.|1) to decide something is true after thinking about the evidence; 2) to end|From the tracks, we concluded that a deer had passed.
+dictate|v.|1) to give orders or control what happens; 2) to say words aloud for someone to write down|The weather will dictate whether we can sail.
+evaluate|v.|to judge the quality, value, or importance of something carefully|Teachers evaluate students' essays using a rubric.
+select|v.|to choose something carefully from a group|She selected three books for the trip.
+controversial among|phr.|causing strong disagreement within a particular group|The theory is controversial among historians.
+antagonistic toward|phr.|showing strong opposition or hostility to|The two neighbors were openly antagonistic toward each other.
+imitated by|phr.|copied by others|Her unique style was later imitated by many artists.
+inconsequential to|phr.|not important or not having any effect on|The small error was inconsequential to the final result.
+disengage|v.|to separate or withdraw from something; to stop being involved|He disengaged from the argument and walked away.
+annotate|v.|to add notes or comments to a text or drawing to explain it|Students annotated the poem with their own observations.
+buttress|v./n.|v. to support or strengthen an argument or idea; n. a structure that supports a wall|New data buttressed the scientist's argument.
+reciprocate|v.|to respond to an action or feeling by doing or feeling the same in return|She helped him move, and he reciprocated by cooking dinner.
+recognition|n.|1) public praise or acknowledgment of someone's work; 2) knowing who or what someone is|The nurse received recognition for her years of service.
+scheme|n.|1) a plan or system for doing something; 2) a secret, often dishonest plan|The color scheme of the room is blue and white.
+supposition|n.|an idea that is believed to be true without proof; an assumption|The plan rests on the supposition that prices will stay low.
+synopsis|n.|a brief summary of the main points of a story or text|The back cover gives a short synopsis of the novel.
+prevail|v.|1) to win or prove stronger in the end; 2) to be common or widespread|In the end, common sense prevailed.
+succumb|v.|to fail to resist something, such as pressure, temptation, or illness|He finally succumbed to temptation and ate the cake.
+diverge|v.|to separate and go in different directions; to become different|Their opinions diverged on how to spend the money.
+intersect|v.|to cross or meet at a point; to overlap|The two roads intersect near the old mill.
+complementary|adj.|different but going well together, each adding what the other lacks|Their skills are complementary: one writes, the other designs.
+unknown|adj.|not known or not familiar; not identified|The cause of the illness is still unknown.
+disparate|adj.|very different from each other; not able to be compared easily|The book brings together disparate ideas from science and art.
+interchangeable|adj.|able to be used in place of each other without making a difference|The two parts are interchangeable, so you can use either one.
+succinctly|adv.|in a brief and clear way, using few words|She explained the problem succinctly in one sentence.
+dispassionately|adv.|calmly and fairly, without strong emotion or bias|The judge reviewed the case dispassionately.
+disingenuously|adv.|in a way that pretends to be honest or innocent but is not|He disingenuously claimed he had never heard of the plan.
+surreptitiously|adv.|secretly, in a way that tries not to be noticed|She surreptitiously checked her phone during the lecture.
+quarrel about|phr.|to argue angrily about something|The children quarrel about whose turn it is.
+paucity of|phr.|a lack of; too small an amount of|There is a paucity of reliable data on the topic.
+profusion of|phr.|a very large amount or number of|The garden had a profusion of roses.
+verisimilitude in|phr.|the quality of seeming real or true, as in a story or artwork|The director aimed for verisimilitude in the battle scenes.
+innovative|adj.|new and original; introducing new ideas or methods|The school uses an innovative approach to teaching math.
+subversive|adj.|trying to weaken or overthrow an established system or authority|The government banned the subversive newspaper.
+profound|adj.|1) very great or intense; 2) showing deep understanding|The discovery had a profound effect on medicine.
+accessible|adj.|1) easy to reach or enter; 2) easy to understand or use|The book explains physics in an accessible way.
+heterogeneity|n.|the quality of being made of many different kinds of parts; diversity|The heterogeneity of the class made teaching challenging.
+ubiquity|n.|the state of being everywhere or very common|The ubiquity of smartphones has changed how we communicate.
+expediency|n.|doing what is convenient or useful right now, even if it is not best or right|They chose the cheaper material out of expediency.
+fecundity|n.|the ability to produce many offspring or new things; fertility|The fecundity of rabbits is well known.
+protracted|adj.|lasting longer than expected or usual|After protracted negotiations, they signed the deal.
+superseded|v./adj.|replaced by something newer or better|Typewriters were superseded by computers.
+curtailed|v.|reduced, limited, or cut short (past of curtail)|The trip was curtailed because of the storm.
+obviated|v.|removed a need or problem; made something unnecessary (past of obviate)|The new bridge obviated the need for a ferry.
+substantial|adj.|large in amount, size, or importance|She received a substantial raise.
+satisfying|adj.|giving a feeling of pleasure or contentment; meeting your needs|It was satisfying to finally finish the puzzle.
+unimportant|adj.|not important; having little value or effect|He ignored the unimportant details.
+appropriate|adj.|suitable or right for a particular situation|Jeans are not appropriate for a job interview.
+defunct|adj.|no longer existing, working, or in use|The defunct factory has been empty for years.
+arcane|adj.|known or understood by only a few people; mysterious|The rules of the old card game are arcane.
+ubiquitous|adj.|seeming to be everywhere at the same time; very common|Coffee shops are ubiquitous in the city.
+extraneous|adj.|not related or relevant to the main subject; unnecessary|Remove any extraneous information from your essay.
+insensible to|phr.|unaware of or not affected by|He seemed insensible to the cold.
+manifest in|phr.|clearly shown or displayed in|Her talent was manifest in her very first painting.
+scrutinized by|phr.|examined very carefully by|Every detail of the contract was scrutinized by lawyers.
+complicated by|phr.|made more difficult or confusing by|The rescue was complicated by heavy snow.
+interjected|v.|said something suddenly, interrupting someone (past of interject)|"That's not true," she interjected.
+committed|adj./v.|adj. strongly dedicated to a cause or person; v. 1) did something wrong or illegal; 2) promised or assigned something|He is committed to helping the community.
+illustrated|v./adj.|1) explained or made clear with examples; 2) decorated with pictures|The teacher illustrated the idea with a simple story.
+prescribed|v./adj.|1) set as a rule that must be followed; 2) ordered by a doctor as treatment|Follow the prescribed steps exactly.
+authoritative|adj.|1) reliable and respected as a source of information; 2) confident and commanding|This is the most authoritative dictionary of English.
+opaque|adj.|1) not able to be seen through; 2) hard to understand; unclear|The instructions were so opaque that no one could follow them.
+empirical|adj.|based on observation, experiment, or experience rather than theory|There is strong empirical evidence for the theory.
+facile|adj.|too simple; achieved easily but without careful thought|He offered a facile solution to a complex problem.
+propensity|n.|a natural tendency to behave in a certain way|She has a propensity to exaggerate.
+inducement|n.|something that persuades someone to do something; an incentive|Free lunch was an inducement to attend the meeting.
+paradigm|n.|1) a typical model or example of something; 2) a set of ideas that shape how people think|The discovery caused a paradigm shift in physics.
+appeasement|n.|giving in to someone's demands to keep the peace|The policy of appeasement only encouraged more demands.
+discernible|adj.|able to be seen, noticed, or understood|There was no discernible difference between the two samples.
+straightforward|adj.|1) easy to understand or do; 2) honest and direct|The instructions were clear and straightforward.
+inconclusive|adj.|not leading to a firm conclusion or result|The test results were inconclusive, so more tests are needed.
+unbiased|adj.|fair; not influenced by personal opinions|We need an unbiased judge for the contest.
+restrained|adj.|calm and controlled; not showing strong emotion or excess|Her response was restrained, though she was clearly angry.
+inventive|adj.|good at creating new things or ideas; creative|The inventive chef combined unusual flavors.
+inexplicable|adj.|impossible to explain or understand|For some inexplicable reason, the lights went out.
+mystifying|adj.|very puzzling and hard to understand|The magician's trick was mystifying.
+presuppose|v.|to assume something is true before an argument or action begins|The plan presupposes that everyone will cooperate.
+categorize|v.|to sort things into groups based on shared features|Librarians categorize books by subject.
+mitigate|v.|to make something less harmful, serious, or painful|Planting trees can mitigate the effects of floods.
+validate|v.|to prove or confirm that something is true, correct, or acceptable|The experiment validated the scientist's theory.
+ambivalent|adj.|having mixed or opposite feelings about something|She felt ambivalent about moving to a new city.
+retrospective|adj./n.|adj. looking back on past events; n. an exhibition of an artist's past work|In a retrospective essay, he reflects on his career.
+counterfactual|adj.|describing something that did not happen but might have (what if...)|A counterfactual history imagines the war ending differently.
+analogical|adj.|based on comparison between two things that are alike in some way|She used analogical reasoning, comparing the heart to a pump.
+require|v.|to need something or make it necessary|The job requires a lot of patience.
+remember|v.|to keep or bring back something in your mind|I remember my first day at school.
+foster|v./adj.|v. to encourage the growth or development of something; adj. caring for a child who is not your own|Teachers try to foster curiosity in their students.
+discourage|v.|1) to try to prevent something; 2) to make someone lose confidence|High prices discourage people from buying.
+exploiting|v.|1) making full use of something for benefit; 2) using someone unfairly|The app works by exploiting a feature of the phone's camera.
+monetizing|v.|turning something into a source of money|The blogger is monetizing her website with ads.
+appraising|v.|judging the value, quality, or nature of something|The expert was appraising the old jewelry.
+engendering|v.|causing a feeling or situation to come into being|His kindness was engendering trust among the staff.
+depleted|adj.|reduced in amount; used up|The river's fish population is severely depleted.
+homogeneous|adj.|made of parts that are all the same or very similar|The town's population was once fairly homogeneous.
+immature|adj.|1) not fully grown or developed; 2) acting in a childish way|Immature fruit is hard and sour.
+dispersed|adj./v.|spread out over a wide area|The seeds are dispersed by the wind.
+demarcated from|phr.|clearly separated from something by a boundary or limit|The play area is demarcated from the road by a fence.
+reconstituted as|phr.|formed again in a new way or in a different form|The old club was reconstituted as a charity.
+conflated with|phr.|wrongly combined or confused with something else|Weather is often conflated with climate.
+derived from|phr.|coming from or developed from a source|Many English words are derived from Latin.
+predatory|adj.|1) hunting and eating other animals; 2) exploiting others for gain|Sharks are predatory fish.
+obscure|adj./v.|adj. 1) not well known; 2) hard to understand; v. to hide or make unclear|The poem was written by an obscure writer.
+diverse|adj.|including many different types or kinds|The city has a diverse population.
+localized|adj.|limited to one particular area or place|The pain was localized in his left knee.
+contrivances of|phr.|clever devices or artificial schemes made by|The plot depended on contrivances of the author rather than real events.
+proxies for|phr.|things used to stand in for or represent something that is hard to measure directly|Tree rings serve as proxies for past rainfall.
+catalysts of|phr.|things that cause or speed up a change in|Social media can be catalysts of political change.
+deterrents to|phr.|things that discourage or prevent an action|High fines are deterrents to illegal parking.
+sanguine|adj.|cheerfully hopeful and confident, especially in a hard situation|She was sanguine about her chances despite the setback.
+recalcitrant|adj.|stubbornly refusing to obey or cooperate|The recalcitrant mule refused to move.
+misanthropic|adj.|disliking and distrusting people in general|The misanthropic old man rarely left his house.
+earnest|adj.|serious and sincere in feeling or intention|He made an earnest effort to apologize.
+cohesion|n.|the state of sticking or working together as a unified whole|Team cohesion improved after the training camp.
+elasticity|n.|the ability to stretch and return to the original shape; flexibility|Skin loses elasticity with age.
+affection|n.|a feeling of fondness or love|She spoke of her grandmother with great affection.
+reciprocity|n.|a mutual exchange in which both sides give and receive|Trade agreements are based on reciprocity.
+consistent with|phr.|in agreement with; matching or fitting|His story is consistent with the evidence.
+representative of|phr.|typical of a group; showing what a group is like|The survey sample was representative of the whole country.
+overshadowed by|phr.|made to seem less important by something else|Her achievements were overshadowed by her brother's fame.
+irrelevant to|phr.|not connected with or important to|His age is irrelevant to the question.
+abrasive|adj.|1) harsh and rude in manner; 2) rough and able to scrape|His abrasive comments upset his coworkers.
+outspoken|adj.|stating opinions openly and directly, even if they upset others|She is an outspoken critic of the new law.
+hypothesized|v.|proposed an explanation to be tested (past of hypothesize)|Researchers hypothesized that the drug would lower blood pressure.
+discounted|v.|1) regarded as unimportant or untrue; 2) reduced in price|The theory was discounted by most experts.
+redefined|v.|changed what something means or how it is understood|The invention redefined how people listen to music.
+exploited|v.|1) used fully for benefit; 2) treated unfairly for someone's gain|The workers were exploited by the factory owners.
+inconspicuousness|n.|the quality of not being easily noticed|The spy relied on his inconspicuousness in crowds.
+discretion|n.|1) the freedom to decide what to do; 2) being careful not to reveal private information|The tip is left to the customer's discretion.
+ambiguity|n.|the quality of having more than one possible meaning; uncertainty|The ambiguity of the rule led to arguments.
+probability|n.|how likely something is to happen; likelihood|The probability of rain today is low.
+disorienting|adj.|causing confusion about where you are or what is happening|Waking up in a strange room can be disorienting.
+tenuous|adj.|very weak or slight; easy to break or doubt|The link between the two events is tenuous at best.
+nuanced|adj.|showing subtle differences or shades of meaning|The essay gives a nuanced view of the conflict.
+unoriginal|adj.|not new or creative; copied from others|The plot was predictable and unoriginal.
+replicable|adj.|able to be repeated with the same results|Good experiments must be replicable by other scientists.
+predetermined|adj.|decided or fixed in advance|The winners were chosen according to predetermined rules.
+operative|adj.|1) working or in effect; 2) most important or relevant in a situation|The old law is still operative in some states.
+latent|adj.|present but hidden or not yet developed|She had a latent talent for music.
+unobtrusive|adj.|not attracting attention; not noticeable|The waiter was quiet and unobtrusive.
+concealed|adj./v.|hidden; kept out of sight|The camera was concealed in a plant.
+approximate|adj.|close to the actual value, but not exact|The approximate cost is fifty dollars.
+peripheral|adj.|1) at the edge of something; 2) less important; not central|These issues are peripheral to the main debate.
+antecedent|adj./n.|adj. existing or happening before; n. something that came before something else|The telegraph was an antecedent of the telephone.
+impending|adj.|about to happen, especially something bad|The dark clouds signaled an impending storm.
+perpetual|adj.|lasting forever or for a very long time; constant|The town lived in perpetual fear of floods.
+unassuming|adj.|modest and not wanting to draw attention to yourself|Despite her fame, she remained unassuming.
+shrewd|adj.|clever and good at judging situations, especially for your own advantage|She made a shrewd investment in property.
+incongruous|adj.|out of place; not fitting with what is around it|A modern sofa looked incongruous in the old castle.
+pretentious|adj.|trying to seem more important, intelligent, or cultured than you really are|The restaurant's menu was full of pretentious French words.
+inevitable|adj.|certain to happen; impossible to avoid|With no rain, a poor harvest was inevitable.
+satisfactory|adj.|good enough; acceptable|His work was satisfactory but not excellent.
+negligible|adj.|so small or unimportant that it can be ignored|The difference in price is negligible.
+commonplace|adj./n.|ordinary and found everywhere; not unusual|Electric cars are becoming commonplace.
+manifest|adj./v.|adj. clear and obvious; v. to show or appear clearly|His fear became manifest in his shaking hands.
+disputing|v.|1) arguing that something is not true or correct; 2) arguing over who owns or controls something|The two farmers were disputing the boundary between their fields.
+reserve|n./v.|n. 1) a supply kept for later use; 2) a quiet, restrained manner; 3) protected land; v. to keep or book for later|Behind her reserve was a warm personality.
+determine|v.|1) to find out or establish exactly; 2) to decide or control what happens|Tests will determine the cause of the fire.
+reflect|v.|1) to show or express something; 2) to think carefully; 3) to send back light or sound|Her choice of words reflects her anger.
+animator|n.|an artist who creates animated films or images
+component|n.|one of the parts that make up a whole|Trust is a key component of friendship.
+animation|n.|1) a film made from drawings or computer images that seem to move; 2) liveliness
+realistic|adj.|1) showing things as they really are; lifelike; 2) sensible and practical|The painting of the apple looks realistic.
+convey|v.|to communicate or express an idea or feeling; to carry|Her smile conveyed how happy she was.
+uncertainty|n.|the state of not being sure about something; doubt
+illustrate|v.|1) to explain or show something by giving examples; 2) to add pictures to a book|This case illustrates how fast the disease can spread.
+experimental|adj.|1) based on experiments; 2) new and still being tested
+physiological|adj.|relating to how the bodies of living things work
+insect|n.|a small creature with six legs, such as an ant or a bee
+summarize|v.|to state the main points briefly|Can you summarize the article in two sentences?
+mechanism|n.|1) a process by which something happens or works; 2) a set of moving parts in a machine|Scientists studied the mechanism that controls sleep.
+resemble|v.|to look like or be similar to something|He closely resembles his father.
+mammalian|adj.|relating to mammals
+mammal|n.|an animal that has hair and feeds its young with milk, such as a dog or a human
+behave|v.|to act in a particular way
+similarly|adv.|in a similar way; also, in the same way
+reward|n./v.|something given for good work or behavior; to give such a thing
+undefended|adj.|not protected or guarded
+maximize|v.|to make something as large or great as possible|Farmers try to maximize their harvests.
+reproductive|adj.|relating to producing babies, young animals, or new plants
+whereas|conj.|while on the other hand; used to show a contrast|Some animals hunt at night, whereas others hunt by day.
+successfully|adv.|in a way that achieves the desired result
+ongoing|adj.|continuing; still happening|The investigation is ongoing.
+potentially|adv.|possibly; in a way that could happen in the future
+defend|v.|to protect from attack or criticism
+outcompete|v.|to do better than others in a competition for the same resources|The new plant species outcompeted native grasses.
+irrelevant|adj.|not related to the subject; not important in this situation|His comment was irrelevant to the discussion.
+thereby|adv.|as a result of this; by doing this|She saved money, thereby avoiding debt.
+eliminate|v.|to remove or get rid of completely
+reproduce|v.|1) to produce young; 2) to copy or make again
+regardless|adv.|without being affected by something; despite|She went out regardless of the rain.
+unexpected|adj.|surprising; not expected
+discovery|n.|the act of finding something new or learning something not known before
+alter|v.|to change something|The new evidence altered her opinion.
+researcher|n.|a person who studies something carefully to discover new facts
+rapidly|adv.|very quickly
+farmworker|n.|a person who works on a farm, often for wages
+nineteenth|adj.|coming after eighteen others; the nineteenth century = the 1800s
+twentieth-century|adj.|from or relating to the years 1900 to 1999
+investigate|v.|to examine something carefully to discover the truth
+resist|v.|1) to fight against or refuse to accept; 2) to stop yourself from doing something|The workers resisted the new rules.
+ideal|n./adj.|n. a principle or standard that people try to achieve; adj. perfect|She stayed true to her ideals.
+scholarly|adj.|1) relating to serious academic study; 2) having a lot of knowledge
+explanation|n.|a statement that makes something clear or gives a reason for it
+explore|v.|1) to travel through a place to learn about it; 2) to examine or discuss a topic in detail
+compare|v.|to examine how two or more things are similar or different
+relative|adj./n.|adj. considered in comparison to something else; n. a family member|The relative cost of food has gone up.
+capture|v.|1) to catch; 2) to represent or express something accurately|The photo captures the joy of the moment.
+scholar|n.|a person who studies a subject in great depth, especially at a university
+peer|n./v.|n. a person of the same age, status, or ability; peer review = checking of research by other experts; v. to look closely|Teenagers often care about the opinions of their peers.
+unfold|v.|1) to develop or happen over time; 2) to open something that was folded|We watched the story unfold.
+limitation|n.|a weakness or restriction that stops something from being as good as it could be|The study's main limitation was its small sample.
+colleague|n.|a person you work with
+solve|v.|to find an answer to a problem
+concur|v.|to agree|The other judges concurred with her decision.
+emphasize|v.|to give special importance or attention to something|The teacher emphasized the need to check our work.
+offset|v.|to balance or cancel out the effect of something|Higher prices were offset by better quality.
+nanomaterial|n.|a material made of extremely tiny particles, measured in billionths of a meter
+conjugation|n.|1) the joining together of things (in chemistry or biology); 2) the forms of a verb in grammar
+argue|v.|1) to give reasons for or against an idea; 2) to disagree angrily|The author argues that schools should start later.
+concede|v.|to admit that something is true, often unwillingly|He conceded that he had made a mistake.
+predict|v.|to say what will happen in the future
+deny|v.|1) to say that something is not true; 2) to refuse to give or allow|She denied breaking the window.
+circumstance|n.|a fact or condition connected with an event or situation
+occur|v.|1) to happen; 2) to exist or be found somewhere
+acknowledge|v.|1) to accept or admit that something is true; 2) to show that you have noticed someone|The author acknowledges that the evidence is limited.
+aspect|n.|one part or feature of a situation, problem, or idea
+poorly|adv.|badly; not well
+inevitably|adv.|in a way that cannot be avoided; certainly
+intensity|n.|the quality of being strong, extreme, or concentrated
+speaker|n.|1) a person who is speaking; in a poem, the voice that tells the poem; 2) a device that produces sound
+hardship|n.|a situation that is difficult and unpleasant, such as lack of money
+glide|v.|to move smoothly and quietly
+contrast|v./n.|v. to compare in order to show differences; n. a clear difference between things|The calm sea contrasted with the stormy sky.
+everyday|adj.|ordinary; happening as part of normal life
+serenity|n.|a state of being calm and peaceful
+impart|v.|1) to give a quality to something; 2) to share information or knowledge|Spices impart a rich flavor to the soup.
+inner|adj.|1) inside; 2) relating to your private feelings and thoughts
+tranquility|n.|a state of peace and calm
+justify|v.|to show or prove that something is reasonable or right|How can you justify spending so much?
+qualm|n.|a feeling of doubt or worry about whether something is right|She had no qualms about telling the truth.
+destination|n.|the place someone or something is going to
+consideration|n.|1) careful thought; 2) a factor that must be thought about when deciding something|Cost is an important consideration.
+interpretation|n.|an explanation or understanding of what something means
+inform|v.|1) to give information to someone; 2) to influence or shape something|Her own childhood informs her novels.
+culturally|adv.|in a way that relates to the customs, arts, and beliefs of a group of people
+paint|v./n.|to cover a surface with colored liquid or to make a picture with it
+motif|n.|a repeated pattern, image, or idea in art, music, or literature|The bird is a recurring motif in her poems.
+abruptly|adv.|suddenly and unexpectedly|The music stopped abruptly.
+cease|v.|to stop|The factory ceased production last year.
+rarity|n.|1) the state of being rare or uncommon; 2) something rare
+elaborate|v./adj.|v. to add more details or explanation; adj. very detailed and complicated|Could you elaborate on your plan?
+trend|n.|a general direction in which something is changing or developing
+exception|n.|something that does not follow the general rule or pattern
+narrative|n.|1) a story or account of events; 2) a commonly accepted explanation of what happened|The film's narrative jumps between two time periods.
+activism|n.|action taken to bring about political or social change
+sketch|v./n.|v. to describe or draw briefly without details; n. a quick drawing or short description
+outward|adj.|1) visible on the surface, as opposed to what someone feels inside; 2) going away from a place|Her outward calm hid her nerves.
+calmness|n.|the state of being peaceful and not upset
+restlessness|n.|the state of being unable to stay still or feel satisfied
+loyalty|n.|strong, faithful support for a person, group, or idea
+demonstrate|v.|1) to show or prove clearly; 2) to protest publicly|The results demonstrate that the method works.
+deeply|adv.|very much; strongly
+fulfill|v.|1) to do or achieve what was promised or hoped; 2) fulfilling = making you feel satisfied|Teaching is a fulfilling career.
+determination|n.|the quality of continuing to try to do something even when it is difficult
+dismiss|v.|1) to refuse to consider something seriously; 2) to send someone away|He dismissed the idea as silly.
+risk-disclosure|adj.|related to telling people about possible dangers or risks
+altogether|adv.|completely; in total
+utility|n.|usefulness; how helpful something is|The tool has little practical utility.
+fewer|adj.|a smaller number of
+contain|v.|1) to have something inside; 2) to keep something under control
+dipeptide|n.|a molecule made of two amino acids joined together
+activate|v.|to make something start working
+umami|n.|a savory, meaty taste, one of the five basic tastes
+salty|adj.|containing or tasting of salt
+receptor|n.|a part of a cell that receives signals such as tastes, smells, or chemicals
+molecular|adj.|relating to molecules, the tiny units that substances are made of
+fermentation|n.|a chemical process in which bacteria or yeast break down a substance, as in making bread or yogurt
+introduce|v.|1) to bring something new into use; 2) to present one person to another
+protein|n.|a substance found in foods like meat and beans that the body needs to grow
+flavor|n.|the particular taste of food or drink
+sauce|n.|a thick liquid served with food to add flavor
+perception|n.|1) the way you notice something through the senses; 2) the way you think about or understand something|Public perception of the company improved.
+saltiness|n.|the quality of tasting of salt
+broth|n.|a thin soup made by boiling meat, fish, or vegetables in water
+experiment|n.|a scientific test done to discover or prove something
+portray|v.|to describe or show someone or something in a particular way|The film portrays him as a hero.
+embarrass|v.|to make someone feel awkward or ashamed
+misunderstand|v.|to fail to understand correctly
+dislike|v./n.|to not like someone or something
+changeable|adj.|likely to change often
+creature|n.|any living animal
+underscore|v.|to emphasize; to show that something is important|The accident underscores the need for safer roads.
+imply|v.|to suggest something without saying it directly|His tone implied that he was angry.
+treasure|v./n.|v. to value something highly; n. valuable things|She treasures her grandmother's letters.
+characteristic|n./adj.|n. a typical feature or quality; adj. typical of someone or something
+regard|v./n.|v. to think of or consider in a particular way; n. respect or attention|Many regard her as the best player.
+flaw|n.|a mistake or weakness that makes something less perfect
+thwart|v.|to prevent someone from doing what they planned|Bad weather thwarted their attempt to climb the mountain.
+ambition|n.|a strong wish to achieve something
+establish|v.|1) to start or create something lasting; 2) to prove or show something to be true|The study established a link between diet and health.
+undertake|v.|to begin or agree to do a task
+enormous|adj.|very large
+courageous|adj.|brave
+outline|v./n.|v. to describe the main points; n. a summary or the shape of something
+confirm|v.|to show or state that something is definitely true
+atmosphere|n.|1) the layer of gases around a planet; 2) the mood or feeling of a place
+evaluation|n.|a careful judgment of the quality or value of something
+methodological|adj.|relating to the methods used in research
+shortcomings|n.|faults or weaknesses
+skeptical|adj.|doubting that something is true or useful|Scientists were skeptical of the bold claim.
+detection|n.|the act of noticing or discovering something
+consensus|n.|general agreement among a group|There is a scientific consensus that the climate is warming.
+controversial|adj.|causing a lot of public disagreement
+expand|v.|1) to become or make larger; 2) to add more detail (expand on)
+observation|n.|1) the act of watching something carefully; 2) a remark or comment
+settle|v.|1) to resolve a disagreement or question; 2) to start living in a place|A new test could settle the debate.
+controversy|n.|a public disagreement about something many people have strong opinions on
+implication|n.|1) a possible result or effect; 2) something suggested but not said directly|The findings have important implications for medicine.
+practical|adj.|1) relating to real situations rather than ideas; 2) sensible and useful
+closely|adv.|1) carefully; 2) near in space or relationship
+widely|adv.|by many people; in many places
+dwarf|n./v.|n. 1) a very small creature; 2) white dwarf = a small, dense star near the end of its life; v. to make something seem small
+exoplanet|n.|a planet that orbits a star other than our Sun
+continental|adj.|relating to a continent
+crust|n.|the hard outer layer of something, such as a planet or bread
+premature|adj.|happening too early or before the proper time|It is premature to celebrate before the results are in.
+begun|v.|past participle of begin
+incomplete|adj.|not finished; missing parts
+detect|v.|to notice or discover something that is hard to see
+puzzle|v./n.|v. to confuse; puzzling = hard to understand; n. a problem or game to solve
+unusual|adj.|not common; different from what is normal
+lithium|n.|a soft, light metal used in batteries
+sodium|n.|a soft metal found in salt
+analyze|v.|to examine something in detail to understand it
+wavelength|n.|the distance between waves of light or sound
+qualify|v.|1) to add something to a statement that limits it or makes it less absolute; 2) to meet the requirements for something|She qualified her praise by noting a few weaknesses.
+surrounding|adj./n.|adj. nearby; around something; surroundings = the place and conditions around you
+reveal|v.|to make known something that was hidden or secret
+posture|n.|1) the way you hold your body; 2) an attitude toward something
+cognition|n.|the mental processes of thinking, learning, and understanding
+misunderstood|adj./v.|not correctly understood
+critique|v./n.|v. to evaluate in detail, pointing out strengths and weaknesses; n. such an evaluation|The professor critiqued the student's essay.
+emerge|v.|1) to come out or appear; 2) emerging = new and still developing
+caution|n.|care taken to avoid danger or mistakes
+weaken|v.|to make or become less strong
+similarity|n.|a way in which things are alike
+trait|n.|a characteristic or quality of a person or animal|Patience is a useful trait for a teacher.
+contextualize|v.|to place something in its wider background so it can be understood|The author contextualizes the poem within its historical period.
+hypothesis|n.|an idea or explanation that is proposed and then tested
+physicist|n.|a scientist who studies physics
+disagree|v.|to have a different opinion
+significance|n.|the importance or meaning of something
+physics|n.|the science of matter, energy, force, and motion
+microscopic|adj.|so small that it can only be seen with a microscope
+consistent|adj.|1) always behaving in the same way; 2) in agreement with something
+macroscopic|adj.|large enough to be seen without a microscope
+isolate|v.|to separate from others|Doctors isolated the sick patient.
+atom|n.|the smallest unit of a chemical element
+laboratory|n.|a room or building for scientific experiments
+extrapolated|v.|used known facts to estimate or conclude something beyond them|You can't extrapolate from one small study to the whole world.
+refinement|n.|a small change that improves something
+compel|v.|to force someone to do something; compelling = convincing and hard to ignore|The evidence is compelling.
+plausible|adj.|seeming reasonable or likely to be true|She gave a plausible excuse.
+agricultural|adj.|relating to farming
+consumption|n.|the act of using or eating something; the amount used
+static|adj.|not moving or changing
+beef|n.|meat from a cow
+mycoprotein|n.|a protein food made from a fungus, used as a meat substitute
+substitute|v./n.|v. to use one thing in place of another; n. a replacement
+pork|n.|meat from a pig
+assert|v.|to state firmly that something is true|He asserted that he was innocent.
+inexpensive|adj.|cheap; not costing much
+substrate|n.|1) a material that something grows on or is produced from; 2) an underlying layer
+contribute|v.|1) to help cause something; 2) to give money or help
+decrease|v./n.|to become or make smaller
+worldwide|adj.|across the whole world
+deforestation|n.|the cutting down of large areas of forest
+assertion|n.|a statement that something is true, often without proof
+textile|n.|a type of cloth or woven fabric
+variation|n.|1) a change or difference; 2) a different form of something
+technique|n.|a particular method of doing something
+originate|v.|to begin or come from somewhere
+indicate|v.|to show, point out, or suggest
+renew|v.|to begin again or make new; renewed = restored after a pause|Renewed interest in vinyl records has boosted sales.
+admiration|n.|a feeling of respect and approval
+skill|n.|an ability to do something well, gained through practice
+urge|v.|to strongly advise or encourage someone to do something
+broader|adj.|wider; more general
+phenomenon|n.|a fact or event that can be observed, especially one that is unusual
+scientist|n.|a person who studies science
+refine|v.|to improve something by making small changes|The team refined their model after more tests.
+unresolved|adj.|not yet settled or answered
+pertaining|v.|pertaining to = relating to; about
+unclear|adj.|not easy to understand; not certain
+compete|v.|to try to win or be more successful than others; competing ideas = ideas that cannot all be right
+hypotheses|n.|plural of hypothesis: proposed explanations to be tested
+extent|n.|the size, degree, or range of something|We don't know the full extent of the damage.
+organizer|n.|a person who arranges an event or activity
+educate|v.|to teach
+participant|n.|a person who takes part in something
+topic|n.|a subject that is discussed or written about
+attendees|n.|people who attend an event
+array|n.|a large group or range of different things|The store sells an array of fruits.
+philosophy|n.|1) the study of ideas about knowledge, truth, and life; 2) a set of beliefs or principles
+criticism|n.|1) expressing disapproval; 2) the analysis of works of art or literature
+comfort|v./n.|to make someone feel less worried or sad
+depart|v.|to leave
+persuade|v.|to make someone agree or do something by giving reasons
+merely|adv.|only; simply
+speculative|adj.|based on guesses rather than facts|The article is speculative; there is no proof.
+bolster|v.|to support or strengthen|The new data bolster the argument.
+motivation|n.|the reason or desire to do something
+absence|n.|the state of being away or missing
+methodology|n.|the set of methods used in a study
+conduct|v./n.|v. to organize and carry out; n. behavior
+fossil|n.|the remains of an ancient plant or animal preserved in rock
+corrupt|v./adj.|v. to damage or change something so it is no longer reliable; adj. dishonest|The file was corrupted and would not open.
+contend|v.|1) to argue or claim that something is true; 2) to compete or deal with a difficulty|Some historians contend that the war could have been avoided.
+analyse|v./n.|British spelling of analyze; "analyses" is also the plural of analysis (detailed examinations)
+surround|v.|to be all around something
+layer|n.|a level or sheet of material lying over or under another
+bone|n.|one of the hard parts that form a skeleton
+pose|v.|1) to present or cause a problem or question; 2) to sit or stand for a photo|The storm poses a threat to the coast.
+cosmogenic|adj.|produced by cosmic rays from space
+nuclide|n.|a particular type of atom, defined by the number of particles in its center
+reliable|adj.|able to be trusted; consistently good
+confuse|v.|to make someone unable to understand or think clearly
+uniqueness|n.|the quality of being the only one of its kind
+imagination|n.|the ability to form new ideas or pictures in your mind
+tarweed|n.|a sticky plant of the sunflower family found in western North America
+ancestor|n.|a person, animal, or plant from which others are descended
+vary|v.|to be different; to change; varied = of many different types
+habitat|n.|the natural home of an animal or plant
+silversword|n.|a rare Hawaiian plant with silvery leaves
+alliance|n.|1) a group joined for a shared purpose; 2) a group of closely related species
+employ|v.|1) to use; 2) to give someone a job|The author employs humor to make a serious point.
+regularly|adv.|often; at regular times
+rely|v.|to depend on someone or something
+heavily|adv.|to a great degree; very much
+observe|v.|1) to notice or watch carefully; 2) to remark; 3) to follow a rule|She observed that the room was empty.
+widespread|adj.|found or happening in many places or among many people
+symbolic|adj.|representing an idea, quality, or meaning beyond itself
+refer|v.|to mention or be about something
+reconsider|v.|to think about again in order to change a decision
+automate|v.|to make a process work by machines instead of people
+automation|n.|the use of machines to do work automatically
+characterize|v.|1) to describe the qualities of; 2) to be typical of|The author characterizes the decision as a mistake.
+attribute|v./n.|v. to say that something is caused by or belongs to; n. a quality or feature|She attributes her success to hard work.
+behavioral|adj.|relating to how people or animals act
+trace|v./n.|v. to follow the history or development of something; n. a very small amount or sign|The book traces the history of jazz.
+speculate|v.|to form ideas or guesses without firm evidence
+politician|n.|a person who works in politics, especially in an elected job
+highlight|v./n.|v. to draw attention to; n. the best or most important part
+representation|n.|1) speaking or acting on behalf of a group; 2) an image or description of something
+brief|adj.|short in time or length
+overview|n.|a general summary of a subject
+imperial|adj.|relating to an empire or an emperor
+notion|n.|an idea or belief|The notion that money buys happiness is common.
+disappear|v.|to stop being visible or to stop existing
+artwork|n.|a painting, sculpture, or other work of art
+merit|n./v.|n. good quality that deserves praise; v. to deserve|The plan has some merit.
+unrelated|adj.|not connected
+unconventionality|n.|the quality of being different from what is usual or traditional
+universally|adv.|by everyone; in all cases
+suitable|adj.|right or appropriate for a purpose
+dispute|v./n.|v. to argue that something is not true or correct; n. a disagreement|Few scientists dispute the findings.
+civic|adj.|relating to a city or to the duties of citizens
+placated|v.|calmed someone down by doing something to please them|He placated his angry boss with an apology.
+reinforce|v.|to make stronger; to support|The new study reinforces earlier findings.
+norm|n.|a standard or accepted way of behaving
+exclusively|adv.|only; for no one or nothing else
+inherent|adj.|existing as a natural, permanent part of something|Risk is inherent in any sport.
+eruption|n.|a sudden explosion of a volcano, or a sudden outburst
+declare|v.|to state officially or firmly
+motivate|v.|to give someone a reason or desire to do something
+invention|n.|something new that has been created
+transformative|adj.|causing a major change|The internet had a transformative effect on business.
+historian|n.|a person who studies history
+belief|n.|something that someone thinks is true
+sophisticated|adj.|1) complex and advanced; 2) having experience and refined taste|The phone uses sophisticated software.
+misconception|n.|a wrong idea or belief|It is a common misconception that bats are blind.
+alarm|v./n.|v. to make someone worried or afraid; alarming = worrying; n. a warning sound
+foreground|v./n.|v. to make something the most important or noticeable part; n. the front part of a picture|The film foregrounds the lives of ordinary workers.
+beneficial|adj.|helpful; having a good effect
+maple|n.|a tree with broad leaves, known for its sweet sap
+portion|n.|a part of something
+atmospheric|adj.|relating to the air or gases around a planet
+oxygen|n.|a gas in the air that people and animals need to breathe
+indicative|adj.|showing or suggesting something|His silence is indicative of his anger.
+attributable|adj.|caused by|The delay was attributable to bad weather.
+oxidative|adj.|involving a chemical reaction with oxygen
+chemically|adv.|by means of chemistry
+bulk|n./adj.|n. the main or largest part; adj. in large amounts or taken as a whole
+sample|n.|a small amount of something taken to test or represent the whole
+impression|n.|an idea or feeling about something, often not based on full evidence
+proponent|n.|a person who supports an idea or plan|She is a proponent of free education.
+contradict|v.|1) to say the opposite of what someone else said; 2) to be inconsistent with|The new data contradict the earlier results.
+fundamentally|adv.|in a basic and very important way
+unserious|adj.|not serious; lacking proper thought or effort
+instinctive|adj.|done without thinking, by natural reaction
+distaste|n.|a feeling of dislike
+external|adj.|outside; coming from outside
+skeptics|n.|people who doubt that claims or beliefs are true
+construct|v.|to build or create
+sufficiently|adv.|enough
+rigorous|adj.|very careful, thorough, and strict|The drug went through rigorous testing.
+refutation|n.|an argument or proof that shows something is false
+valid|adj.|1) logical and well-reasoned; 2) officially acceptable
+instinct|n.|a natural feeling or reaction that is not learned
+inadequate|adj.|not good enough; not sufficient
+skepticism|n.|an attitude of doubting that something is true
+odd|adj./n.|adj. strange; at odds (with) = in conflict or disagreement with|His actions are at odds with his words.
+unavoidably|adv.|in a way that cannot be prevented
+equivalent|adj./n.|equal in value, meaning, or effect
+sermon|n.|a speech on a religious or moral subject, usually given in church
+wider|adj.|more extensive; more general
+disregard|v./n.|to ignore or pay no attention to
+structural|adj.|relating to the way something is built or organized
+stylistic|adj.|relating to style, especially in writing or art
+divergence|n.|a difference, or moving apart in different directions
+indebted|adj.|owing gratitude or money to someone; strongly influenced by|Modern poets are indebted to earlier traditions.
+tradition|n.|a custom or belief passed down over time
+literary|adj.|relating to literature
+convention|n.|1) a usual or accepted way of doing something; 2) a large formal meeting|The novel breaks with literary conventions.
+privilege|v./n.|v. to treat one thing as more important than others; n. a special advantage|The system privileges the wealthy.
+oral|adj.|spoken rather than written; relating to the mouth
+humor|n.|the quality of being funny
+impressive|adj.|causing admiration
+differ|v.|to be different
+insist|v.|to say something firmly and refuse to change your position
+centrality|n.|the quality of being central or most important
+nonetheless|adv.|in spite of that; however|The test was hard; nonetheless, she passed.
+reputation|n.|the opinion people generally have of someone or something
+reader|n.|a person who reads
+overlook|v.|1) to fail to notice or consider; 2) to have a view over a place|Critics overlooked the novel for years.
+unearned|adj.|not deserved or gained through effort
+panther|n.|a large wild cat, such as a black leopard; panther worm = a small sea worm
+worm|n.|a small, long, soft creature without legs
+overly|adv.|too; excessively
+enthusiasm|n.|strong excitement and interest
+unfairly|adv.|in a way that is not fair or just
+dismissive|adj.|showing that you think something is not worth considering|He was dismissive of her concerns.
+discrepancy|n.|a difference between things that should be the same|There is a discrepancy between the two reports.
+consequence|n.|a result or effect of an action
+complicate|v.|to make more difficult or complex
+generate|v.|to produce or create
+derive|v.|to get or come from a source|The word derives from Latin.
+electoral|adj.|relating to elections
+underestimate|v.|to think something is smaller or less important than it really is
+inconsistency|n.|a situation in which things do not agree or match
+praise|v./n.|to express approval or admiration
+recognize|v.|1) to identify someone or something you have seen before; 2) to accept that something is true
+script|n.|1) a system of writing; 2) the written text of a play or film
+symbol|n.|a sign or object that represents something else
+approve|v.|to have a positive opinion of; to officially accept
+emphasis|n.|special importance or attention given to something
+credible|adj.|believable; able to be trusted|The witness gave a credible account.
+astronomical|adj.|1) relating to stars and space; 2) extremely large
+refute|v.|to prove that a statement or theory is wrong|The scientist refuted the claim with new data.
+persuasive|adj.|able to make people agree or believe
+assurance|n.|a promise or statement meant to remove doubt
+inoffensive|adj.|not likely to upset or offend anyone
+involve|v.|to include as a necessary part
+clarify|v.|to make something clearer
+scholarship|n.|1) serious academic study and research; 2) money given to a student
+reevaluated|v.|judged again, often with a different result
+overemphasized|v.|given too much importance
+orientation|n.|1) a person's basic attitudes or beliefs; 2) the direction something faces
+ideological|adj.|relating to a set of political or social beliefs
+diversity|n.|the presence of many different types or kinds
+conventional|adj.|usual, traditional, or standard|The conventional view is that the war began in 1914.
+mislead|v.|to make someone believe something that is not true; misleading = giving a wrong idea
+effectiveness|n.|how well something works
+neighborhood|n.|a district or area of a town where people live
+scope|n.|the range of things that something covers or deals with|The scope of the study was limited to one city.
+incorrect|adj.|wrong; not true
+simplistic|adj.|treating something complex as if it were much simpler than it is|His explanation was too simplistic.
+worthwhile|adj.|worth the time, money, or effort
+perceive|v.|1) to notice; 2) to understand or think of in a particular way
+deficiency|n.|a lack of something needed; a weakness
+weakness|n.|a lack of strength; a fault
+broadly|adv.|generally; in a general way
+timeline|n.|a list or plan of events in time order
+genetic|adj.|relating to genes, which pass traits from parents to offspring
+assumption|n.|something believed to be true without proof
+invasion|n.|the entry of an army or something unwanted into a place
+genetically|adv.|in terms of genes
+uniform|adj./n.|adj. the same everywhere; not varying; n. special clothes worn by a group
+pellicle|n.|a thin skin or film
+synthetic|adj.|made artificially, not natural
+leather|n.|material made from animal skin
+adapt|v.|to change something to suit a new situation
+overcome|v.|to succeed in dealing with a problem or difficulty
+impediment|n.|something that makes progress difficult; an obstacle|Lack of money was an impediment to her studies.
+undermine|v.|to make something weaker or less effective, often gradually|The scandal undermined trust in the government.
+comparable|adj.|similar enough to be compared
+conclusion|n.|a judgment reached after thinking about something
+characterization|n.|a description of the qualities of someone or something
+comprehensive|adj.|including everything or nearly everything; complete
+renown|n.|fame; renowned = famous and admired
+popularity|n.|the state of being liked by many people
+propose|v.|to suggest an idea or plan
+specialist|n.|an expert in a particular field
+influential|adj.|having a lot of influence on others
+biological|adj.|relating to living things
+pteropod|n.|a small sea snail that swims using wing-like flaps
+survival|n.|the state of continuing to live or exist
+drawn|v.|past participle of draw; a conclusion drawn = a conclusion reached
+calcium|n.|a chemical element found in bones, teeth, and shells
+carbonate|n.|a chemical compound containing carbon and oxygen, found in shells and chalk
+periostracum|n.|the thin outer layer that covers the shell of a mollusk
+acidification|n.|the process of becoming more acidic
+shell|n.|the hard outer covering of an animal, egg, or nut
+unwarranted|adj.|not justified or deserved|Their fears turned out to be unwarranted.
+curiosity|n.|a strong wish to know or learn something
+acquire|v.|to get or gain something
+immediate|adj.|happening now or very soon; nearest
+purposeless|adj.|having no purpose
+hierarchical|adj.|arranged in levels of rank or power
+decentralized|adj.|with power or control spread among many groups rather than one center
+collective|adj.|shared or done by a group as a whole
+linear|adj.|1) moving step by step in a straight line or fixed order; 2) relating to lines
+progression|n.|gradual movement or development from one stage to another
+distinct|adj.|clearly separate and different
+agriculture|n.|farming
+grouping|n.|a set of people or things that belong together
+hunter-gatherers|n.|people who live by hunting animals and collecting wild plants rather than farming
+earliest|adj.|first in time
+composition|n.|1) the parts or substances that make something up; 2) a piece of writing or music
+hycean|adj.|describing a possible type of planet with an ocean under a hydrogen-rich atmosphere
+unlikely|adj.|not likely to happen or be true
+harbor|v./n.|v. 1) to contain or shelter something; 2) to keep a feeling secretly; n. a protected area of water for ships|The lake may harbor rare fish.
+liquid|n./adj.|a substance that flows, such as water
+estimate|n./v.|a rough calculation; to calculate approximately
+hydrogen-rich|adj.|containing a lot of hydrogen gas
+orbit|v./n.|to move in a curved path around a planet or star
+portrait|n.|a painting, drawing, or photo of a person
+bust|n.|a sculpture of a person's head, shoulders, and chest
+overshadowed|v.|made to seem less important by something else
+sculpting|v.|making a figure or shape by carving or shaping material
+depict|v.|to show or represent in art or words|The painting depicts a busy market.
+stance|n.|an attitude or position on an issue|What is the senator's stance on taxes?
+investor|n.|a person who puts money into something to make a profit
+enthusiast|n.|a person who is very interested in a particular activity
+technologist|n.|an expert in technology
+contemporary|adj.|1) belonging to the present time; modern; 2) living or happening at the same time
+interactive|adj.|responding to the user's actions
+anecdote|n.|a short, interesting story about a real event|He began his speech with a funny anecdote.
+technological|adj.|relating to technology
+phytoplankton|n.|tiny plants that float in water and are food for many sea animals
+replenishment|n.|the act of filling something up again
+nutrient|n.|a substance that a living thing needs to grow
+organism|n.|a living thing
+ecologist|n.|a scientist who studies how living things relate to each other and their environment
+density|n.|how closely packed something is
+mimosa|n.|a tree or shrub with feathery leaves and fluffy flowers
+generalization|n.|a general statement based on a few examples
+exemplified|v.|served as a typical example of|The building exemplifies modern design.
+hide|v.|to put or keep out of sight; to keep secret
+engage|v.|1) to take part in; 2) to hold someone's attention; 3) to deal with
+emotionally|adv.|in a way related to feelings
+intellectually|adv.|in a way related to thinking and understanding
+discover|v.|to find or learn something for the first time
+novelty|n.|the quality of being new and unusual
+magpie|n.|a black-and-white bird of the crow family
+captive|adj.|kept in a closed space; not free
+tracker|n.|a device used to follow where something goes
+deliberately|adv.|on purpose
+obtain|v.|to get something
+selflessness|n.|caring more about others than about yourself
+adequately|adv.|well enough
+assist|v.|to help
+ought|v.|ought to = should
+persistent|adj.|continuing firmly despite difficulty; lasting a long time
+antagonist|n.|a person who opposes someone; an opponent
+undeserved|adj.|not deserved
+nationalist|n./adj.|a person who strongly supports the independence or interests of their nation or people
+thinker|n.|a person who thinks deeply, especially about important ideas
+sharp|adj.|1) having a fine edge; 2) clear and definite (a sharp contrast); 3) sudden
+aesthetically|adv.|in terms of beauty or artistic appearance
+ascendancy|n.|a position of power or control|The party's ascendancy lasted a decade.
+pragmatic|adj.|dealing with things in a practical way, based on real conditions rather than ideals|We need a pragmatic solution, not a perfect one.
+capitalistic|adj.|relating to an economic system based on private ownership and profit
+outlook|n.|1) a person's general attitude toward life; 2) what is likely to happen
+inhabitants|n.|people or animals that live in a place
+intrusion|n.|an unwelcome entry into a place or situation
+materialism|n.|the belief that money and possessions are the most important things
+modernity|n.|the quality or condition of being modern
+associate|v.|to connect in the mind|People associate summer with holidays.
+idealism|n.|believing in high principles and perfect standards, even if unrealistic
+austerity|n.|1) plainness and simplicity; 2) strict economic limits on spending
+mirror|v./n.|v. to reflect or closely match; n. a reflecting glass
+prospect|n.|the possibility that something will happen
+authentic|adj.|real or genuine; not false or copied
+chiefly|adv.|mainly
+prosperity|n.|success and wealth
+countryside|n.|land outside cities and towns
+intangible|adj.|not physical; unable to be touched but still real|Trust is an intangible asset.
+abundance|n.|a very large amount
+engagement|n.|1) involvement or interaction; 2) an agreement to marry
+naïve|adj.|lacking experience or judgment; too ready to believe that things are simple or that people are honest|It was naïve to think the plan would work without money.
+naive|adj.|lacking experience or judgment; too ready to believe that things are simple or that people are honest|It was naive to think the plan would work without money.
+reject|v.|to refuse to accept, believe, or use something
+premise|n.|an idea that you assume is true and use as the basis for an argument or plan|The plan rests on the premise that prices will fall.
+unify|v.|to join together into one whole; unified = joined and consistent
+contributor|n.|a person who gives something, such as writing to a magazine or money to a cause
+authorial|adj.|relating to the author of a text
+autonomy|n.|the freedom to make your own decisions and control your own work or life|Teachers want more autonomy in the classroom.
+diverged|v.|separated and went in different directions; became different (past of diverge)
+editorial|adj./n.|adj. relating to the editing or editors of a publication; n. a newspaper article giving the editors' opinion
+publication|n.|1) a book, magazine, or newspaper; 2) the act of publishing something
+lifelike|adj.|looking very much like a real person or thing
+strive|v.|to try very hard to achieve something
+computer-animated|adj.|made with moving images created by a computer
+exaggerate|v.|to make something seem bigger, better, or worse than it really is
+carefully|adv.|with great attention to avoid mistakes
+engineer|v./n.|v. to design and build something with skill; n. a person who designs machines or structures
+mimic|v.|to copy the appearance, sound, or behavior of something
+convincingly|adv.|in a way that makes people believe something is true or real
+affective|adj.|relating to feelings and emotions
+neuroscience|n.|the science of the brain and nervous system
+displeasure|n.|a feeling of being unhappy or annoyed
+sensation|n.|1) a physical feeling, such as heat or pain; 2) great excitement
+neurotransmitter|n.|a chemical that carries signals between nerve cells
+dopamine|n.|a chemical in the brain linked to pleasure and reward
+partly|adv.|to some degree but not completely
+honeybee|n.|a bee that makes honey
+forage|v.|to search for food
+dopamine-based|adj.|working through the brain chemical dopamine
+household|n.|all the people who live together in one home
+disprove|v.|to show that something is false
+nuisance|n.|something annoying or inconvenient; nuisance costs = small annoying costs in time or effort
+donation|n.|money or goods given to help a person or organization
+charitable|adj.|1) relating to giving help to people in need; 2) kind in judging others
+charity|n.|an organization that collects money to help people in need
+compensate|v.|1) to pay someone for loss, effort, or harm; 2) to balance out a bad effect
+donor|n.|a person who gives money, goods, or blood to help others
+attract|v.|to cause to come near or take interest
+teleost|n.|a member of the largest group of bony fish
+protogynous|adj.|starting life as female and later becoming male (of some fish and plants)
+fertile|adj.|1) able to produce young; 2) able to produce many plants or ideas
+protogyny|n.|the condition of starting life as female and later becoming male
+confer|v.|1) to give an advantage, right, or title; 2) to discuss together|A college degree confers many advantages.
+reproduction|n.|1) the process of producing young; 2) a copy
+comparatively|adv.|when compared with something else; relatively
+lifetime|n.|the length of time something lives or exists
+threshold|n.|1) the level at which something starts to happen; 2) the entrance of a building|The noise was just above the threshold of hearing.
+spotty|adj.|having spots; also uneven in quality
+wrasse|n.|a type of brightly colored sea fish
+breed|v./n.|v. to produce young; n. a particular type of animal
+artifact|n.|an object made by people long ago, such as a tool
+archaeologist|n.|a scientist who studies past human life by digging up old objects
+utilize|v.|to use
+hook-and-eye|adj.|a small metal fastener with a hook that fits into a loop
+closure|n.|1) something that fastens clothes; 2) the act of closing; 3) a feeling that something is finished
+fasten|v.|to close or attach firmly
+waist|n.|the narrow middle part of the body above the hips
+silhouette|n.|1) the outline shape of a person or object; 2) a dark shape against a light background
+restrictive|adj.|limiting freedom or movement
+garment|n.|a piece of clothing
+corset|n.|a tight piece of underwear worn to make the waist look smaller
+sartorial|adj.|relating to clothes or the way someone dresses
+hegemonic|adj.|dominant; relating to the power of one group over others
+femininity|n.|qualities traditionally associated with women
+physically|adv.|relating to the body
+occupation|n.|1) a job; 2) the control of a country by a foreign army
+peer-reviewed|adj.|checked by other experts in the field before being published
+masculinity|n.|qualities traditionally associated with men
+dub|v.|to give a name or nickname to something
+combine|v.|to join or mix together
+mixtape|n.|a collection of songs put together by one person
+essay|n.|a short piece of writing on one subject
+connect|v.|to join or link together
+lyric|n.|the words of a song
+listener|n.|a person who listens
+academia|n.|the world of universities and research
+redefine|v.|to change the meaning or nature of something
+astronomer|n.|a scientist who studies stars, planets, and space
+confident|adj.|feeling sure about something or about your abilities
+consume|v.|1) to use up; 2) to eat or drink
+helium|n.|a very light gas
+explode|v.|to burst violently
+supernova|n.|a huge explosion of a star
+depend|v.|to be decided by; to rely on
+acoustic|adj.|relating to sound
+stellar|adj.|1) relating to stars; 2) excellent
+evolutionary|adj.|1) relating to evolution; 2) developing gradually
+firmly|adv.|in a strong, fixed, or certain way
+randomized|adj.|arranged by chance, especially to make a test fair
+clinical|adj.|relating to medical treatment and testing on patients
+efficacy|n.|the ability to produce the intended result; effectiveness|The trial tested the efficacy of the new drug.
+intervention|n.|an action taken to improve a situation, especially a medical treatment
+practitioner|n.|a person who works in a profession, such as a doctor
+confounding|adj.|1) confusing; 2) a confounding variable = a hidden factor that distorts the results of a study
+whack|n.|a hard hit
+posit|v.|to suggest something as a basis for argument; to propose|The theory posits that the universe is expanding.
+protoplanet|n.|a very young planet that is still forming
+collide|v.|to crash into something
+fling|v.|to throw with great force
+debris|n.|broken pieces left after something has been destroyed
+coalesced|v.|came together to form one mass or group
+lowermost|adj.|lowest
+mantle|n.|1) the layer of a planet between the crust and the core; 2) a responsibility or role
+flyby|n.|a flight past a planet or other object to observe it
+thick|adj.|1) wide from one side to the other; 2) dense, hard to see through
+tendency|n.|a habit or likelihood of behaving in a certain way|He has a tendency to talk too fast.
+situate|v.|to place in a particular location or context
+distant|adj.|far away in space or time
+rejection|n.|the act of refusing to accept something
+evident|adj.|clear and obvious|Her joy was evident in her smile.
+revolve|v.|1) to turn around a center; 2) revolve around = to have as the main subject
+teenager|n.|a person aged between 13 and 19
+dialogue|n.|conversation, especially in a book, play, or film
+lace|v./n.|v. to add a small amount of something throughout; n. delicate fabric with holes in a pattern
+slang|n.|very informal words used by a particular group
+consonant|n./adj.|n. a speech sound or letter that is not a vowel, such as b or t; adj. in agreement with
+globally|adv.|throughout the world
+median|n./adj.|the middle value in a list of numbers arranged in order
+archaeological|adj.|relating to the study of past human life through old objects and sites
+pharaoh|n.|a ruler of ancient Egypt
+reign|n./v.|the period when a king, queen, or other ruler is in power
+successor|n.|a person who takes over a position after someone else
+nanohybrid|n.|a material made by combining two or more types of nanomaterials
+oxide|n.|a chemical compound of oxygen with another element
+conjugated|adj.|joined together chemically
+magnetic|adj.|relating to magnets or magnetism
+outpaced|v.|went faster or developed more quickly than
+constituent|n.|1) a part of a whole; 2) a voter in a particular area
+physiochemical|adj.|relating to both physical and chemical properties
+enhance|v.|to improve or increase the quality or strength of
+toxicity|n.|how poisonous something is
+silicon|n.|a chemical element used in computer chips and glass
+dioxide|n.|a compound with two oxygen atoms
+zinc|n.|a bluish-white metal
+preserve|v.|to keep something in its original state; to protect
+optical|adj.|relating to sight or light
+transparency|n.|1) the quality of being see-through; 2) openness and honesty
+nanoparticles|n.|extremely tiny particles, measured in billionths of a meter
+poem|n.|a piece of writing in lines, often with rhythm and rhyme
+eternity|n.|time without end
+swoon|v.|to faint or feel overwhelmed with emotion
+breast|n.|1) the chest; 2) in poetry, the surface or heart of something
+bound|adj.|1) going toward (outward bound = leaving); 2) certain to; 3) tied
+drift|v.|to be carried slowly by water or air
+toil|n./v.|hard, tiring work
+lap|v.|of water: to wash gently against something with a soft sound
+mingle|v.|to mix together
+gently|adv.|softly and carefully
+peaceful|adj.|calm and quiet
+soothe|v.|to calm or comfort
+slumberous|adj.|sleepy; causing sleep
+lullaby|n.|a soft song sung to help a child sleep
+radiocarbon|n.|a radioactive form of carbon used to find the age of old objects
+comblike|adj.|shaped like a comb
+predating|v.|existing or happening earlier than something else
+millennia|n.|thousands of years (plural of millennium)
+subsequently|adv.|afterward; later
+coincide|v.|to happen at the same time
+arid|adj.|very dry, with little rain
+ecological|adj.|relating to living things and their environment
+demographic|adj.|relating to the size and characteristics of a population
+crucial|adj.|extremely important
+contribution|n.|something you give or do to help achieve something
+quota|n.|a fixed amount or number that is required or allowed
+bargain|v./n.|v. to negotiate the terms of an agreement; bargaining power = ability to get good terms
+favorable|adj.|1) good and helpful; 2) showing approval
+employer|n.|a person or company that pays people to work
+anxious|adj.|1) worried; 2) eager to do something
+comply|v.|to obey a rule or request
+narrator|n.|the person who tells a story
+governess|n.|a woman employed to teach children in their home
+tranquilly|adv.|calmly and peacefully
+anon|adv.|old-fashioned: soon; ever and anon = from time to time
+vague|adj.|not clear or specific
+suggestion|n.|1) an idea put forward; 2) a slight sign
+wander|v.|to move around without a fixed direction
+quit|v.|to leave or stop
+involuntarily|adv.|without meaning to
+advertisement|n.|a notice or message promoting something
+ponder|v.|to think carefully about something
+conjecture|n.|a guess or opinion formed without complete evidence
+germinate|v.|to start growing, like a seed
+crises|n.|plural of crisis: times of great danger or difficulty
+exacerbated|v.|made a problem worse|The drought was exacerbated by high temperatures.
+policymakers|n.|people who make decisions about government plans and rules
+seller|n.|a person or company that sells something
+nevertheless|adv.|in spite of that; however|The task was difficult; nevertheless, they finished it.
+pursue|v.|1) to try to achieve; 2) to follow or chase
+residential|adj.|relating to places where people live
+mobility|n.|the ability to move or change position, place, or social level
+reducible|adj.|able to be explained simply as; able to be made smaller
+noneconomic|adj.|not related to money or the economy
+fermented|adj.|changed chemically by bacteria or yeast
+soybean|n.|a bean used to make foods such as tofu and soy sauce
+bitter|adj.|1) having a sharp, unpleasant taste; 2) angry and hurt
+sour|adj.|having a sharp, acidic taste like lemon
+formally|adv.|officially
+classify|v.|to arrange into groups by type
+define|v.|1) to explain the meaning of; 2) to describe clearly
+shiitake|n.|a type of mushroom used in Asian cooking
+mushroom|n.|a fungus with a stem and a cap, some of which are eaten
+kombu|n.|a type of seaweed used in Japanese cooking
+seaweed|n.|plants that grow in the sea
+initially|adv.|at first
+mixture|n.|a combination of different things
+tester|n.|a person who tests something
+prominent|adj.|1) important and well known; 2) easy to see|She is a prominent scientist.
+chemist|n.|a scientist who studies chemistry
+inventor|n.|a person who invents things
+grave|adj./n.|adj. serious; n. a place where a dead person is buried
+coxcombical|adj.|vain and showy (old-fashioned)
+absurd|adj.|ridiculous or unreasonable
+ribbon|n.|a narrow strip of cloth
+lapel|n.|the folded part on the front of a jacket below the collar
+banter|n.|friendly teasing conversation
+whisk|v.|to move quickly
+dispose|v.|1) disposed to = inclined or willing to; 2) dispose of = to get rid of
+admire|v.|to respect or look at with pleasure
+savant|n.|a very learned person; a scholar
+disdain|n.|a feeling that someone or something is not worthy of respect|She looked at the mess with disdain.
+jackanape|n.|jackanapes: a rude, cheeky, or silly person
+thrown|v.|past participle of throw; thrown aback = taken aback, surprised
+aback|adv.|taken aback = shocked or surprised
+personage|n.|an important or well-known person
+pomfret|n.|a type of flat fish
+diamond|n.|1) a precious stone; 2) a shape with four equal sides
+slick|adj.|smooth and shiny or slippery
+uniformity|n.|the state of being the same throughout
+temperamental|adj.|likely to change mood or behavior unpredictably
+threw|v.|past of throw; threw up = produced
+prawn|n.|a sea creature like a large shrimp
+squid|n.|a sea creature with a long body and ten arms
+colorful|adj.|having many bright colors
+unpredictability|n.|the quality of being impossible to predict
+embrace|v.|1) to accept willingly; 2) to hug
+groove|n.|a long narrow cut in a surface
+palm|n.|1) the inside of the hand; 2) a tropical tree
+diversification|n.|spreading something, such as money, across different types to reduce risk
+distribute|v.|to give out or spread among many
+animate|v.|to make something seem alive or moving; animated film = cartoon
+collaborator|n.|a person who works with others on a project
+painstakingly|adv.|with great care and effort|She painstakingly restored the old painting.
+repeatedly|adv.|again and again
+invent|v.|to create something new
+envision|v.|to imagine something as a future possibility
+eighteenth|adj.|the eighteenth century = the 1700s
+hire|v.|to employ someone or pay to use something
+wage|n.|money paid for work
+acre|n.|a unit for measuring land, about 4,000 square meters
+fulfil|v.|British spelling of fulfill: to do what was promised or required
+brave-hearted|adj.|courageous
+dare-devil|n.|a person who likes doing dangerous things
+pinch|n.|1) a small amount; 2) at a pinch / upon a pinch = in a difficult situation if necessary
+evinced|v.|clearly showed a quality or feeling
+singular|adj.|1) unusual or remarkable; 2) only one
+patience|n.|the ability to wait or accept difficulty without getting upset
+mildness|n.|gentleness
+oblige|v.|to force or require; obliged = forced
+livelihood|n.|the way someone earns money to live
+wilderness|n.|a wild natural area where no one lives
+saltwater|adj.|living in or relating to the sea
+latitude|n.|1) the distance north or south of the equator; 2) freedom to act
+morphological|adj.|relating to the form and structure of living things
+tropical|adj.|from or relating to the hot regions near the equator
+laterally|adv.|sideways
+compress|v.|to press together into a smaller space
+vertically|adv.|in an up-and-down direction
+polar|adj.|relating to the North or South Pole
+temperate|adj.|1) having a mild climate; 2) moderate
+disperse|v.|to spread out over a wide area
+spectrum|n.|a full range of different but related things
+confirmation|n.|proof that something is true
+apparent|adj.|1) seeming true but perhaps not really; 2) clear and obvious
+phosphine|n.|a poisonous gas made of phosphorus and hydrogen
+cloud|n.|a mass of water drops or gas floating in the sky
+deck|n.|1) a layer, as in a cloud deck; 2) the floor of a ship
+uninhabitable|adj.|not suitable for living in
+plausibility|n.|the quality of seeming reasonable or likely
+abiotic|adj.|not involving living things
+pathway|n.|1) a route or way; 2) a series of steps in a chemical process
+geochemical|adj.|relating to the chemistry of the earth
+photochemical|adj.|relating to chemical reactions caused by light
+insufficiency|n.|the state of not being enough
+chemistry|n.|the science of substances and how they react
+examine|v.|to look at closely
+dense|adj.|closely packed; thick
+remnant|n.|a small remaining part
+unduly|adv.|more than is reasonable; excessively
+signifier|n.|a sign or symbol that represents something
+mineral|n.|a natural solid substance found in rocks or the earth
+ratio|n.|the relationship between two amounts
+navigate|v.|to find the way through a place
+thoroughfare|n.|a main road through a town
+uproarious|adj.|very noisy
+sway|v.|to move slowly from side to side
+omnibus|n.|an old word for a bus
+trot|v.|to move faster than walking, as a horse does
+silent|adj.|quiet; with no sound
+swift|adj.|fast
+hansom|n.|a two-wheeled horse-drawn carriage
+horse-drawn|adj.|pulled by horses
+carriage|n.|a vehicle with wheels, usually pulled by horses
+worn|adj.|1) damaged by long use; 2) worn = past participle of wear
+slight|adj.|small in amount or degree
+backward|adj./adv.|toward the back
+tilt|n./v.|a slope or slant; to lean to one side
+brush|v.|1) to touch lightly; 2) to clean or smooth with a brush
+respectful|adj.|showing respect
+sleekness|n.|the quality of being smooth, shiny, and elegant
+steady|adj.|firm and not shaking; regular and continuous
+propriety|n.|correct and respectable behavior
+güiro|n.|a Latin American musical instrument made from a hollow gourd with ridges that are scraped
+instrument|n.|1) an object used to make music; 2) a tool or device
+traditionally|adv.|according to long-established custom
+hollow|v./adj.|adj. empty inside; v. to make empty inside
+gourd|n.|a hard-shelled fruit often dried and used as a container or instrument
+wooden|adj.|made of wood
+scrape|v.|to rub a rough or sharp object across a surface
+ridge|n.|a long, narrow raised line or edge
+stroke|n.|1) a single movement, as of a brush or hand; 2) a sudden illness of the brain
+thickness|n.|how thick something is
+overstate|v.|to describe something as bigger or more important than it is|The danger has been overstated.
+risky|adj.|involving the possibility of danger or loss
+simulate|v.|to imitate the conditions of something, often for testing
+unstable|adj.|likely to change, move, or fall
+cognitively|adv.|in a way related to thinking
+accordingly|adv.|1) in a way that is suitable; 2) therefore
+aversion|n.|a strong dislike|She has an aversion to loud noise.
+discomfort|n.|a feeling of slight pain or unease
+elephant|n.|a very large gray animal with a trunk
+caribou|n.|a North American reindeer
+geographic|adj.|relating to places and their physical features
+prompt|v./adj.|v. to cause or encourage something to happen; adj. quick and on time|The report prompted a debate.
+woolly|adj.|covered with thick hair like wool
+mammoth|n./adj.|n. a large extinct hairy elephant; adj. huge
+extinct|adj.|no longer existing
+elephantid|n.|a member of the elephant family, including mammoths
+exhibit|v.|1) to show clearly; 2) to display in public
+tusks|n.|long pointed teeth of animals like elephants
+sequential|adj.|following in order, one after another
+incorporate|v.|to include as part of something larger
+ingested|v.|taken into the body by eating or drinking
+organic|adj./n.|1) relating to living things; 2) organics = substances that come from living things
+ivory|n.|the hard white material of elephant tusks
+stratum|n.|one layer of rock or earth
+strontium|n.|a soft metal element found in rocks
+isotope|n.|a form of a chemical element with a different number of neutrons
+sequence|n.|a series of things in a particular order
+strata|n.|layers of rock (plural of stratum)
+roam|v.|to travel freely over a large area
+tusk|n.|a long pointed tooth that grows out of the mouth of an elephant or walrus
+relation|n.|a connection between things
+maturity|n.|1) being fully grown; 2) behaving like an adult
+proposal|n.|a suggested plan
+retirees|n.|people who have stopped working because of age
+recipient|n.|a person who receives something
+delay|v./n.|to make something happen later than planned
+wealth|n.|a large amount of money or possessions
+lengthening|n.|making something longer
+nonworking|adj.|not having a job
+stimuli|n.|things that cause a reaction (plural of stimulus)
+itch|v./n.|an uncomfortable feeling on the skin that makes you want to scratch
+allergic|adj.|having a bad physical reaction to something
+histamine|n.|a chemical in the body that causes allergic reactions
+harmless|adj.|not causing harm
+vibration|n.|a rapid shaking movement
+temporary|adj.|lasting only a short time
+distraction|n.|something that takes your attention away
+stimulus|n.|something that causes a reaction or activity
+benign|adj.|1) harmless; 2) kind and gentle|Most skin spots are benign.
+mild|adj.|not strong or severe
+shock|n.|1) a sudden upsetting surprise; 2) a small electric hit
+paleoanthropologist|n.|a scientist who studies early humans through fossils
+evolution|n.|1) the gradual development of living things over generations; 2) gradual change
+hominid|n.|a member of the group that includes humans and great apes and their ancestors
+illuminate|v.|1) to light up; 2) to make clear or explain|The study illuminates how memory works.
+epoch|n.|a long period of time in history or geology
+translation|n.|a version of a text in another language
+translate|v.|to change words into another language
+rampart|n.|a defensive wall around a castle or city
+elevate|v.|to raise to a higher position
+walkway|n.|a path for walking
+atop|prep.|on top of
+confess|v.|to admit something, often something wrong
+shroud|n./v.|n. a cloth wrapped around a dead body; v. to cover or hide
+ravelling|n.|a loose thread
+pale|adj.|light in color; having little color
+livid|adj.|1) very angry; 2) dark bluish in color
+tongue|n.|1) the organ in the mouth; 2) something shaped like a tongue, such as a flame
+dart|v.|to move quickly and suddenly
+zenith|n.|1) the highest point in the sky; 2) the peak of success
+languid|adj.|slow and relaxed; lacking energy
+doom|v./n.|v. to make certain to fail or die; n. a terrible fate
+sooner|adv.|earlier
+extinguish|v.|to put out a fire or light
+instinctively|adv.|by natural reaction, without thinking
+thermodynamics|n.|the science of heat and energy
+irreversible|adj.|impossible to undo or change back
+entropy|n.|a measure of disorder in a system
+rewind|v.|to go back to an earlier point
+molecule|n.|the smallest unit of a substance, made of atoms
+unbreak|v.|to make something broken whole again
+egg|n.|an oval object laid by a bird, containing a young animal
+quantum|adj.|relating to the physics of very small particles
+reversible|adj.|able to be changed back
+irreversibility|n.|the quality of being impossible to undo
+thermodynamic|adj.|relating to heat and energy
+oscillating|adj.|moving back and forth regularly
+chloroform|n.|a liquid chemical once used to make people unconscious
+pinpoint|v.|to find or identify exactly
+coauthor|n.|a person who writes something together with another person
+taxi|n.|a car you pay to ride in
+vendor|n.|a person who sells things, often on the street
+shopper|n.|a person buying things in shops
+multitude|n.|a very large number
+unbelievably|adv.|extremely; to a degree hard to believe
+festive|adj.|cheerful and celebratory
+inch|v./n.|v. to move slowly; n. a unit of length, about 2.5 cm
+passage|n.|1) a narrow way through; 2) a short section of a text
+wagon|n.|a vehicle with four wheels for carrying goods
+handtruck|n.|a small two-wheeled cart for moving heavy boxes
+burst|v.|1) to break open suddenly; 2) bursting with = very full of
+basket|n.|a container made of woven material
+angle|v./n.|n. the space between two lines that meet; v. to slope
+steeply|adv.|at a sharp slope
+self-confident|adj.|sure of yourself and your abilities
+theorist|n.|a person who develops theories
+strongly|adv.|with force or conviction
+biologist|n.|a scientist who studies living things
+artificial|adj.|made by people; not natural
+zooplankton|n.|tiny animals that float in water
+naturally|adv.|1) in a natural way; 2) of course
+thereafter|adv.|after that time
+periodically|adv.|from time to time, at regular intervals
+contrary|adj.|opposite; contrary to = against
+expectation|n.|a belief that something will happen
+fungal|adj.|relating to fungi such as mushrooms and mold
+biomass|n.|the total amount of living matter in an area
+eaten|v.|past participle of eat
+manufacture|v.|to make goods in large quantities, usually in a factory
+expense|n.|cost
+restrict|v.|to limit
+availability|n.|how easy something is to get or use
+postindustrial|adj.|relating to a society where industry is no longer the main source of work
+reduction|n.|a decrease
+biochemist|n.|a scientist who studies the chemistry of living things
+cheaper|adj.|costing less
+cattle|n.|cows and bulls
+principal|adj./n.|adj. main; most important; n. the head of a school
+accomplish|v.|to succeed in doing something
+thirty|num.|the number 30
+divert|v.|to change the direction or use of something
+crop|n.|a plant grown for food
+companion|n.|a person or animal you spend time with
+intimacy|n.|a close, personal relationship
+passion|n.|a very strong feeling or enthusiasm
+keenly|adv.|strongly; sharply
+sensitive|adj.|1) quick to notice or react; 2) easily upset
+landscape|n.|the appearance of an area of land
+outspread|adj.|spread out fully
+enlargement|n.|making something larger
+mood|n.|the way you feel at a particular time
+breadth|n.|width; wide range
+nearer|adj.|closer
+slope|n.|a surface that goes up or down at an angle
+sugar-maples|n.|maple trees whose sap is used to make maple syrup
+wavered|v.|1) moved unsteadily; 2) was unsure
+pyres|n.|piles of wood for burning, especially a dead body
+grey|adj.|British spelling of gray
+orchard|n.|an area of fruit trees
+linger|v.|to stay longer than expected
+oak-grove|n.|a small group of oak trees
+batik|n.|a method of dyeing cloth using wax to make patterns
+fabric|n.|cloth
+skillfully|adv.|with skill
+dye|v./n.|to change the color of something with a coloring substance
+cloth|n.|material made by weaving
+cant|v./n.|1) to tilt; canting = a tool for applying wax in batik; 2) insincere talk
+pen-shaped|adj.|shaped like a pen
+dot|n.|a small round mark
+expedite|v.|to make a process happen faster|The new system expedites shipping.
+laborious|adj.|needing a lot of time and effort
+copper|n.|a reddish-brown metal
+stamp|n./v.|a tool for pressing a pattern onto something
+preset|adj.|set in advance
+quicker|adj.|faster
+vegetation|n.|plants in general
+nitrogen|n.|a gas that makes up most of the air
+soil|n.|the top layer of earth in which plants grow
+extend|v.|to make longer or larger
+topsoil|n.|the top layer of soil
+graze|v.|to eat grass in a field
+cropland|n.|land used for growing crops
+comparably|adv.|in a similar way or amount
+novella|n.|a short novel
+resident|n.|a person who lives in a place
+encounter|v./n.|to meet, often unexpectedly
+acquaintance|n.|a person you know slightly
+forth|adv.|forward; out
+unexpectedly|adv.|in a surprising way
+reticent|adj.|not willing to talk about your feelings or share information|He was reticent about his past.
+hint|n./v.|a small sign or suggestion
+disapproval|n.|a negative opinion
+insurmountable|adj.|too great to be overcome
+reluctance|n.|unwillingness
+invite|v.|1) to ask someone to come; 2) to encourage a reaction
+activist|n.|a person who works for social or political change
+participate|v.|to take part
+workshop|n.|1) a meeting for learning skills; 2) a room for making things
+doctrine|n.|a set of beliefs taught by a group
+newly|adv.|recently
+spearhead|v.|to lead an effort or movement
+initiative|n.|1) a new plan for solving a problem; 2) the ability to act independently
+circa|prep.|about (used with dates)
+permission|n.|approval to do something
+pray|v.|1) to speak to God; 2) old use: please
+thee|pron.|old form of "you"
+importunate|adj.|asking for something persistently and annoyingly
+sickness|n.|illness
+fifteen|num.|the number 15
+abroad|adv.|in or to a foreign country
+penitent|adj.|feeling sorry for having done wrong
+hath|v.|old form of "has"
+sorrow|n.|deep sadness
+allay|v.|to reduce fear, worry, or doubt|The doctor allayed her fears.
+presume|v.|to suppose something is true without proof
+spur|v./n.|v. to encourage or cause something to happen faster; n. something that encourages action
+departure|n.|1) leaving; 2) a change from the usual way
+subscription|n.|regular payment to receive a product or service
+cancel|v.|to stop something planned or ongoing
+automatically|adv.|by itself, without human control
+recurring|adj.|happening again and again
+fee|n.|money paid for a service
+retailer|n.|a person or company that sells goods to the public
+subscriber|n.|a person who pays regularly for a service
+beverage|n.|a drink
+passivity|n.|not taking action; accepting what happens
+interim|adj./n.|temporary; the time between two events
+tremendous|adj.|very great
+painter|n.|a person who paints
+compromise|n./v.|an agreement in which each side gives up something
+incline|v.|inclined = tending or willing to do something
+passive|adj.|accepting things without action or resistance
+proliferation|n.|rapid increase in number|The proliferation of smartphones changed media.
+exposure|n.|1) being in contact with something; 2) being made public
+sunshine|n.|light from the sun
+workday|n.|a day of work
+span|v./n.|to extend across a period of time or space
+earning|n.|earnings = money earned
+forecast|n./v.|a prediction of the future
+submit|v.|1) to give in a document for consideration; 2) to accept authority
+exceed|v.|to be greater than
+hominin|n.|a member of the group of humans and their extinct close relatives
+assign|v.|to give a task, value, or role to
+unreliability|n.|the quality of not being trustworthy or dependable
+geology|n.|the science of rocks and the earth
+impede|v.|to slow down or block progress|Heavy snow impeded the rescue.
+stratigraphic|adj.|relating to the study of rock layers
+reliably|adv.|in a way that can be trusted
+imputed|adj.|assigned or estimated by reasoning rather than measured directly
+relocate|v.|to move to a new place
+flood|v./n.|to cover with a large amount of water
+reevaluate|v.|to judge again
+nucleotide|n.|a basic unit of DNA
+breccia|n.|rock made of broken pieces cemented together
+matrix|n.|1) the material in which something is embedded; 2) a grid of numbers
+fragment|n.|a small broken piece
+misdating|n.|giving something the wrong date
+folk|n.|people
+fond|adj.|having affection for; fond of = liking
+scarce|adj.|not enough; rare
+luxuriant|adj.|rich and plentiful in growth
+magnolia|n.|a tree with large white or pink flowers
+bosom|n.|1) a person's chest; 2) the center of something emotional
+float|v.|to stay on the surface or move gently in air or water
+delicately|adv.|gently and carefully
+hyacinth|n.|a plant with sweet-smelling flowers
+twig|n.|a small thin branch
+sail|v.|to travel on water in a boat
+twelfth-century|adj.|from the 1100s
+philosopher|n.|a person who studies ideas about knowledge, truth, and life
+indisputable|adj.|impossible to argue against; certainly true
+primarily|adv.|mainly
+monarch|n.|a king or queen
+historically|adv.|in the past; from the point of view of history
+consequential|adj.|important; having significant results
+uneventful|adj.|without anything interesting happening
+trajectory|n.|the path or development of something over time|The company's trajectory has been upward.
+legitimacy|n.|being lawful or accepted as right
+corollary|n.|a natural result or consequence of something|A corollary of higher prices is lower demand.
+throne|n.|the special chair of a king or queen; royal power
+collectively|adv.|as a group
+extraordinary|adj.|very unusual or remarkable
+phenotype|n.|the visible characteristics of a living thing, shaped by genes and environment
+mature|v./adj.|to become fully grown
+vine|n.|a climbing plant
+shrub|n.|a small bush
+descend|v.|1) to go down; 2) descended from = having as an ancestor
+ancestral|adj.|relating to ancestors
+descendant|n.|a person or animal that comes from a particular ancestor
+diversify|v.|to become more varied
+corpora|n.|large collections of texts (plural of corpus)
+electronically|adv.|by electronic means
+frequency|n.|how often something happens
+usage|n.|the way words or things are used
+incidence|n.|how often something happens
+corpus|n.|a large collection of written or spoken texts
+commonly|adv.|usually; often
+verb|n.|a word that describes an action or state
+excite|v.|to make enthusiastic; exciting = causing interest
+duly|adv.|as expected or required
+standardized|adj.|made the same according to a set standard
+valuable|adj.|worth a lot; very useful
+pioneer|v./n.|v. to be the first to develop something; n. one of the first people to do something
+consistently|adv.|always in the same way
+designer|n.|a person who designs things
+accomplishment|n.|something successfully achieved
+innovator|n.|a person who introduces new ideas or methods
+increasingly|adv.|more and more
+streamline|v.|to make a process simpler and more efficient
+robot|n.|a machine that does tasks automatically
+specialize|v.|to focus on one particular area
+weigh|v.|1) to measure how heavy something is; 2) to consider carefully before deciding
+efficiency|n.|the ability to do something well without wasting time, money, or energy
+preference|n.|a greater liking for one thing over another
+critic|n.|1) a person who judges art, books, or films; 2) a person who disapproves of something
+rarely|adv.|not often
+timeless|adj.|not affected by time or fashion; always relevant
+exhibition|n.|a public display of art or objects
+boutique|n.|a small shop selling fashionable goods
+moonlight|n.|light from the moon
+inhibit|v.|to slow down, limit, or prevent|Cold weather inhibits plant growth.
+short-nosed|adj.|having a short nose or snout
+sphinx|n.|1) a hawk moth (sphinx moth); 2) an ancient statue with a lion's body and a human head
+explicable|adj.|able to be explained
+lunar|adj.|relating to the moon
+enable|v.|to make something possible
+bat|n.|a small flying mammal active at night
+owl|n.|a bird that hunts at night
+hawk|n.|a bird of prey that hunts during the day
+nocturnal|adj.|active at night
+respond|v.|to react or reply
+mongoose|n.|a small, fast animal from Africa and Asia that eats snakes and insects
+lemur|n.|a tree-living primate from Madagascar
+reliance|n.|dependence on someone or something
+visual|adj.|relating to seeing
+advocate|v./n.|v. to publicly support an idea; n. a person who supports a cause|She advocates for animal rights.
+predominantly|adv.|mainly; mostly
+wealthy|adj.|rich
+tightly|adv.|firmly; closely
+extension|n.|1) something added to make a thing longer or larger; 2) extra time
+patronage|n.|financial support given by a patron, such as to an artist
+vastly|adv.|very greatly
+tension|n.|1) a feeling of nervousness or conflict; 2) tightness
+vivid|adj.|bright and clear; producing strong images in the mind
+flatstyle|n.|a painting style with flat areas of color, used by many Native American artists
+intertribal|adj.|between or among different tribes
+shade|n./v.|1) an area out of the sun; 2) shading = drawing darker areas
+underground|adj.|1) below the ground; 2) secret
+anonymously|adv.|without revealing your name
+protest|n./v.|a strong public statement or action against something
+authoritarian|adj.|demanding strict obedience to authority, without freedom
+regime|n.|a government, especially an undemocratic one
+readily|adv.|1) easily; 2) willingly
+altitude|n.|height above sea level
+disrupt|v.|to interrupt or disturb the normal course of something
+aesthetic|adj./n.|relating to beauty or artistic taste
+sculpture|n.|a three-dimensional work of art
+nonmuseum|adj.|not in or related to a museum
+nontheatrical|adj.|not related to theaters
+broad|adj.|1) wide; 2) general, not detailed
+artistic|adj.|relating to art; having creative skill
+appease|v.|to calm someone by giving them what they want|He tried to appease his critics.
+conceptually|adv.|in terms of ideas
+bland|adj.|without strong features; dull
+provoke|v.|to cause a reaction, especially anger|The comment provoked a heated debate.
+backlash|n.|a strong negative reaction from many people
+meaningful|adj.|having a serious or important meaning
+norm-defying|adj.|going against accepted standards
+effectively|adv.|1) successfully; 2) in reality, in effect
+integrate|v.|to combine into a whole
+passersby|n.|people walking past
+unfavorably|adv.|in a negative way
+provocative|adj.|intended to cause a strong reaction or debate
+luminous|adj.|bright; giving off light
+viewer|n.|a person who watches something
+elicit|v.|to draw out a response or reaction|The question elicited laughter.
+commentary|n.|comments or discussion about something
+cryptic|adj.|having a hidden or mysterious meaning
+overtly|adv.|openly; not hidden
+extinction|n.|the dying out of a species
+solely|adv.|only
+asteroid|n.|a rocky object that orbits the Sun
+volcanic|adj.|relating to volcanoes
+climate-altering|adj.|changing the climate
+dissenter|n.|a person who disagrees with an accepted view
+align|v.|1) to place in a line; 2) to agree or support
+publicly|adv.|openly; in public
+spectator|n.|a person who watches an event
+leap|v.|to jump
+fled|v.|past of flee: ran away
+canonical|adj.|accepted as standard or authoritative
+retelling|n.|a new version of an old story
+myth|n.|1) a traditional story; 2) a false belief
+divide|v.|to separate into parts
+plethora|n.|a very large amount; more than enough|There is a plethora of apps for learning languages.
+bead|n.|a small ball with a hole, used in jewelry
+propagation|n.|spreading or reproducing
+ornament|n.|a decorative object
+polyploidy|n.|having more than two complete sets of chromosomes
+genome|n.|the full set of genes of a living thing
+duplication|n.|copying; making a double
+accumulation|n.|gradual gathering or increase
+noncoding|adj.|not carrying instructions for making proteins (of DNA)
+deletion|n.|removal
+fork|n.|1) a split into branches; 2) a tool for eating
+fern|n.|a green plant with feathery leaves and no flowers
+eukaryote|n.|an organism whose cells have a nucleus
+cite|v.|to mention as evidence or an example; to quote
+inspiration|n.|something that gives you ideas or a desire to create
+memoir|n.|a written account of your own life and experiences
+recall|v.|to remember
+tribe|n.|a group of people with shared ancestry and culture
+harvest|v./n.|to gather crops or other natural resources
+syrup|n.|a thick sweet liquid
+childhood|n.|the time when you are a child
+leisurely|adj.|slow and relaxed
+reluctant|adj.|unwilling; hesitant
+birchen|adj.|made of birch wood
+basin|n.|a bowl-shaped container
+hardwood|n.|wood from broad-leaved trees, such as oak or maple
+chip|n.|a small piece broken off
+driven|v./adj.|1) past participle of drive; 2) highly motivated
+freely|adv.|without limits
+trickle|v.|to flow slowly in small drops
+dish|n.|a shallow container for food
+inaccessible|adj.|impossible or difficult to reach or understand
+notably|adv.|especially; in a noticeable way
+discontinue|v.|to stop doing or producing
+transient|adj.|lasting only a short time|The pain was transient.
+molybdenum|n.|a silvery metal element
+correspond|v.|1) to match; 2) to write letters to someone
+roughly|adv.|approximately
+briefly|adv.|for a short time
+reexamined|v.|examined again
+occlude|v.|to block or close up
+contextual|adj.|relating to the surrounding situation
+microscopy|n.|the use of microscopes
+microfracture|n.|a very small crack
+fluid|n./adj.|a liquid or gas; adj. smooth and flowing
+initiate|v.|to start
+deposition|n.|the laying down of material, such as sediment
+print|v.|to produce text or images on paper
+preindustrial|adj.|before the rise of factories and machines
+industrialization|n.|the development of industries in a country
+handmade|adj.|made by hand
+intricate|adj.|very detailed and complicated
+ornamentation|n.|decoration
+reminiscent|adj.|reminding you of something|The smell was reminiscent of her childhood.
+medieval|adj.|relating to the Middle Ages (about 500-1500)
+manuscript|n.|a handwritten or typed document
+meticulously|adv.|with very careful attention to detail
+handcrafted|adj.|made skillfully by hand
+exemplify|v.|to be a typical example of
+artistry|n.|creative skill
+comedy|n.|a funny play or film
+celebrate|v.|1) to have a party for a special event; 2) to praise publicly
+rebellion|n.|resistance to authority
+playwright|n.|a person who writes plays
+rigid|adj.|1) stiff; 2) strict and unwilling to change
+socially|adv.|in relation to society
+defy|v.|to refuse to obey; to resist
+notable|adj.|worth noticing; important
+glance|n./v.|a quick look
+proven|adj.|shown to be true or effective
+manage|v.|1) to succeed in doing something difficult; 2) to control or run
+penetrate|v.|to go into or through
+prose|n.|ordinary written language, not poetry
+thrillingly|adv.|in a very exciting way
+entail|v.|to involve as a necessary part|The job entails a lot of travel.
+profess|v.|to claim openly, sometimes falsely
+dimension|n.|1) a measurement such as length; 2) an aspect of something
+groundbreaking|adj.|new and very important; innovative
+philosophical|adj.|relating to philosophy; thoughtful
+lecture|n.|a talk given to teach a group
+reflexively|adv.|automatically, without thinking
+annoy|v.|to make slightly angry
+articulate|v./adj.|v. to express clearly; adj. able to express ideas clearly
+entice|v.|to attract by offering something pleasant
+psychology|n.|the study of the mind and behavior
+compensation|n.|payment for work or for loss
+undercut|v.|to weaken or undermine
+applicability|n.|how relevant or usable something is in a situation
+verbal|adj.|relating to words
+dexterity|n.|skill with the hands or mind
+formal|adj.|1) official; 2) following rules of form or style
+parameter|n.|a limit or factor that defines how something is done
+fiction|n.|stories about imaginary people and events
+echoes|n./v.|repeated sounds; things similar to something earlier
+destabilizing|adj.|making something less stable
+interpolated|v.|inserted or estimated between known points
+erode|v.|to wear away gradually
+externally|adv.|from the outside
+impose|v.|to force a rule or burden on someone
+oddity|n.|a strange thing or quality
+consist|v.|consist of = to be made of
+fantastical|adj.|strange and imaginative; unreal
+superficially|adv.|on the surface only
+interaction|n.|communication or action between people or things
+lighter|adj.|1) less heavy; 2) less serious
+tone|n.|1) the general feeling or attitude of a text; 2) quality of a sound
+entertain|v.|1) to amuse; 2) to consider an idea
+binary|adj.|1) having two parts; 2) a binary star = two stars orbiting each other
+planetary|adj.|relating to planets
+formation|n.|the process of forming
+shed|v./n.|v. to lose or get rid of; n. a small hut
+installation|n.|1) a large artwork made for a particular space; 2) setting up equipment
+singer|n.|a person who sings
+composer|n.|a person who writes music
+creatively|adv.|in a creative way
+transform|v.|to change completely
+rotunda|n.|a round building or room with a dome
+dynamic|adj.|full of energy and change
+curtain|n.|cloth that covers a window or stage
+relevance|n.|connection to the matter at hand
+inequality|n.|unfair difference between groups
+suffer|v.|to experience pain or harm
+myopic|adj.|1) short-sighted; 2) lacking long-term thinking
+shortcoming|n.|a fault or weakness
+regenerate|v.|to grow again
+feat|n.|an impressive achievement
+gene|n.|a unit of heredity passed from parents to offspring
+regeneration|n.|regrowth
+possess|v.|to have or own
+excitement|n.|a feeling of great enthusiasm
+differently|adv.|in a different way
+likened|v.|compared to
+operate|v.|to work or function
+fiscal|adj.|relating to government money and taxes
+electorally|adv.|in terms of elections
+incongruity|n.|the quality of not fitting in
+strategically|adv.|in a planned way to gain an advantage
+literacy|n.|the ability to read and write
+invade|v.|to enter by force
+encoded|v.|put into a code or system of signs
+signify|v.|to mean or show
+linguist|n.|a person who studies languages
+syllable|n.|a unit of sound in a word
+syntax|n.|the rules for arranging words in sentences
+huipil|n.|a loose blouse traditionally worn by Indigenous women in Mexico and Central America
+blouse|n.|a woman's shirt
+intermittent|adj.|stopping and starting at intervals|There was intermittent rain all day.
+repeat|v.|to do or say again
+perihelion|n.|the point in an orbit closest to the Sun
+closest|adj.|nearest
+solar|adj.|relating to the Sun
+vaporization|n.|turning into vapor or gas
+ejection|n.|throwing out with force
+untenable|adj.|impossible to defend or support|His position became untenable.
+duration|n.|the length of time something lasts
+rotational|adj.|relating to spinning
+instability|n.|the state of being unstable
+scenario|n.|a possible situation or sequence of events
+causal|adj.|relating to cause and effect
+judgment|n.|an opinion or decision formed after careful thought
+billiard|n.|a game played with balls and a cue on a table
+gate|n.|a movable barrier in a fence or wall
+kindness|n.|being kind
+prosocial|adj.|helping others or benefiting society
+bystander|n.|a person who watches an event but is not involved
+witness|v./n.|to see an event happen
+helpful|adj.|giving help
+inspire|v.|to fill someone with the urge to do something
+amusement|n.|enjoyment; finding something funny
+publicity|n.|public attention
+unexceptionable|adj.|not open to objection; perfectly acceptable
+conceive|v.|to form an idea or imagine
+harm|n./v.|damage or injury
+converse|v.|to talk
+elegant|adj.|graceful and stylish
+respectable|adj.|regarded as proper and decent
+chatter|v.|to talk quickly about unimportant things
+empowerment|n.|gaining power and control over one's own life
+militant|adj.|aggressively active for a cause
+uniformly|adv.|in the same way throughout
+radical|adj.|1) very new and different; 2) favoring extreme political change
+espousing|v.|supporting or adopting a cause or belief
+cassette|n.|a small plastic case containing tape for recording sound
+tape|n.|a long narrow strip of material
+dramatically|adv.|suddenly and greatly
+counterintuitive|adj.|opposite to what you would expect|It seems counterintuitive, but resting can make you faster.
+buyer|n.|a person who buys
+vintage|adj.|old and of high quality
+thronged|v.|crowded into a place
+resold|v.|sold again
+bee|n.|a flying insect that makes honey
+decline|v./n.|v. 1) to decrease; 2) to refuse politely; n. a decrease
+floral|adj.|relating to flowers
+inconsistent|adj.|not staying the same; not in agreement
+prediction|n.|a statement about what will happen
+patch|n.|a small area that differs from what is around it
+richness|n.|1) wealth; 2) the variety or number of species in an area
+resource|n.|a supply of something useful
+outbreak|n.|a sudden start of something unwanted, like a disease or war
+hostility|n.|1) unfriendliness; 2) hostilities = acts of war
+instigator|n.|a person who starts something, often trouble
+consult|v.|to seek information or advice from
+secondary|adj.|less important; coming after
+neglect|v.|to fail to care for or pay attention to
+engrossing|adj.|holding your full attention
+introduction|n.|1) the beginning of a text; 2) bringing in something new
+laudable|adj.|deserving praise|It was a laudable effort.
+thesis|n.|1) the main argument of an essay; 2) a long piece of academic writing
+catastrophic|adj.|extremely harmful
+outcome|n.|a result
+refuse|v.|to say no to
+deviate|v.|to depart from the usual course or standard
+implausibly|adv.|in a way that is hard to believe
+reductive|adj.|presenting something complex in an oversimplified way|The review called the theory reductive.
+mutation|n.|a change in the genetic material of a living thing
+marker|n.|1) a sign that shows something; 2) a pen with a thick tip
+preponderance|n.|a larger amount or number; being more common|A preponderance of evidence supports the theory.
+petroleum|n.|oil found under the ground, used to make fuel and plastics
+ecologically|adv.|in a way that relates to or protects the environment
+sustainable|adj.|able to continue for a long time without harming the environment
+bacteria|n.|very small living things, some of which cause disease
+secrete|v.|to produce and release a liquid, as glands do
+glucose|n.|a type of sugar that gives energy to living things
+mesh|n.|material like a net
+cellulose|n.|the substance that makes up the walls of plant cells
+leatherlike|adj.|similar to leather
+wastewater|n.|used water that contains waste
+undesirable|adj.|not wanted; unpleasant or harmful
+byproduct|n.|something produced in addition to the main product, often unintentionally
+adopt|v.|1) to start using an idea or method; 2) to take a child into your family legally
+regimen|n.|a set plan or routine, such as for diet or exercise
+modify|v.|to change slightly
+embedded|adj.|firmly fixed inside something
+pigmentation|n.|natural coloring of skin, hair, or other tissue
+diadromous|adj.|migrating between fresh water and salt water during life (of fish)
+migrate|v.|to move from one place to another, often seasonally
+freshwater|adj.|living in or relating to water that is not salty
+marine|adj.|relating to the sea
+biome|n.|a large natural area with typical plants and animals, such as a desert or rainforest
+migration|n.|movement from one place to another
+obligate|adj.|having to live in a particular way; unable to survive otherwise
+euryhaline|adj.|able to live in waters of a wide range of saltiness
+tolerate|v.|to accept or endure something unpleasant
+salinity|n.|saltiness
+blackchin|adj.|blackchin tilapia = a fish with a dark chin
+tilapia|n.|a freshwater fish often raised for food
+survive|v.|to continue to live or exist
+relocation|n.|moving to a new place
+salmon|n.|a large fish that swims from the sea up rivers to lay eggs
+curious|adj.|1) eager to know; 2) strange
+visually|adv.|in a way that relates to seeing
+recruit|v.|to get people to join or take part
+lucid|adj.|1) clear and easy to understand; 2) lucid dream = a dream in which you know you are dreaming
+dreamer|n.|a person who dreams
+slept|v.|past of sleep
+smoothness|n.|the quality of being smooth
+sight|v./n.|v. to see or notice; n. the ability to see
+awake|adj.|not sleeping
+paleontologist|n.|a scientist who studies fossils
+shadow|n./v.|a dark area made when light is blocked
+dinosaur|n.|an extinct reptile that lived millions of years ago
+ground-dwelling|adj.|living on the ground
+insectivore|n.|an animal that eats insects
+squirrel|n.|a small animal with a bushy tail that lives in trees
+isotopic|adj.|relating to isotopes, forms of a chemical element
+signature|n.|1) your name written by you; 2) a distinctive pattern that identifies something
+meteorite|n.|a piece of rock from space that has landed on Earth
+recover|v.|1) to get back; 2) to get well again
+tempt|v.|to make someone want to do something; tempting = attractive
+ascertain|v.|to find out for certain|Police tried to ascertain the cause of the fire.
+meteorite-sample|n.|a sample taken from a meteorite
+moral|adj./n.|relating to right and wrong
+morally|adv.|in terms of right and wrong
+motive|n.|a reason for doing something
+inherently|adv.|as a basic, natural part of something
+goodness|n.|the quality of being good
+constitute|v.|1) to form or make up; 2) to be considered as|Women constitute half the workforce.
+swim|v.|to move through water
+snail|n.|a small slow creature with a shell
+thin|adj.|not thick
+delicate|adj.|easily broken or damaged; fine
+vulnerable|adj.|easily hurt or damaged
+susceptibility|n.|being easily affected or harmed by something
+dissolution|n.|1) dissolving; 2) the ending of an organization or relationship
+protective|adj.|giving protection
+coat|n./v.|a covering layer; coating = a thin layer covering something
+outer|adj.|on the outside
+intact|adj.|complete and not damaged
+moreover|adv.|in addition; also
+breach|v./n.|v. to break through; n. a break or gap
+rebuild|v.|to build again
+namely|adv.|that is to say; specifically
+instrumental|adj.|1) important in making something happen; 2) played on instruments|She was instrumental in creating the program.
+sake|n.|for the sake of = for the purpose or benefit of
+motivator|n.|something that gives a reason to act
+usefulness|n.|how useful something is
+rat|n.|a rodent larger than a mouse
+wisdom|n.|good judgment from knowledge and experience
+evolve|v.|to develop gradually
+spark|v./n.|v. to cause something to start; n. a tiny burning bit
+emergence|n.|the process of appearing or coming into existence
+clan|n.|a group of related families
+chiefdom|n.|a society ruled by a chief
+bureaucratic|adj.|relating to complex official systems and rules
+anthropologist|n.|a scientist who studies human societies and cultures
+flexible|adj.|able to bend or change easily
+alternately|adv.|in turns, one after the other
+hierarchy|n.|a system in which people or things are ranked by importance
+adjust|v.|to change slightly to fit
+seasonally|adv.|according to the seasons
+assemble|v.|1) to gather together; 2) to put together parts
+esteem|v./n.|to respect and admire; esteemed = highly respected
+conspicuous|adj.|easily seen; attracting attention|He felt conspicuous in his bright suit.
+alignment|n.|1) arrangement in a line; 2) agreement or support
+integral|adj.|necessary and important as part of a whole|Music is integral to the film.
+commentator|n.|a person who gives opinions on events
+lauded|v.|praised highly
+observer|n.|a person who watches or notices
+polarization|n.|division into two sharply opposing groups
+problematic|adj.|causing problems; difficult
+familial|adj.|relating to a family
+swan|n.|a large white water bird with a long neck
+rear|v./n.|v. to raise young; n. the back part
+cygnet|n.|a young swan
+significantly|adv.|in an important or noticeable way
+adulthood|n.|the period of being an adult
+interstate|adj.|between states
+taxation|n.|the system of taxing
+hydrogen|n.|the lightest gas
+habitable|adj.|suitable for living in
+retain|v.|to keep
+evaporation|n.|liquid turning into gas
+assessment|n.|a judgment or evaluation
+calculation|n.|a mathematical process to find an answer
+sculptor|n.|an artist who makes sculptures
+mythology|n.|a collection of myths
+sculpted|v./adj.|carved or shaped as a sculpture
+mythical|adj.|existing in myths; imaginary
+ignore|v.|to pay no attention to
+carve|v.|to cut into a shape
+financially|adv.|relating to money
+ultimate|adj.|final; greatest
+displacement|n.|moving something or someone from its usual place
+newer|adj.|more recent
+scratch|v.|to mark or cut a surface with something sharp
+margin|n.|1) the edge of a page; 2) the difference between two amounts
+comic|adj./n.|funny; a comic book
+alongside|prep.|next to; together with
+supplanting|v.|replacing something
+outcompeting|v.|doing better than others in a competition for resources
+uncover|v.|to discover something hidden
+substance|n.|a material or matter
+interact|v.|to act on or communicate with each other
+beetle|n.|an insect with hard wing covers
+prey|v./n.|n. an animal hunted by another; v. prey on = to hunt and eat
+seed|n.|the part of a plant from which a new plant grows
+predator|n.|an animal that hunts others
+persist|v.|to continue to exist or to keep doing something
+continent|n.|one of the large land masses, such as Africa
+southeastern|adj.|in the southeast
+botanist|n.|a scientist who studies plants
+monitor|v.|to watch and check over time
+collect|v.|to gather
+privacy|n.|the state of being free from others' attention
+data-privacy|n.|protection of personal data
+privacy-setting|n.|an option that controls who sees your information
+integrity|n.|1) honesty; 2) being whole and undamaged
+pipe|n.|a tube that carries liquid or gas
+assess|v.|to judge or evaluate
+unearthing|v.|digging up; discovering
+alteration|n.|a change
+concentration|n.|1) the amount of a substance in a mixture; 2) focus of attention
+chirping|n.|short high sounds made by birds or insects
+antenna|n.|1) a feeler on an insect's head; 2) a device that receives signals
+gravitational|adj.|relating to gravity
+faint|adj.|weak; not clear
+statistical|adj.|relating to statistics
+preclude|v.|to prevent from happening; to make impossible|His injury precludes him from playing.
+convince|v.|to make someone believe something; convincing = believable
+specimen|n.|a sample used for study
+baleen|n.|the comb-like plates some whales use to filter food
+whale|n.|a very large sea mammal
+accessory|adj./n.|extra; additional
+spleen|n.|an organ in the body that filters blood
+seemingly|adv.|apparently
+functionless|adj.|having no function
+splenetic|adj.|1) relating to the spleen; 2) bad-tempered
+tissue|n.|the material that animals and plants are made of
+prevalence|n.|how common something is
+deeper|adj.|further down
+dive|n./v.|a plunge into water
+hypothesize|v.|to suggest an explanation to be tested
+actively|adv.|in an active way
+province|n.|a region of a country
+kilometer|n.|1,000 meters
+southeast|n.|the direction between south and east
+cacao|n.|the bean from which chocolate is made
+overland|adv./adj.|by land
+corona|n.|the outer layer of the Sun's atmosphere
+indication|n.|a sign
+flare|n.|a sudden burst of light or energy
+intense|adj.|very strong
+electromagnetic|adj.|relating to electricity and magnetism
+radiation|n.|energy sent out as waves or particles
+emanate|v.|to come out from a source
+interfere|v.|to get in the way of
+telecommunication|n.|communication over distance by phone, radio, or internet
+preceding|adj.|coming before
+temporarily|adv.|for a short time
+brightness|n.|the quality of being bright
+recount|v.|to tell a story
+tale|n.|a story
+vein|n.|a tube that carries blood to the heart
+flame|n.|burning gas from a fire
+unseen|adj.|not seen
+valor|n.|great courage
+imprint|v.|to mark or fix firmly
+attach|v.|to fix or join
+harness|n./v.|n. straps fastened around an animal or person; v. to use energy or a resource
+peck|v.|to strike with a beak
+cooperative|adj.|working together
+exclude|v.|to leave out
+curiously|adv.|strangely
+paw|v./n.|to touch with a paw
+detach|v.|to separate or remove
+assimilate|v.|1) to take in and understand fully; 2) to become part of a group
+sharply|adv.|1) suddenly and greatly; 2) severely
+criticize|v.|to point out faults
+self-contained|adj.|complete in itself
+casual|adj.|relaxed and informal
+mural|n.|a large painting on a wall
+ambitious|adj.|1) wanting success; 2) requiring great effort
+meditation|n.|1) quiet focused thinking; 2) a piece of writing that reflects deeply on a subject
+legacy|n.|something passed down from the past|The war left a legacy of distrust.
+colonialism|n.|the control of one country over another territory
+adjacent|adj.|next to
+railway|n.|a train track system
+terminal|n.|a station at the end of a transport line
+withdrawn|adj.|quiet and not social
+splendour|n.|British spelling of splendor: magnificent beauty
+arch|n.|a curved structure
+colourless|adj.|British spelling of colorless: without color; dull
+indifferent|adj.|not interested; not caring|He was indifferent to the results.
+shoulder|v.|to carry a burden; to push with the shoulder
+unlovely|adj.|unattractive
+clock|n.|a device that shows the time
+portal|n.|a large, grand entrance
+eternal|adj.|lasting forever
+adventure|n.|an exciting experience
+prosperous|adj.|wealthy and successful
+ordinary|adj.|normal; not special
+interplay|n.|the way things affect each other
+oppose|v.|to be against
+metropolis|n.|a very large city
+capitalism|n.|an economic system based on private ownership and profit
+pragmatism|n.|a practical approach to problems
+infinite|adj.|without limits
+undergraduate|n.|a university student working toward a first degree
+anthropology|n.|the study of human societies and cultures
+prehistoric|adj.|from before written history
+participation|n.|taking part
+hunt|v.|to chase and kill animals for food
+burial|n.|putting a dead body in the ground
+hunter|n.|a person or animal that hunts

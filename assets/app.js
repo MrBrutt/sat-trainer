@@ -3,6 +3,7 @@ import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 import { createAssistant } from "./assistant.js";
 import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, REVIEW_DAYS, dayKey } from "./today.js";
 import { createTimer, fmtTime, paceFor } from "./timer.js";
+import { createPrep } from "./prep.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -177,6 +178,13 @@ const vocab = createVocab({
   inClaude: () => !!window.claude,   // inside claude.ai the page cannot reach other sites
   onWordDone: () => today.log("w"),
   refreshQuestion: () => { if (S.set && $("#main") && S.ui.view === "questions") renderQuestion(); },
+  refreshTrainer: () => { if (S.set && $("#main") && S.ui.view === "questions") { renderSidebar(); renderQuestion(); } },
+});
+const prep = createPrep({
+  S, esc, icon, plural, toast, vocab,
+  answerOf: (q) => answerOf(q),
+  current: () => cur(),
+  refresh: (scrollTop) => { if (S.set && $("#main") && S.ui.view === "questions") { renderSidebar(); renderQuestion(scrollTop); } },
 });
 ai = createAssistant({
   S, $, icon, esc, toast, ls, KEY, confirmDialog,
@@ -192,6 +200,7 @@ const today = createToday({
   S, $, icon, esc, toast, ls, KEY, plural,
   vocabDue: () => vocab.dueTotal(),
   wordsStudied: () => vocab.studied(),
+  readyCount: () => S.set.questions.filter(isReady).length,
   refreshChrome: () => renderTopbar(),
 });
 
@@ -561,7 +570,7 @@ const isOriginal = (q) => S.ui.original[q.id] ?? q.hasFigure;
 const timingKey = (q) => (inReview(q) ? `r:${q.id}` : q.id);
 function timerTick() {
   const q = S.set && S.ui.view === "questions" ? cur() : null;
-  timer.sync(q && !answerOf(q) ? timingKey(q) : null);
+  timer.sync(q && !answerOf(q) && !prep.locked(q) ? timingKey(q) : null);   // learning the words is not question time
   const el = document.getElementById("qtimer");
   if (!el || !q) return;
   const st = timer.state();
@@ -585,6 +594,8 @@ function timeNote(q, pr) {
 const inReview = (q) => S.ui.status === "review" && (isDue(S.review[q.id]) || !!S.attempt[q.id]);
 const answerOf = (q) => (inReview(q) ? S.attempt[q.id] || null : S.progress[q.id]);
 const dueReviewCount = () => S.set.questions.filter((q) => isDue(S.review[q.id])).length;
+// Not answered yet, and every word of its answer choices is learned.
+const isReady = (q) => { if (S.progress[q.id]) return false; const g = vocab.gateOf(q); return !g.loading && !g.missing.length; };
 function whenDue(r) {
   const days = Math.round((r.due - new Date().setHours(0, 0, 0, 0)) / 864e5);
   return days <= 0 ? "сегодня" : days === 1 ? "завтра" : `через ${days} ${plural(days, "день", "дня", "дней")}`;
@@ -600,6 +611,7 @@ function matches(q) {
   if (S.ui.status === "all") return true;
   if (S.ui.status === "flag") return S.flags.has(q.id);
   if (S.ui.status === "review") return isDue(S.review[q.id]) || !!S.attempt[q.id];
+  if (S.ui.status === "ready") return isReady(q);
   return statusOf(q.id) === S.ui.status;
 }
 // The open question stays in the list even after it stops matching (e.g. answered while filtering "todo").
@@ -699,12 +711,12 @@ function renderTopbar() {
 function renderSidebar() {
   const qs = S.set.questions;
   const inSkill = (q) => (S.ui.skill === "all" || q.skill === S.ui.skill) && (!S.ui.diff || S.ui.diff === "all" || q.difficulty === S.ui.diff);
-  const count = (st) => qs.filter((q) => inSkill(q) && (st === "all" || (st === "flag" ? S.flags.has(q.id) : st === "review" ? isDue(S.review[q.id]) : statusOf(q.id) === st))).length;
+  const count = (st) => qs.filter((q) => inSkill(q) && (st === "all" || (st === "flag" ? S.flags.has(q.id) : st === "review" ? isDue(S.review[q.id]) : st === "ready" ? isReady(q) : statusOf(q.id) === st))).length;
   const list = visible();
   const skills = [{ name: "all", label: "Все навыки", count: qs.length, color: "var(--text-2)" }, ...S.set.skills];
   const multiDomain = new Set(S.set.skills.map((sk) => sk.domain)).size > 1;
   const diffs = S.set.difficulties || [];
-  const statuses = [["all", "Все"], ["review", "Повторить"], ["todo", "Не решены"], ["wrong", "Ошибки"], ["right", "Верно"], ["flag", "Отмеченные"]];
+  const statuses = [["all", "Все"], ["review", "Повторить"], ["todo", "Не решены"], ["ready", "Слова выучены"], ["wrong", "Ошибки"], ["right", "Верно"], ["flag", "Отмеченные"]];
   const stats = S.set.skills.map((s) => {
     const sq = qs.filter((q) => q.skill === s.name);
     const ok = sq.filter((q) => S.progress[q.id]?.ok).length;
@@ -735,7 +747,7 @@ function renderSidebar() {
     <div>
       <div class="side-label">Статус</div>
       <div class="chips">${statuses.map(([k, label]) => `
-        <button class="chip ${S.ui.status === k ? "active" : ""} ${k === "review" && count(k) ? "chip-warn" : ""}" data-action="status" data-status="${k}" aria-pressed="${S.ui.status === k}">${k === "review" ? icon("clock", "icon-sm") : ""}${label}<span class="count">${count(k)}</span></button>`).join("")}
+        <button class="chip ${S.ui.status === k ? "active" : ""} ${k === "review" && count(k) ? "chip-warn" : ""}" data-action="status" data-status="${k}" aria-pressed="${S.ui.status === k}"${k === "ready" ? ' title="Не решены, и все слова из вариантов ответа уже выучены"' : ""}>${k === "review" ? icon("clock", "icon-sm") : k === "ready" ? icon("cards", "icon-sm") : ""}${label}<span class="count">${count(k)}</span></button>`).join("")}
       </div>
     </div>
     <div>
@@ -744,10 +756,12 @@ function renderSidebar() {
         const st = statusOf(q.id);
         const rv = S.review[q.id];
         const at = S.ui.status === "review" ? S.attempt[q.id] : null;
+        const g = !answerOf(q) && vocab.gateOf(q);
         const cls = [at ? (at.ok ? "ok" : "bad") : st === "right" ? "ok" : st === "wrong" ? "bad" : "",
-          rv && !rv.done ? "rq" : "", rv?.done ? "fixed" : "",
+          rv && !rv.done ? "rq" : "", rv?.done ? "fixed" : "", g && !g.loading && g.missing.length ? "locked" : "",
           q.id === S.ui.cur ? "current" : "", S.flags.has(q.id) ? "flag" : ""].join(" ");
-        return `<button class="qcell ${cls}" style="--c:${skillOf(q).color}" data-action="go" data-id="${q.id}" aria-label="Вопрос ${q.n}"${q.id === S.ui.cur ? ' aria-current="true"' : ""}>${q.n}</button>`;
+        const lockNote = g && !g.loading && g.missing.length ? `, сначала ${g.missing.length} ${plural(g.missing.length, "слово", "слова", "слов")}` : "";
+        return `<button class="qcell ${cls}" style="--c:${skillOf(q).color}" data-action="go" data-id="${q.id}" aria-label="Вопрос ${q.n}${lockNote}" title="${lockNote ? `Вопрос ${q.n}${lockNote}` : ""}"${q.id === S.ui.cur ? ' aria-current="true"' : ""}>${q.n}</button>`;
       }).join("")}</div>
     </div>
     ${S.ui.status === "review" ? upcomingHtml() : ""}
@@ -861,6 +875,13 @@ function renderQuestion(scrollTop = false) {
         <button class="btn btn-outline" data-action="today-new">Решать новые вопросы</button></div>`;
       return;
     }
+    if (S.ui.status === "ready") {
+      main.innerHTML = `<div class="empty"><h3>Пока нет вопросов, к которым выучены все слова</h3>
+        <p>Откройте нерешённый вопрос — тренажёр покажет слова из его вариантов ответа, проверит их и откроет вопрос. Или учите слова в карточках: они идут в порядке вопросов.</p>
+        <div class="row" style="justify-content:center"><button class="btn btn-primary" data-action="status" data-status="todo">К нерешённым вопросам</button>
+        <button class="btn btn-outline" data-action="today-words">Учить слова</button></div></div>`;
+      return;
+    }
     main.innerHTML = `<div class="empty"><h3>Здесь пусто</h3><p>По выбранным фильтрам вопросов нет.</p>
       <button class="btn btn-outline" data-action="clear-filters">Сбросить фильтры</button></div>`;
     return;
@@ -870,6 +891,32 @@ function renderQuestion(scrollTop = false) {
   const pr = answerOf(q);
   const orig = isOriginal(q);
   const sk = skillOf(q);
+  const nav = `<nav class="qnav" aria-label="Навигация по вопросам">
+      <button class="btn btn-outline" data-action="prev" ${pos <= 0 ? "disabled" : ""} aria-label="Предыдущий вопрос">${icon("left")}<span class="btn-label">Назад</span></button>
+      <div class="spacer"></div>
+      ${pr && !review ? `<button class="btn btn-ghost" data-action="retry" aria-label="Решить заново">${icon("rotate")}<span class="btn-label">Решить заново</span></button>` : ""}
+      <button class="btn btn-primary" data-action="next" ${pos >= list.length - 1 ? "disabled" : ""} aria-label="Следующий вопрос"><span class="btn-label">Далее</span>${icon("right")}</button>
+    </nav>`;
+  if (prep.locked(q)) {
+    // the question stays closed until the words of its answer choices are learned
+    main.innerHTML = `<div class="qwrap">
+      ${review ? reviewBanner(q, pr) : ""}
+      <div class="qhead">
+        <div class="qnum">Вопрос ${q.n} <span>· ${pos + 1} из ${list.length}</span></div>
+        <span class="badge badge-skill" style="--c:${sk.color}"><span class="dot"></span>${esc(q.skill)}</span>
+        ${q.difficulty ? `<span class="badge">${diffBars(q.difficulty)} ${esc(q.difficulty)}</span>` : ""}
+        <div class="spacer"></div>
+        <span class="mono" title="Question ID в College Board">${esc(q.id)}</span>
+      </div>
+      ${prep.html(q)}
+      ${nav}
+    </div>`;
+    S.anim = null;
+    timerTick();
+    ai.follow();
+    if (scrollTop) window.scrollTo({ top: 0 });
+    return;
+  }
   main.innerHTML = `<div class="qwrap">
     ${review ? reviewBanner(q, pr) : ""}
     <div class="qhead">
@@ -892,12 +939,7 @@ function renderQuestion(scrollTop = false) {
     ${feedbackHtml(q, pr)}
     ${explainHtml(q, pr)}
     ${pr ? vocab.questionWordsHtml(q) : ""}
-    <nav class="qnav" aria-label="Навигация по вопросам">
-      <button class="btn btn-outline" data-action="prev" ${pos <= 0 ? "disabled" : ""} aria-label="Предыдущий вопрос">${icon("left")}<span class="btn-label">Назад</span></button>
-      <div class="spacer"></div>
-      ${pr && !review ? `<button class="btn btn-ghost" data-action="retry" aria-label="Решить заново">${icon("rotate")}<span class="btn-label">Решить заново</span></button>` : ""}
-      <button class="btn btn-primary" data-action="next" ${pos >= list.length - 1 ? "disabled" : ""} aria-label="Следующий вопрос"><span class="btn-label">Далее</span>${icon("right")}</button>
-    </nav>
+    ${nav}
     <div class="hints">
       <span><kbd>A</kbd>–<kbd>D</kbd> ответ</span><span><kbd>Shift</kbd>+<kbd>A</kbd> вычеркнуть</span>
       <span><kbd>←</kbd> <kbd>→</kbd> навигация</span><span><kbd>E</kbd> разбор</span><span><kbd>F</kbd> отметить</span>
@@ -939,6 +981,7 @@ async function fillOriginals(q) {
 
 function go(id, scroll = true) {
   vocab.hideWord();
+  prep.leave();
   S.ui.cur = id;
   saveUi();
   document.body.classList.remove("sidebar-open");
@@ -956,6 +999,7 @@ function step(d) {
 // Records an answer: a review attempt reschedules the mistake, a first attempt may start a review.
 function record(q, result) {
   result = { ...result, ms: timer.take(timingKey(q)) };
+  vocab.invalidate();
   if (inReview(q)) {
     S.attempt[q.id] = result;
     S.review[q.id] = { ...gradeReview(S.review[q.id], result.ok), lastMs: result.ms };
@@ -971,7 +1015,7 @@ function record(q, result) {
 
 function answer(letter) {
   const q = cur();
-  if (!q || answerOf(q) || !q.choices.some((c) => c.letter === letter)) return;
+  if (!q || answerOf(q) || prep.locked(q) || !q.choices.some((c) => c.letter === letter)) return;
   record(q, { c: letter, ok: letter === q.correct, t: Date.now() });
   S.anim = { id: q.id, letter };
   S.explainOpen[q.id] = true;
@@ -982,7 +1026,7 @@ function answer(letter) {
 function checkSpr() {
   const q = cur();
   const val = $("#spr")?.value.trim();
-  if (!q || !val) return;
+  if (!q || !val || prep.locked(q)) return;
   const norm = (s) => s.replace(/\s+/g, "").replace(/^\+/, "").toLowerCase();
   const ok = String(q.correctText || "").split(/[,;]| or /).map(norm).filter(Boolean).includes(norm(val));
   record(q, { c: val, ok, t: Date.now() });
@@ -1029,7 +1073,7 @@ const ACTIONS = {
   "check-spr": checkSpr,
   reveal: () => {
     const q = cur();
-    if (!q || answerOf(q)) return;
+    if (!q || answerOf(q) || prep.locked(q)) return;
     record(q, { c: null, ok: false, revealed: true, t: Date.now() });
     S.explainOpen[q.id] = true;
     renderAll();
@@ -1114,6 +1158,7 @@ const ACTIONS = {
   ...vocab.actions,
   ...ai.actions,
   ...today.actions,
+  ...prep.actions,
   "today-review": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "review"); },
   "timer-visible": () => { S.ui.hideTimer = !S.ui.hideTimer; saveUi(); renderAll(); toast(S.ui.hideTimer ? "Таймер скрыт — время всё равно считается" : "Таймер показан"); },
   "today-new": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "todo"); },
@@ -1144,6 +1189,12 @@ document.addEventListener("keydown", (e) => {
   }
   if (inField) {
     if (e.key === "Enter" && e.target.id === "spr") checkSpr();
+    return;
+  }
+  if (cur() && prep.locked(cur())) {
+    if (prep.onKey(e)) e.preventDefault();
+    else if (e.key === "ArrowRight") { step(1); e.preventDefault(); }
+    else if (e.key === "ArrowLeft") { step(-1); e.preventDefault(); }
     return;
   }
   const k = e.key.toLowerCase();

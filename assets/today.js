@@ -79,7 +79,7 @@ export function createToday(ctx) {
       {
         id: "new", icon: "target", title: "Новые вопросы",
         done: (d.q || 0) >= target, cur: Math.min(d.q || 0, target), total: target,
-        sub: target ? `${d.q || 0} из ${target} на сегодня` : "Все вопросы набора решены",
+        sub: target ? `${d.q || 0} из ${target} на сегодня · ${(() => { const r = ctx.readyCount?.() || 0; return r ? `слова выучены к ${r} ${plural(r, "вопросу", "вопросам", "вопросам")}` : "перед вопросом — его слова"; })()}` : "Все вопросы набора решены",
         action: "today-new", cta: "Решать",
       },
     ];

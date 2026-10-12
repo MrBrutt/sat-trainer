@@ -1,11 +1,11 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
-import { buildDeck, schedule, previewIntervals, statusOf, termKey, lookupWithRu, makeExample, startOfDay, fmtDays } from "./vocab.js";
-import { LEVELS, levelZipf, loadFrequencies, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, lemma } from "./words.js";
+import { buildDeck, schedule, previewIntervals, statusOf, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
 
 const DAY = 86400000;
 const STATUS_LABEL = { new: "новое", learning: "изучаю", mastered: "выучено", known: "знаю" };
-const ROLE_LABEL = { answer: "правильный ответ", target: "слово из текста", distractor: "неверный вариант", mine: "моё слово", text: "слово из текста" };
-const DEF_SRC = { cb: "из разбора College Board", dict: "из Wiktionary", ai: "объяснение Claude", user: "моё определение" };
+const ROLE_LABEL = { answer: "правильный ответ", target: "слово из текста", distractor: "неверный вариант", mine: "моё слово", text: "слово из текста", choice: "слово из вариантов ответа" };
+const DEF_SRC = { sat: "", dict: "из Wiktionary", ai: "объяснение Claude", user: "моё определение" };
 
 export const VOCAB_DEFAULT = () => ({ srs: {}, user: {}, edits: {}, known: [], daily: { date: "", newCount: 0, extra: 0 }, newPerDay: 20, level: "middle" });
 
@@ -15,13 +15,15 @@ export function createVocab(ctx) {
   const pendingLookups = new Set();
   const failedLookups = new Set();
   let auto = [];
-  let textDeck = [];          // hard words from the passages, once word frequencies are loaded
+  let textDeck = [];          // hard words from the passages and choices, once word frequencies are loaded
+  let gates = new Map();      // question id → words of its answer choices that open the question
+  let loaded = false;         // word frequencies and definitions are in
+  let cache = null;           // cards built during the current render pass
   let addOpen = false;
-  const glossOpen = new Set();
   let openRow = null;
 
-  const save = () => ls.set(KEY.vocab, S.vocab);
-  const saveDict = () => ls.set(KEY.dict, dict);
+  const save = () => { cache = null; ls.set(KEY.vocab, S.vocab); };
+  const saveDict = () => { cache = null; ls.set(KEY.dict, dict); };
   const today = () => new Date().toDateString();
   const words = (n) => `${n} ${plural(n, "слово", "слова", "слов")}`;
 
@@ -33,18 +35,37 @@ export function createVocab(ctx) {
   function rebuild() {
     auto = S.set ? buildDeck(S.set.questions) : [];
     textDeck = [];
+    gates = new Map();
+    loaded = false;
     if (!S.set) return;
-    loadFrequencies().then(() => {
+    Promise.all([loadFrequencies(), loadDefs()]).then(() => {
       if (!S.set) return;
-      textDeck = buildTextDeck(S.set.questions, levelZipf(S.vocab.level));
+      rebuildWords();
+      loaded = true;
       ctx.refreshChrome();
       if (S.ui.view === "vocab") { renderSidebar(); renderMain(); }
-      else if (S.ui.view === "questions") ctx.refreshQuestion();
+      else if (S.ui.view === "questions") ctx.refreshTrainer();
     });
   }
 
+  // Words that depend on the learner's level: hard words of the texts and of the choices.
+  function rebuildWords() {
+    const level = levelZipf(S.vocab.level);
+    textDeck = buildTextDeck(S.set.questions, level);
+    gates = new Map(S.set.questions.map((q) => [q.id, choiceWords(q, level)]));
+  }
+
   // Every word of the deck, shaped for display (spoiler-free for questions not answered yet).
+  // A render asks for the cards many times; they are built once per pass.
   function allCards() {
+    if (cache) return cache;
+    cache = buildCards();
+    queueMicrotask(() => { cache = null; });
+    return cache;
+  }
+  const cardMap = () => allCards().byKey;
+
+  function buildCards() {
     const map = new Map();
     for (const c of auto) map.set(c.key, { ...c, examples: [...c.examples] });
     for (const c of textDeck) {
@@ -65,37 +86,48 @@ export function createVocab(ctx) {
       const shown = c.examples.filter((x) => x.own || x.safe || !x.qid || S.progress[x.qid]);
       c.hiddenExamples = c.examples.length - shown.length;
       c.examples = shown;
-      if (c.role === "target" && !c.practiced) c.def = null;   // its gloss is the question's answer
+      // "What does the word X most nearly mean": the meaning of X is the question itself
+      c.hideDef = c.role === "target" && !c.practiced;
       const e = S.vocab.edits[c.key] || {};
+      const own = defOf(c.key);
+      const d = dict[c.key];
       c.note = e.note || "";
-      if (e.def) { c.def = e.def; c.defSrc = "user"; }
-      else if (c.def) c.defSrc = "cb";
-      else if (dict[c.key]) {
-        const e = dict[c.key];
-        c.def = typeof e === "string" ? e : e.d;
-        c.defSrc = typeof e === "string" ? "dict" : e.s || "dict";
-      }
-      else c.defSrc = null;
-      const de = dict[c.key];
-      c.ru = de && typeof de === "object" ? de.ru || "" : "";
+      c.def = null; c.pos = ""; c.sample = ""; c.defSrc = null;
+      if (c.hideDef) { /* shown after the question is answered */ }
+      else if (e.def) { c.def = e.def; c.defSrc = "user"; }
+      else if (own) { c.def = own.d; c.pos = own.p; c.sample = own.x; c.defSrc = "sat"; }
+      else if (d) { c.def = typeof d === "string" ? d : d.d; c.defSrc = typeof d === "string" ? "dict" : d.s || "dict"; }
       c.st = S.vocab.srs[c.key] || null;
       c.known = known.has(c.key);
       c.status = statusOf(c.st, c.known);
+      c.ready = c.known || (c.st?.reps || 0) > 0;     // learned: remembered at least once since the last slip
       c.n = c.qnum ?? 9999;
     }
-    return [...map.values()];
+    const list = [...map.values()];
+    list.byKey = map;
+    return list;
   }
 
   const cards = allCards;
 
-  // Own words first, then words from questions answered wrong, then question by question.
-  // Within a question the four choices come in a fixed shuffled order, so the answer is never first.
+  // Own words first, then words from questions answered wrong, then the words of the answer choices
+  // of the questions ahead (they open those questions), then the other words of those questions.
+  // Within a question the choices come in a fixed shuffled order, so the answer is never first.
   const mix = (k) => { let h = 2166136261; for (const ch of k) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
-  function priority(c) {
+  function gateNumbers() {
+    const first = new Map();
+    for (const q of S.set.questions) {
+      if (S.progress[q.id]) continue;
+      for (const k of gates.get(q.id) || []) if (!first.has(k)) first.set(k, q.n);
+    }
+    return first;
+  }
+  function priority(c, gateN) {
     if (c.mine) return 0;
     if (c.qids.some((id) => S.progress[id] && !S.progress[id].ok)) return 1;
-    if (c.qids.some((id) => !S.progress[id])) return 2;    // words of questions still ahead come first
-    return 3;
+    if (gateN.has(c.key)) return 2;
+    if (c.qids.some((id) => !S.progress[id])) return 3;
+    return 4;
   }
 
   function counts(all = cards()) {
@@ -118,28 +150,29 @@ export function createVocab(ctx) {
   function startSession() {
     const { due, mineFresh, autoFresh, newLeft } = counts();
     due.sort((a, b) => a.st.due - b.st.due);
-    autoFresh.sort((a, b) => priority(a) - priority(b) || a.n - b.n || (a.role === "text" ? 0 : 1) - (b.role === "text" ? 0 : 1) || (b.zipf || 0) - (a.zipf || 0) || mix(a.key) - mix(b.key));
+    const gateN = gateNumbers();
+    const n = (c) => gateN.get(c.key) ?? c.n;
+    autoFresh.sort((a, b) => priority(a, gateN) - priority(b, gateN) || n(a) - n(b) || (b.zipf || 0) - (a.zipf || 0) || mix(a.key) - mix(b.key));
     S.session = {
       queue: [...due.map((c) => c.key), ...mineFresh.map((c) => c.key), ...autoFresh.slice(0, newLeft).map((c) => c.key)],
       revealed: false, reviewed: 0, learnedNew: 0,
     };
   }
 
-  // Inside claude.ai the page cannot reach other sites, so Claude explains the word instead of Wiktionary.
-  const splitAi = (t) => { const [d, ...ru] = String(t).split(" — "); return { d: d.trim(), ru: ru.join(" — ").trim(), s: "ai" }; };
-
+  // Words the trainer has no definition for: Wiktionary, or Claude inside claude.ai (the page cannot
+  // reach other sites there). A choice word gets a general definition, not one fitted to a passage.
   function fetchDef(c, after) {
-    if (c.def || dict[c.key] !== undefined || pendingLookups.has(c.key)) return;
+    if (c.def || c.hideDef || defOf(c.key) || dict[c.key] !== undefined || pendingLookups.has(c.key)) return;
     const viaClaude = ctx.inClaude();
     if (viaClaude && !ctx.ai()?.available()) return;
     failedLookups.delete(c.key);
     pendingLookups.add(c.key);
     const ex = c.examples?.[0];
-    const find = viaClaude ? ctx.ai().define(c.term, ex ? ex.before + (ex.term ?? c.term) + ex.after : "") : lookupWithRu(c.term);
+    const find = viaClaude ? ctx.ai().define(c.term, ex ? ex.before + (ex.term ?? c.term) + ex.after : "") : lookup(c.term);
     find.then((res) => {
       pendingLookups.delete(c.key);
       if (res === undefined) { failedLookups.add(c.key); after?.(); return; } // offline: try again next time
-      dict[c.key] = !res ? "" : viaClaude ? splitAi(res) : { d: res.d, ru: res.ru || "", s: "dict" };
+      dict[c.key] = !res ? "" : { d: res, s: viaClaude ? "ai" : "dict" };
       saveDict();
       after?.();
       if (S.ui.view !== "vocab") return;
@@ -170,7 +203,12 @@ export function createVocab(ctx) {
   }
 
   function defHtml(c) {
-    if (c.def) return `<div class="flash-def">${esc(c.def)}</div>${c.ru ? `<div class="flash-ru">${esc(c.ru)}</div>` : ""}<div class="def-src">${DEF_SRC[c.defSrc] || ""}</div>`;
+    if (c.hideDef) return `<div class="flash-def muted">${icon("lock", "icon-sm")} Значение откроется, когда вы решите вопрос про это слово</div>`;
+    if (c.def) {
+      return `<div class="flash-def">${c.pos ? `<span class="pos">${esc(c.pos)}</span> ` : ""}${esc(c.def)}</div>
+        ${c.sample ? `<p class="flash-sample">${esc(c.sample)}</p>` : ""}
+        ${DEF_SRC[c.defSrc] ? `<div class="def-src">${DEF_SRC[c.defSrc]}</div>` : ""}`;
+    }
     if (dict[c.key] === "") return `<div class="flash-def muted">Определение не найдено — впишите своё в заметку ниже</div>`;
     if (ctx.inClaude() && !ctx.ai()?.available()) return `<div class="flash-def muted">Определения нет — впишите своё в заметку ниже</div>`;
     if (failedLookups.has(c.key)) return `<div class="flash-def muted">Не удалось загрузить определение (нет сети?) — попробую ещё раз позже</div>`;
@@ -224,7 +262,7 @@ export function createVocab(ctx) {
         <div class="chips">${LEVELS.map((l) => `
           <button class="chip ${(S.vocab.level || "middle") === l.id ? "active" : ""}" data-action="v-level" data-level="${l.id}">${l.label}</button>`).join("")}
         </div>
-        <p class="side-hint">От уровня зависит, какие слова в текстах считаются трудными.</p>
+        <p class="side-hint">От уровня зависит, какие слова в текстах и вариантах ответа считаются трудными — и какие нужно выучить перед вопросом.</p>
       </div>
       <div>
         <div class="side-label">Новых слов в день</div>
@@ -279,7 +317,7 @@ export function createVocab(ctx) {
       </div>
       <article class="card flash">
         <div class="flash-meta">
-          <span class="badge">${c.mine && !auto.some((a) => a.key === c.key) && !textDeck.some((a) => a.key === c.key) ? ROLE_LABEL.mine : c.role === "text" ? ROLE_LABEL.text : c.practiced ? ROLE_LABEL[c.role] || "" : "слово из вопросов"}</span>
+          <span class="badge">${c.mine && !auto.some((a) => a.key === c.key) && !textDeck.some((a) => a.key === c.key) ? ROLE_LABEL.mine : c.role === "text" || c.role === "choice" ? ROLE_LABEL[c.role] : c.practiced ? ROLE_LABEL[c.role] || "" : c.role === "target" ? ROLE_LABEL.target : ROLE_LABEL.choice}</span>
           ${statusBadge(c)}
           <div class="spacer"></div>
           ${qs.length ? `<span class="mono">вопрос ${qs.join(", ")}</span>` : ""}
@@ -289,7 +327,7 @@ export function createVocab(ctx) {
           ${defHtml(c)}
           ${examplesHtml(c)}
           <label class="field"><span>Мой перевод / заметка</span>
-            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, перевод на русский" autocomplete="off"></label>`
+            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>`
         : `<p class="flash-hint">Вспомните значение, потом откройте карточку</p>
            <button class="btn btn-primary btn-lg" data-action="v-reveal">Показать значение <kbd>Пробел</kbd></button>`}
       </article>
@@ -341,15 +379,16 @@ export function createVocab(ctx) {
         <button class="wrow-main" data-action="v-row" data-key="${esc(c.key)}" aria-expanded="${open}">
           <span class="sdot s-${c.status}" title="${STATUS_LABEL[c.status]}"></span>
           <span class="wterm">${esc(c.term)}${c.mine ? ` <span class="mine-tag">моё</span>` : ""}</span>
-          <span class="wdef">${esc(c.def || "—")}${c.ru ? ` <span class="wnote">· ${esc(c.ru)}</span>` : ""}${c.note ? ` <span class="wnote">· ${esc(c.note)}</span>` : ""}</span>
+          <span class="wdef">${c.hideDef ? `<span class="muted">откроется после вопроса</span>` : esc(c.def || "—")}${c.note ? ` <span class="wnote">· ${esc(c.note)}</span>` : ""}</span>
           <span class="wwhen">${when(c)}</span>
         </button>
         ${open ? `<div class="wrow-body">
+          ${c.sample ? `<p class="flash-sample">${esc(c.sample)}</p>` : ""}
           ${examplesHtml(c, 3)}
-          <label class="field"><span>Определение${c.defSrc && c.defSrc !== "user" ? ` (${DEF_SRC[c.defSrc]})` : ""}</span>
+          <label class="field"><span>Определение${DEF_SRC[c.defSrc] && c.defSrc !== "user" ? ` (${DEF_SRC[c.defSrc]})` : ""}</span>
             <input data-def="${esc(c.key)}" value="${esc(c.def || "")}" placeholder="своё определение" autocomplete="off"></label>
           <label class="field"><span>Мой перевод / заметка</span>
-            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, перевод на русский" autocomplete="off"></label>
+            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>
           <div class="row">
             <button class="btn btn-outline btn-sm" data-action="v-toggle-known" data-key="${esc(c.key)}">${c.known ? `${icon("rotate", "icon-sm")} Вернуть в изучение` : `${icon("check", "icon-sm")} Уже знаю`}</button>
             ${c.st?.last ? `<button class="btn btn-ghost btn-sm" data-action="v-reset-card" data-key="${esc(c.key)}">Начать заново</button>` : ""}
@@ -399,7 +438,7 @@ export function createVocab(ctx) {
   // ---------------------------------------------------------------- hard words while reading
 
   const known = (key) => {
-    const c = allCards().find((x) => x.key === key);
+    const c = cardMap().get(key);
     return !!c && (c.known || c.status === "mastered");
   };
 
@@ -409,16 +448,15 @@ export function createVocab(ctx) {
     return hardWordsIn(passageText(q), levelZipf(S.vocab.level), skip).filter((h) => !known(h.key));
   }
 
-  // Underlines the hard words in the rendered passage and adds the "hard words" list above it.
+  // Underlines the hard words in the rendered passage; a tap shows the meaning.
   function decoratePassage(q, root) {
     if (!root || !q) return;
     const hard = hardWordsOf(q);
-    root.querySelector(".gloss")?.remove();
     if (!hard.length) return;
     const forms = new Map(hard.map((h) => [h.form.toLowerCase(), h.key]));
-    const re = new RegExp(`\\b(${[...forms.keys()].sort((a, b) => b.length - a.length).map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi");
+    const re = new RegExp(`(?<![\\p{L}])(${[...forms.keys()].sort((a, b) => b.length - a.length).map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}])`, "giu");
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode: (n) => (n.parentElement.closest(".text-label, .hw, .gloss") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+      acceptNode: (n) => (n.parentElement.closest(".text-label, .hw") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
     });
     const nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -445,63 +483,17 @@ export function createVocab(ctx) {
       frag.append(text.slice(last));
       node.replaceWith(frag);
     }
-    const open = glossOpen.has(q.id);
-    const bar = document.createElement("div");
-    bar.className = "gloss";
-    bar.innerHTML = `<button class="gloss-toggle" data-action="v-gloss" data-q="${esc(q.id)}" aria-expanded="${open}">
-        ${icon("book", "icon-sm")} Трудные слова · ${hard.length} ${icon("down", "icon-sm")}</button>
-      ${open ? `<div class="gloss-list">${hard.map((h) => glossRow(h)).join("")}</div>` : ""}`;
-    root.prepend(bar);
-    if (open) fillGloss(q, hard);
   }
 
-  function entry(key) {
+  // The meaning of any word: its card, the trainer's dictionary, or a looked-up definition.
+  function meaning(key) {
+    const c = cardMap().get(key);
+    if (c?.hideDef) return null;
+    if (c?.def) return { d: c.def, p: c.pos };
+    const own = defOf(key);
+    if (own) return { d: own.d, p: own.p };
     const e = dict[key];
-    if (!e) return null;
-    return typeof e === "string" ? { d: e, ru: "" } : e;
-  }
-
-  // The list shows the first meaning only; the word's card has the full text.
-  const shortDef = (d) => { const first = d.split(" · ")[0]; return first.length > 130 ? first.slice(0, 127).replace(/\s+\S*$/, "") + "…" : first; };
-
-  function glossRow(h) {
-    const e = entry(h.key);
-    const c = allCards().find((x) => x.key === h.key);
-    const d = c?.def && c.defSrc !== "dict" && c.defSrc !== "ai" ? c.def : e?.d;
-    return `<div class="gloss-row" data-w="${esc(h.key)}">
-      <b>${esc(h.key)}</b>
-      <span class="gloss-def">${d ? esc(shortDef(d)) : dict[h.key] === "" ? "определение не найдено" : `<span class="muted">ищу…</span>`}${e?.ru ? ` <span class="gloss-ru">${esc(e.ru)}</span>` : ""}</span>
-      <button class="btn btn-ghost btn-sm" data-action="v-know" data-w="${esc(h.key)}" title="Убрать подсветку этого слова">знаю</button>
-    </div>`;
-  }
-
-  // Looks up every word of the list: Wiktionary one by one, or Claude in one call inside claude.ai.
-  async function fillGloss(q, hard) {
-    const missing = hard.filter((h) => dict[h.key] === undefined && !pendingLookups.has(h.key));
-    if (!missing.length) return;
-    const redraw = () => { if (ctx.current()?.id === q.id) ctx.refreshQuestion(); };
-    if (ctx.inClaude()) {
-      if (!ctx.ai()?.available()) return;
-      missing.forEach((h) => pendingLookups.add(h.key));
-      const res = await ctx.ai().defineMany(missing.map((h) => ({ term: h.key, sentence: `${h.before}${h.form}${h.after}` })));
-      missing.forEach((h, i) => {
-        pendingLookups.delete(h.key);
-        const r = res.find((x) => String(x?.w || "").toLowerCase() === h.key) || res[i];
-        if (r?.d) dict[h.key] = { d: String(r.d), ru: String(r.ru || ""), s: "ai" };
-      });
-      saveDict();
-      redraw();
-      return;
-    }
-    let i = 0;
-    const worker = async () => {
-      while (i < missing.length) {
-        const h = missing[i++];
-        await new Promise((res) => fetchDef({ key: h.key, term: h.key, examples: [] }, res));
-      }
-    };
-    await Promise.all([worker(), worker(), worker()]);
-    redraw();
+    return e ? { d: typeof e === "string" ? e : e.d, p: "" } : null;
   }
 
   // A small card next to a highlighted word.
@@ -517,15 +509,13 @@ export function createVocab(ctx) {
     const q = S.set.questions.find((x) => x.id === el.dataset.q);
     const h = q ? hardWordsIn(passageText(q), 9, new Set()).find((x) => x.key === key) : null;
     wordAt = { key, el, q, sentence: h ? `${h.before}${h.form}${h.after}` : "" };
-    const c = allCards().find((x) => x.key === key);
-    const e = entry(key);
-    const d = c?.def && c.defSrc !== "dict" && c.defSrc !== "ai" ? c.def : e?.d;
+    const c = cardMap().get(key);
+    const m = meaning(key);
     const mine = c?.mine || c?.st?.last;
     wordPop.innerHTML = `
-      <div class="wp-head"><b>${esc(key)}</b>${c?.status && c.status !== "new" ? statusBadge(c) : ""}
+      <div class="wp-head"><b>${esc(key)}</b>${m?.p ? `<span class="pos">${esc(m.p)}</span>` : ""}${c?.status && c.status !== "new" ? statusBadge(c) : ""}
         <button class="icon-btn" data-action="v-word-close" aria-label="Закрыть">${icon("x", "icon-sm")}</button></div>
-      <div class="wp-def">${d ? esc(d) : dict[key] === "" ? `<span class="muted">Определение не найдено</span>` : `<span class="muted">Ищу определение…</span>`}</div>
-      ${e?.ru ? `<div class="wp-ru">${esc(e.ru)}</div>` : ""}
+      <div class="wp-def">${m ? esc(m.d) : dict[key] === "" ? `<span class="muted">Определение не найдено</span>` : `<span class="muted">Ищу определение…</span>`}</div>
       <div class="wp-actions">
         <button class="btn btn-primary btn-sm" data-action="v-word-add" ${mine ? "disabled" : ""}>${icon(mine ? "check" : "plus", "icon-sm")} ${mine ? "Уже учу" : "Учить"}</button>
         <button class="btn btn-ghost btn-sm" data-action="v-know" data-w="${esc(key)}">Знаю</button>
@@ -537,13 +527,43 @@ export function createVocab(ctx) {
     wordPop.style.width = `${w}px`;
     wordPop.style.left = `${Math.min(Math.max(8, r.left + r.width / 2 - w / 2), document.documentElement.clientWidth - w - 8)}px`;
     wordPop.style.top = `${r.bottom + window.scrollY + 8}px`;
-    if (!d && dict[key] === undefined) fetchDef({ key, term: key, examples: wordAt.sentence ? [{ before: wordAt.sentence, term: "", after: "" }] : [] }, () => { if (wordAt?.key === key && !wordPop.hidden) showWord(el); });
+    if (!m && dict[key] === undefined) fetchDef({ key, term: key, examples: wordAt.sentence ? [{ before: wordAt.sentence, term: "", after: "" }] : [] }, () => { if (wordAt?.key === key && !wordPop.hidden) showWord(el); });
   }
   const hideWord = () => { wordPop.hidden = true; wordAt = null; };
   document.addEventListener("click", (e) => {
     if (!wordPop.hidden && !e.target.closest(".wordpop, .hw")) hideWord();
   });
   addEventListener("scroll", () => { if (!wordPop.hidden && wordAt && !wordAt.el.isConnected) hideWord(); }, { passive: true });
+
+  // ---------------------------------------------------------------- words that open a question
+
+  // The words of a question's answer choices, and those not learned yet. Words without any
+  // definition cannot be checked and do not count. `loading` until frequencies and definitions are in.
+  function gateOf(q) {
+    if (!loaded) return { loading: true, cards: [], missing: [] };
+    const byKey = cardMap();
+    const cards = (gates.get(q.id) || []).map((k) => byKey.get(k)).filter((c) => c && c.def);
+    return { loading: false, cards, missing: cards.filter((c) => !c.ready) };
+  }
+
+  // Definitions for choice words the trainer's dictionary does not have (a PDF added later).
+  function fetchGateDefs(q, after) {
+    if (!loaded) return;
+    const byKey = cardMap();
+    for (const k of gates.get(q.id) || []) {
+      const c = byKey.get(k);
+      if (c && !c.def && !failedLookups.has(c.key)) fetchDef(c, after);
+    }
+  }
+
+  // A check before a question counts as a review of the word's card: right on the first try is
+  // "remember", right after a slip is "hard", wrong is "again".
+  function quizResult(key, ok, slipped) {
+    S.vocab.srs[key] = schedule(S.vocab.srs[key], ok ? (slipped ? 2 : 3) : 1);
+    save();
+    S.session = null;
+    if (ok) ctx.onWordDone?.();
+  }
 
   // ---------------------------------------------------------------- adding words
 
@@ -710,15 +730,12 @@ export function createVocab(ctx) {
       toast(`«${el.dataset.w}» больше не подсвечивается`);
       ctx.refreshQuestion();
     },
-    "v-gloss": (el) => {
-      glossOpen.has(el.dataset.q) ? glossOpen.delete(el.dataset.q) : glossOpen.add(el.dataset.q);
-      ctx.refreshQuestion();
-    },
     "v-level": (el) => {
       S.vocab.level = el.dataset.level;
       save();
       S.session = null;
-      if (wordsReady()) textDeck = buildTextDeck(S.set.questions, levelZipf(S.vocab.level));
+      if (loaded) rebuildWords();
+      cache = null;
       renderSidebar(); renderMain(); ctx.refreshChrome();
     },
     "ai-explain-sel": () => {
@@ -797,6 +814,7 @@ export function createVocab(ctx) {
   return {
     rebuild, renderSidebar, renderMain, questionWordsHtml, dueTotal, actions, onInput, onSubmit, onKey, merge, decoratePassage, hideWord,
     hidePop, resetSession: () => { S.session = null; },
+    gateOf, fetchGateDefs, quizResult, invalidate: () => { cache = null; },
     card: (key) => cards().find((c) => c.key === key) || null,
     studied: () => cards().filter((c) => c.known || c.st?.last).length,
     currentKey,

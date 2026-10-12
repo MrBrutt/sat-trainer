@@ -400,31 +400,14 @@ export function createAssistant(ctx) {
 
   async function define(term, sentence) {
     if (!available()) return undefined;
-    const prompt = `Define the English word or phrase "${term}" for an SAT student who speaks Russian.
-${sentence ? `It appears in this sentence: "${sentence}"\n` : ""}Reply with exactly one line in this format and nothing else:
-<plain English definition as used in that sentence, at most 15 words> — <Russian translation, 1-4 words>`;
+    const prompt = `Define the English word or phrase "${term}" for an SAT student, in the style of a learner's dictionary.
+${sentence ? `It appears in this sentence: "${sentence}"\n` : ""}Reply with exactly one line in English and nothing else: its main meaning in plain words (or two short numbered meanings if the word has two common ones), at most 20 words. No translation, no quotes, no example.`;
     try {
       const { text } = await sample(prompt, { modelTier: "quick", cache: { gcTime: 86400000 } });
       return text.trim().split("\n")[0].replace(/^["“]|["”]$/g, "").slice(0, 200) || null;
     } catch (e) {
       if (FATAL.has(e?.code)) disabledReason = ERRORS[e.code] || "Claude недоступен на этой странице.";
       return undefined;
-    }
-  }
-
-  // Several words at once (the "hard words" list of a passage): one quick call, JSON back.
-  async function defineMany(items) {
-    if (!available() || !items.length) return [];
-    const prompt = `For each English word below, give a short plain-English definition as it is used in its sentence (at most 12 words) and a Russian translation (1-3 words).
-Reply with only a JSON array of objects {"w": word, "d": definition, "ru": translation}, in the same order.
-
-${items.map((x, i) => `${i + 1}. ${x.term} — "${x.sentence}"`).join("\n")}`;
-    try {
-      const arr = await sample.json(prompt, { modelTier: "quick", cache: { gcTime: 86400000 } });
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      if (FATAL.has(e?.code)) disabledReason = ERRORS[e.code] || "Claude недоступен на этой странице.";
-      return [];
     }
   }
 
@@ -480,7 +463,7 @@ ${items.map((x, i) => `${i + 1}. ${x.term} — "${x.sentence}"`).join("\n")}`;
   function wipe() { threads = {}; ls.del(KEY.chats); close(); }
 
   return {
-    init, available, actions, explainSelection, follow, hasThread, define, defineMany, merge, wipe, close,
+    init, available, actions, explainSelection, follow, hasThread, define, merge, wipe, close,
     isOpen: () => !!panel && !panel.hidden,
     threads: () => threads,
   };
