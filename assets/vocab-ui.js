@@ -31,7 +31,8 @@ export function createVocab(ctx) {
     auto = S.set ? buildDeck(S.set.questions) : [];
   }
 
-  function cards() {
+  // Every word, including ones still locked behind an unanswered question.
+  function allCards() {
     const map = new Map();
     for (const c of auto) map.set(c.key, { ...c, examples: [...c.examples] });
     for (const u of Object.values(S.vocab.user)) {
@@ -55,9 +56,16 @@ export function createVocab(ctx) {
       c.known = known.has(c.key);
       c.status = statusOf(c.st, c.known);
       c.n = c.examples.find((x) => x.n)?.n ?? 9999;
+      // A word from a question opens only after that question is answered — otherwise the deck
+      // teaches the answer before the student has tried it. Own words and words already studied stay open.
+      c.locked = !(c.mine || c.known || c.st?.last || c.qids.some((id) => S.progress[id]));
     }
     return [...map.values()];
   }
+
+  const cards = () => allCards().filter((c) => !c.locked);
+  const lockedCount = () => allCards().filter((c) => c.locked).length;
+  const lockedNote = (n) => n ? `<div class="vlocked">${icon("lock", "icon-sm")}<span>Ещё ${words(n)} откроются, когда вы ответите на их вопросы — так слова не подсказывают ответ заранее.</span></div>` : "";
 
   // words the user picked, then words from questions they got wrong, then answers, then distractors
   function priority(c) {
@@ -183,6 +191,7 @@ export function createVocab(ctx) {
           <span><i class="m"></i>выучено ${by("mastered")}</span><span><i class="k"></i>знаю ${by("known")}</span>
           <span><i class="l"></i>изучаю ${by("learning")}</span><span><i></i>новые ${by("new")}</span>
         </div>
+        ${lockedNote(lockedCount())}
       </div>
       <div>
         <div class="side-label">Новых слов в день</div>
@@ -213,6 +222,14 @@ export function createVocab(ctx) {
 
   function studyHtml() {
     const all = cards();
+    if (!all.length && lockedCount()) {
+      return `<div class="vwrap"><div class="card done-card">
+        <div class="done-icon">${icon("lock")}</div>
+        <h2>Слова появятся после вопросов</h2>
+        <p>Ответьте на вопросы Words in Context — слова из каждого решённого вопроса попадут сюда с определениями и примерами.</p>
+        <div class="row"><button class="btn btn-primary" data-action="view" data-view="questions">${icon("book", "icon-sm")} К вопросам</button></div>
+      </div></div>`;
+    }
     if (!all.length) {
       return `<div class="vwrap"><div class="empty"><h3>Словарь пуст</h3>
         <p>В этом наборе нет вопросов Words in Context. Добавляйте слова сами: выделите слово в тексте вопроса.</p></div></div>`;
@@ -333,6 +350,7 @@ export function createVocab(ctx) {
         <div class="row"><button class="btn btn-primary" type="submit">Добавить</button><button class="btn btn-ghost" type="button" data-action="v-add-open">Отмена</button></div>
       </form>` : ""}
       <div class="wcount" id="wcount">${words(list.length)}</div>
+      ${lockedNote(lockedCount())}
       <div class="wlist" id="wlist">${rowsHtml(list)}</div>
     </div>`;
   }
@@ -359,8 +377,8 @@ export function createVocab(ctx) {
     term = term.trim().replace(/\s+/g, " ");
     const key = termKey(term);
     if (!key) return;
-    const existing = cards().find((c) => c.key === key);
-    if (existing) {
+    const existing = allCards().find((c) => c.key === key);
+    if (existing && !existing.locked) {
       if (existing.known) S.vocab.known = S.vocab.known.filter((k) => k !== key);
       save();
       toast(`«${existing.term}» уже в словаре`);
