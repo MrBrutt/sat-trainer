@@ -79,6 +79,7 @@ export function createVocab(ctx) {
       else map.set(u.key, { ...u, examples: [...u.examples], mine: true });
     }
     const known = new Set(S.vocab.known);
+    const now = Date.now();
     for (const c of map.values()) {
       // Learn words before the questions, but keep each question unspoiled until it is answered:
       // its sentence (with the answer filled in), its number and the word's role stay hidden.
@@ -100,7 +101,10 @@ export function createVocab(ctx) {
       c.st = S.vocab.srs[c.key] || null;
       c.known = known.has(c.key);
       c.status = statusOf(c.st, c.known);
-      c.ready = c.known || (c.st?.reps || 0) > 0;     // learned: remembered at least once since the last slip
+      // Learned = remembered since the last slip and not due again yet. A word whose review day has
+      // come may be forgotten, so its questions wait until it is recalled again.
+      c.review = !c.known && (c.st?.reps || 0) > 0 && c.st.due <= now;
+      c.ready = c.known || ((c.st?.reps || 0) > 0 && !c.review);
       c.n = c.qnum ?? 9999;
     }
     const list = [...map.values()];

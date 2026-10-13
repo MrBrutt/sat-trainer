@@ -62,28 +62,39 @@ export function createPrep(ctx) {
     if (gate.loading) return `<section class="card prep"><div class="prep-loading">${icon("cards")} Загружаю словарь…</div></section>`;
     vocab.fetchGateDefs(q, () => ctx.refresh());
     if (quiz?.qid === q.id) return quizHtml(q);
-    const miss = gate.missing;
-    const knownN = gate.cards.length - miss.length;
+    // new words are shown with their meanings; words due for review are recalled first, as in the cards
+    const fresh = gate.missing.filter((c) => !c.review);
+    const due = gate.missing.filter((c) => c.review);
+    const knownN = gate.cards.length - gate.missing.length;
     const wic = /words in context/i.test(q.skill);
+    const todo = fresh.length && due.length
+      ? `Выучите ${fresh.length === 1 ? "новое слово" : `${fresh.length} ${plural(fresh.length, "новое слово", "новых слова", "новых слов")}`} и вспомните ${due.length === 1 ? "одно, которое уже учили" : `${due.length}, которые уже учили`}, — потом короткая проверка, и вопрос откроется.`
+      : fresh.length
+        ? `Выучите ${fresh.length === 1 ? "это слово" : `эти ${words(fresh.length)}`} и пройдите короткую проверку — вопрос откроется.`
+        : `${due.length === 1 ? "Это слово вы уже учили, но пришло время его повторить" : `Эти ${words(due.length)} вы уже учили, но пришло время их повторить`}: вспомните значения в проверке — вопрос откроется.`;
     return `<section class="card prep">
       <div class="prep-head">
         <div class="prep-icon">${icon("lock")}</div>
         <div>
-          <h2>Сначала слова из вариантов ответа</h2>
+          <h2>${fresh.length ? "Сначала слова из вариантов ответа" : "Сначала вспомните слова из вариантов"}</h2>
           <p>${wic ? "В этом вопросе нужно выбрать слово по смыслу." : "Варианты ответа — это предложения, и в них есть трудные слова."}
-            Не зная, что они значат, вы будете угадывать. Выучите ${miss.length === 1 ? "это слово" : `эти ${words(miss.length)}`} и пройдите короткую проверку — вопрос откроется.
-            ${knownN ? `<span class="muted">Ещё ${words(knownN)} из вариантов вы уже знаете.</span>` : ""}</p>
+            Не зная, что они значат, вы будете угадывать. ${todo}
+            ${knownN ? `<span class="muted">Ещё ${words(knownN)} из вариантов вы помните.</span>` : ""}</p>
         </div>
       </div>
-      <ol class="prep-list">${miss.map((c) => `
+      <ol class="prep-list">${fresh.map((c) => `
         <li class="prep-word">
-          <div class="pw-top"><b>${esc(c.term)}</b>${c.pos ? `<span class="pos">${esc(c.pos)}</span>` : ""}${c.st?.last ? `<span class="spill s-learning" title="Вы уже встречали это слово, но в последний раз не вспомнили">повторить</span>` : ""}</div>
+          <div class="pw-top"><b>${esc(c.term)}</b>${c.pos ? `<span class="pos">${esc(c.pos)}</span>` : ""}${c.st?.last ? `<span class="spill s-learning" title="В прошлый раз вы не вспомнили это слово">ещё раз</span>` : ""}</div>
           <div class="pw-def">${esc(c.def)}</div>
           ${c.sample ? `<div class="pw-ex">${esc(c.sample)}</div>` : ""}
+        </li>`).join("")}${due.map((c) => `
+        <li class="prep-word">
+          <div class="pw-top"><b>${esc(c.term)}</b>${c.pos ? `<span class="pos">${esc(c.pos)}</span>` : ""}<span class="spill s-learning" title="Пора повторить: значение откроется в проверке">повторить</span></div>
+          <div class="pw-def muted">Вспомните значение — оно откроется в проверке</div>
         </li>`).join("")}
       </ol>
       <div class="prep-actions">
-        <button class="btn btn-primary btn-lg" data-action="prep-start">${icon("check", "icon-sm")} Проверить себя · ${words(miss.length)} <kbd>Enter</kbd></button>
+        <button class="btn btn-primary btn-lg" data-action="prep-start">${icon("check", "icon-sm")} Проверить себя · ${words(gate.missing.length)} <kbd>Enter</kbd></button>
         <button class="btn btn-ghost btn-sm" data-action="prep-skip" title="Вопрос откроется без проверки слов">Решать без подготовки</button>
       </div>
     </section>`;
