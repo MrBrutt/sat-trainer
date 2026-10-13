@@ -16,7 +16,7 @@ let freq = null;
 let loading = null;
 
 // Data files carry the app version too, so a deploy is not hidden behind a cached copy.
-function dataUrl(name) {
+export function dataUrl(name) {
   const url = new URL(`./data/${name}`, import.meta.url);
   const v = new URL(import.meta.url).searchParams.get("v");
   if (v) url.searchParams.set("v", v);

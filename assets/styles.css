@@ -881,3 +881,47 @@ dialog .row { display: flex; justify-content: flex-end; gap: 8px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------------------------------------------------------------- vocabulary size test */
+.side-btn { margin-top: 10px; width: 100%; justify-content: center; }
+.side-btn.active { border-color: var(--primary); color: var(--primary); }
+.vt, .vt-result { padding: 24px 26px 22px; }
+.vt p { margin: 0 0 8px; color: var(--text-2); line-height: 1.55; }
+.vt-last { margin-top: 16px !important; font-size: 14px; }
+.vt-item { padding: 40px 26px 26px; text-align: center; }
+.vt-word { font: 600 clamp(34px, 7vw, 48px)/1.15 var(--font-read); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.vt-item > .muted { margin: 8px 0 26px; }
+.vt-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 460px; margin: 0 auto; }
+.vt-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; border-radius: 14px; cursor: pointer;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font: 600 16px var(--font-ui);
+  box-shadow: var(--shadow-sm); transition: border-color .15s, background .15s, transform .08s;
+}
+.vt-btn:active { transform: translateY(1px); }
+.vt-btn.yes:hover { border-color: var(--ok); background: var(--ok-soft); }
+.vt-btn.no:hover { border-color: var(--bad); background: var(--bad-soft); }
+.vt-btn kbd { opacity: .6; }
+.vt-undo { margin-top: 18px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.vt-big { font: 700 clamp(40px, 8vw, 56px)/1.05 var(--font-ui); letter-spacing: -0.02em; }
+.vt-big span { font-size: .45em; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.vt-result > p { line-height: 1.55; color: var(--text-2); }
+.vt-result > p.muted { color: var(--muted); font-size: 14px; }
+.vt-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0; }
+.vt-stats > div { padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+.vt-stats b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.vt-stats span { font-size: 13px; color: var(--muted); }
+.vt-bands { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 16px; }
+.vt-band { display: grid; grid-template-columns: 96px 1fr 44px; gap: 10px; align-items: center; font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.vt-bar { height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; border: 1px solid var(--border); }
+.vt-bar span { display: block; height: 100%; background: var(--primary); border-radius: 6px; }
+.vt-pct { text-align: right; }
+.vt-warn { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--bad-soft); color: var(--bad) !important; }
+@media (max-width: 600px) { .vt, .vt-result, .vt-item { padding-left: 16px; padding-right: 16px; } .vt-stats { grid-template-columns: 1fr; } .vt-band { grid-template-columns: 80px 1fr 40px; } }
+/* narrow phones with three-digit badges: keep the top bar inside the screen */
+@media (max-width: 420px) {
+  .topbar { gap: 4px; padding: 0 8px; }
+  .tab { padding: 0 7px; gap: 5px; }
+  .tab-badge { padding: 0 4px; }
+  .streak-chip { padding: 0 6px; }
+  .topbar .icon-btn { width: 32px; }
+}

@@ -1,5 +1,6 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
 import { buildDeck, schedule, previewIntervals, statusOf, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { createSizeTest } from "./size-test.js";
 import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
 
 const DAY = 86400000;
@@ -48,9 +49,12 @@ export function createVocab(ctx) {
     });
   }
 
+  // Below this frequency a word counts as hard: the chosen level, or the size test's result.
+  const threshold = () => (S.vocab.level === "test" && S.vocab.test?.zipf) || levelZipf(S.vocab.level);
+
   // Words that depend on the learner's level: hard words of the texts and of the choices.
   function rebuildWords() {
-    const level = levelZipf(S.vocab.level);
+    const level = threshold();
     textDeck = buildTextDeck(S.set.questions, level);
     gates = new Map(S.set.questions.map((q) => [q.id, choiceWords(q, level)]));
   }
@@ -277,10 +281,12 @@ export function createVocab(ctx) {
       </div>
       <div>
         <div class="side-label">Мой уровень английского</div>
-        <div class="chips">${LEVELS.map((l) => `
+        <div class="chips">${[...LEVELS, ...(S.vocab.test?.zipf ? [{ id: "test", label: "По тесту" }] : [])].map((l) => `
           <button class="chip ${(S.vocab.level || "middle") === l.id ? "active" : ""}" data-action="v-level" data-level="${l.id}">${l.label}</button>`).join("")}
         </div>
         <p class="side-hint">От уровня зависит, какие слова в текстах и вариантах ответа считаются трудными — и какие нужно выучить перед вопросом.</p>
+        ${S.vocab.test ? `<p class="side-hint">Тест: ≈ ${S.vocab.test.size.toLocaleString("ru-RU")} слов · ${new Date(S.vocab.test.at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</p>` : ""}
+        <button class="btn btn-outline btn-sm side-btn ${tab === "test" ? "active" : ""}" data-action="v-tab" data-tab="test">${icon("target", "icon-sm")} ${S.vocab.test ? "Пройти тест ещё раз" : "Тест словарного запаса · 5 мин"}</button>
       </div>
       <div>
         <div class="side-label">Новых слов в день</div>
@@ -304,7 +310,7 @@ export function createVocab(ctx) {
       <button class="${tab === "study" ? "active" : ""}" data-action="v-tab" data-tab="study">${icon("cards", "icon-sm")} Карточки</button>
       <button class="${tab === "list" ? "active" : ""}" data-action="v-tab" data-tab="list">${icon("list", "icon-sm")} Все слова</button>
     </div>`;
-    main.innerHTML = seg + (tab === "list" ? listHtml() : studyHtml());
+    main.innerHTML = tab === "test" ? sizeTest.html() : seg + (tab === "list" ? listHtml() : studyHtml());
     if (scrollTop) window.scrollTo({ top: 0 });
     ctx.ai()?.follow();
   }
@@ -459,7 +465,7 @@ export function createVocab(ctx) {
   function hardWordsOf(q) {
     if (!wordsReady()) return [];
     const skip = S.progress[q.id] ? new Set() : spoilerWords(q);
-    return hardWordsIn(passageText(q), levelZipf(S.vocab.level), skip).filter((h) => !known(h.key));
+    return hardWordsIn(passageText(q), threshold(), skip).filter((h) => !known(h.key));
   }
 
   // Underlines the hard words in the rendered passage; a tap shows the meaning.
@@ -675,9 +681,18 @@ export function createVocab(ctx) {
     save();
   }
 
+  const sizeTest = createSizeTest({
+    S, esc, icon, toast, save,
+    render: (all) => { if (S.ui.view !== "vocab") return; renderMain(); if (all) renderSidebar(); },
+    // the test's frequency edge becomes the level: words rarer than it are hard for this student
+    applyLevel: () => { S.vocab.level = "test"; S.session = null; if (loaded) rebuildWords(); cache = null; ctx.refreshChrome(); },
+  });
+
   const actions = {
+    ...sizeTest.actions,
     "v-tab": (el) => {
       S.ui.vtab = el.dataset.tab;
+      if (el.dataset.tab === "test") sizeTest.open();
       if (el.dataset.tab === "study" && S.session && !S.session.queue.length) S.session = null;
       ctx.saveUi();
       document.body.classList.remove("sidebar-open");
@@ -799,6 +814,7 @@ export function createVocab(ctx) {
   }
 
   function onKey(e) {
+    if (S.ui.vtab === "test") return sizeTest.onKey(e);
     if ((S.ui.vtab || "study") !== "study" || !S.session?.queue.length) return false;
     const k = e.key.toLowerCase();
     if ((k === " " || k === "enter") && !S.session.revealed) { actions["v-reveal"](); return true; }
@@ -819,6 +835,7 @@ export function createVocab(ctx) {
     for (const [k, u] of Object.entries(incoming.user || {})) if (!S.vocab.user[k]) { S.vocab.user[k] = u; n++; }
     for (const [k, e] of Object.entries(incoming.edits || {})) S.vocab.edits[k] = { ...e, ...(S.vocab.edits[k] || {}) };
     S.vocab.known = [...new Set([...S.vocab.known, ...(incoming.known || [])])];
+    if (incoming.test && (!S.vocab.test || incoming.test.at > S.vocab.test.at)) S.vocab.test = incoming.test;
     save();
     S.session = null;
     return n;
