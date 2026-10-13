@@ -145,10 +145,25 @@ export function createVocab(ctx) {
     return { all, due, fresh, mineFresh, autoFresh, newLeft, newToday: mineFresh.length + Math.min(newLeft, autoFresh.length) };
   }
 
+  // Today's cards: the open session, plus words that came due after it started (a word missed in a
+  // check before a question comes back a minute later). Every counter on screen reads from here.
+  function todayCards() {
+    if (S.session && S.session.day !== today()) S.session = null;
+    if (!S.session) startSession();
+    const s = S.session;
+    const all = cards();
+    const byKey = all.byKey;
+    s.queue = s.queue.filter((k) => byKey.has(k) && !byKey.get(k).known);
+    const inQueue = new Set(s.queue);
+    const now = Date.now();
+    for (const c of all) if (!c.known && c.st?.last && c.st.due <= now && !inQueue.has(c.key)) s.queue.push(c.key);
+    const fresh = s.queue.filter((k) => !byKey.get(k).st?.last).length;
+    return { s, all, byKey, fresh, review: s.queue.length - fresh };
+  }
+
   function dueTotal() {
     if (!S.set) return 0;
-    const c = counts();
-    return c.due.length + c.newToday;
+    return todayCards().s.queue.length;
   }
 
   function startSession() {
@@ -159,7 +174,7 @@ export function createVocab(ctx) {
     autoFresh.sort((a, b) => priority(a, gateN) - priority(b, gateN) || n(a) - n(b) || (b.zipf || 0) - (a.zipf || 0) || mix(a.key) - mix(b.key));
     S.session = {
       queue: [...due.map((c) => c.key), ...mineFresh.map((c) => c.key), ...autoFresh.slice(0, newLeft).map((c) => c.key)],
-      revealed: false, reviewed: 0, learnedNew: 0,
+      revealed: false, reviewed: 0, learnedNew: 0, day: today(),
     };
   }
 
@@ -222,8 +237,7 @@ export function createVocab(ctx) {
   // ---------------------------------------------------------------- sidebar
 
   function renderSidebar() {
-    const all = cards();
-    const { due, newToday } = counts(all);
+    const { all, fresh: newToday, review: dueN } = todayCards();
     const by = (st) => all.filter((c) => c.status === st).length;
     const tab = S.ui.vtab || "study";
     const filter = S.ui.vfilter || "all";
@@ -235,7 +249,7 @@ export function createVocab(ctx) {
       <div>
         <div class="side-label">Сегодня</div>
         <div class="vtoday">
-          <div><b>${due.length}</b><span>повторить</span></div>
+          <div><b>${dueN}</b><span>повторить</span></div>
           <div><b>${newToday}</b><span>новых</span></div>
         </div>
         <button class="btn btn-primary vstart" data-action="v-tab" data-tab="study">${icon("cards", "icon-sm")} Учить</button>
@@ -301,16 +315,12 @@ export function createVocab(ctx) {
       return `<div class="vwrap"><div class="empty"><h3>Словарь пуст</h3>
         <p>В этом наборе нет вопросов Words in Context. Добавляйте слова сами: выделите слово в тексте вопроса.</p></div></div>`;
     }
-    if (!S.session) startSession();
-    const s = S.session;
-    const byKey = new Map(all.map((c) => [c.key, c]));
-    s.queue = s.queue.filter((k) => byKey.has(k) && !byKey.get(k).known);
+    const { s, byKey, fresh: newInQueue } = todayCards();
     if (!s.queue.length) return doneHtml(all);
     const c = byKey.get(s.queue[0]);
     if (s.revealed) fetchDef(c);
     const left = s.queue.length;
     const pct = Math.round((s.reviewed / (s.reviewed + left)) * 100);
-    const newInQueue = s.queue.filter((k) => !byKey.get(k).st?.last).length;
     const iv = previewIntervals(c.st);
     const qs = c.practiced ? [...new Set(c.examples.filter((e) => e.n).map((e) => e.n))] : [];
     return `<div class="vwrap">
@@ -673,6 +683,7 @@ export function createVocab(ctx) {
       document.body.classList.remove("sidebar-open");
       renderSidebar();
       renderMain(true);
+      ctx.refreshChrome();
     },
     "v-filter": (el) => { S.ui.vfilter = el.dataset.filter; S.ui.vtab = "list"; ctx.saveUi(); renderSidebar(); renderMain(true); document.body.classList.remove("sidebar-open"); },
     "v-perday": (el) => { S.vocab.newPerDay = +el.dataset.n; save(); S.session = null; renderSidebar(); renderMain(); ctx.refreshChrome(); },
