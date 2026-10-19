@@ -2,10 +2,11 @@
 // every device they sign in on shows the same. The device copy stays the working copy (see sync.js).
 // Off inside claude.ai (the page cannot reach Google there) and while no Firebase project is set.
 import { createSync } from "./sync.js";
-import { mergeMap, mergeSet, mergeValue, newer } from "./merge.js";
+import { mergeMap, mergeSet, mergeValue, newer, same } from "./merge.js";
 import { firebaseConfig } from "./cloud-config.js";
 
 const RECORD = "sat-trainer:sync:v1";   // { uid, email, on, base: { section: last agreed value } }
+const SOURCES = "sat-trainer:sources:v1";   // the PDFs this device should have: { list: {id: {fileName, importedAt}}, numbers: {qid: n} }
 
 // Days of activity: numbers take the larger, marks stay set.
 const maxFields = (x, y) => Object.fromEntries([...new Set([...Object.keys(x), ...Object.keys(y)])]
@@ -42,7 +43,27 @@ export const MERGE = {
     bestRun: larger,
     bestStreak: larger,
   }),
+  sources: (b, l, r) => byField(b, l, r, {
+    list: (b, l, r) => mergeMap(b, l, r, mine),
+    numbers: (b, l, r) => mergeMap(b, l, r, mine),
+  }),
 };
+
+// Brings this device's questions in line with the PDFs the account lists. `have` is what the
+// device's set is built from: { ids, numbers }. `bytesOf(id)` finds a PDF here or in the account
+// (null: not uploaded yet); `install(list, numbers)` builds the set. An empty list in the account
+// never removes questions from a device. Returns "same", "done" or "waiting" (some PDF is missing).
+export async function syncSources(want, have, bytesOf, install) {
+  const list = Object.entries(want?.list || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => (a.importedAt || 0) - (b.importedAt || 0));
+  if (!list.length) return "same";
+  const ids = list.map((s) => s.id);
+  if (same([...ids].sort(), [...have.ids].sort()) && same(want.numbers || {}, have.numbers || {})) return "same";
+  const ready = [];
+  for (const s of list) if (await bytesOf(s.id)) ready.push(s);
+  if (!ready.length) return "waiting";
+  await install(ready, want.numbers || {});
+  return ready.length < list.length ? "waiting" : "done";
+}
 
 const STATUS = {
   saving: ["cloud", "Сохраняю…"],
@@ -61,7 +82,9 @@ function signInError(e) {
 }
 
 // data: { [section]: { read(), write(value) } } — the trainer's own copy of each section.
-export function createAccount({ ls, icon, esc, toast, data, changed }) {
+// sets: { current() → {list, numbers} | null, have() → {ids, numbers}, stored(id), store(id, bytes), install(list, numbers) }
+//   — the questions on this device, the PDFs behind them, and building them from PDFs.
+export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
   const enabled = !!firebaseConfig && !window.claude;
   let cloudP = null;
   let cloud = null;
@@ -77,40 +100,123 @@ export function createAccount({ ls, icon, esc, toast, data, changed }) {
   const load = () => (cloudP ||= import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)).then((c) => (cloud = c)))
     .catch((e) => { cloudP = null; throw e; });
 
-  function setState(s) {
-    state = s;
+  // Several parts report (data, the list of PDFs, an upload); the chip shows the most pressing.
+  const states = {};
+  function setState(part, s) {
+    if (s) states[part] = s; else delete states[part];
+    state = ["offline", "error", "saving", "saved"].find((x) => Object.values(states).includes(x)) || (user ? "saved" : "off");
     const el = document.getElementById("sync-chip");
     if (el) el.outerHTML = chip();
   }
+  const clearStates = () => { for (const k of Object.keys(states)) delete states[k]; setState("none", null); };
 
   // After the account changed the trainer's data: redraw once, not per section.
   const refresh = () => { clearTimeout(refreshTimer); refreshTimer = setTimeout(changed, 120); };
 
-  const sections = Object.fromEntries(Object.keys(MERGE).map((name) => [name, {
+  const sections = Object.fromEntries(Object.keys(MERGE).filter((n) => n !== "sources").map((name) => [name, {
     read: () => data[name].read(),
     apply: (v) => { applying = true; try { data[name].write(v); } finally { applying = false; } refresh(); },
     merge: MERGE[name],
   }]));
+
+  // ---------------------------------------------------------------- questions and PDFs
+  // The list of PDFs this device should have is kept apart from the set, which may still be
+  // waiting for one of them. It goes to the account only after its PDFs are there.
+
+  let sourcesSync = null;
+  let waitTimer = null;
+  let ensuring = Promise.resolve();
+  const uploaded = new Set();
+
+  const wanted = () => ls.get(SOURCES, null) || sets.current() || undefined;
+  const sourcesSection = { sources: {
+    read: wanted,
+    apply: (v) => { ls.set(SOURCES, v); ensureSources(); },
+    merge: MERGE.sources,
+  } };
+
+  async function bytesOf(id) {
+    const here = await sets.stored(id);
+    if (here || !user || !cloud) return here || null;
+    const got = await cloud.getPdf(user.uid, id);
+    if (got) await sets.store(id, got);
+    return got;
+  }
+
+  function ensureSources() {
+    clearTimeout(waitTimer);
+    ensuring = ensuring.then(async () => {
+      try {
+        const res = await syncSources(ls.get(SOURCES, null), sets.have(), bytesOf, sets.install);
+        if (res === "waiting" && user) waitTimer = setTimeout(ensureSources, 20_000);   // another device is still uploading
+      } catch (e) { console.warn("sources", e); }
+    });
+    return ensuring;
+  }
+
+  async function uploadMissing() {
+    for (const id of Object.keys(wanted()?.list || {})) {
+      if (uploaded.has(id)) continue;
+      if (!(await cloud.hasPdf(user.uid, id))) {
+        const bytes = await sets.stored(id);
+        if (!bytes) continue;          // not here: the device that has it uploads it
+        await cloud.putPdf(user.uid, id, bytes);
+      }
+      uploaded.add(id);
+    }
+  }
+
+  async function sendSources() {
+    setState("pdf", "saving");
+    try { await uploadMissing(); setState("pdf", null); }
+    catch (e) { console.warn("pdf upload", e); setState("pdf", navigator.onLine ? "error" : "offline"); return false; }
+    return true;
+  }
+
+  // A PDF was added here (or the set started over with `replace`): the list follows, after the upload.
+  async function setsChanged({ replace = false } = {}) {
+    const now = sets.current();
+    const before = ls.get(SOURCES, null);
+    // a PDF still on its way from the account stays on the list unless the set started over
+    ls.set(SOURCES, replace || !before ? now : { list: { ...before.list, ...now?.list }, numbers: { ...before.numbers, ...now?.numbers } });
+    if (!user || !sourcesSync) return;
+    if (await sendSources()) sourcesSync.notify("sources");
+  }
 
   const base = {
     get: (name) => record()?.base?.[name],
     set: (name, value) => { const r = record(); if (!r) return; r.base = { ...r.base, [name]: value }; ls.set(RECORD, r); },
   };
 
-  async function begin(u) {
+  function stopAll() {
     sync?.stop();
+    sourcesSync?.stop();
+    sync = sourcesSync = null;
     started = false;
+    clearTimeout(waitTimer);
+  }
+
+  async function begin(u) {
+    stopAll();
     let r = record();
-    if (!r || r.uid !== u.uid) r = { uid: u.uid, base: {} };     // another account starts from nothing agreed
+    if (!r || r.uid !== u.uid) { r = { uid: u.uid, base: {} }; uploaded.clear(); }   // another account starts from nothing agreed
     ls.set(RECORD, { ...r, on: true, email: u.email || "" });
-    sync = createSync({ adapter: cloud.adapter(u.uid), sections, base, onStatus: setState });
-    setState("saving");
+    const adapter = cloud.adapter(u.uid);
+    sync = createSync({ adapter, sections, base, onStatus: (s) => setState("data", s) });
+    setState("data", "saving");
     try {
       await sync.start();
+      changed();
+      // questions: this device's PDFs go up first, then the list that names them
+      if (await sendSources()) {
+        sourcesSync = createSync({ adapter, sections: sourcesSection, base, onStatus: (s) => setState("sources", s) });
+        await sourcesSync.start();
+        await ensureSources();
+      }
       started = true;
     } catch (e) {
       console.warn("sync start", e);
-      setState(navigator.onLine ? "error" : "offline");
+      setState("data", navigator.onLine ? "error" : "offline");
     }
     changed();
   }
@@ -119,12 +225,10 @@ export function createAccount({ ls, icon, esc, toast, data, changed }) {
     if ((u?.uid || null) === (user?.uid || null)) return;
     user = u;
     if (u) return begin(u);
-    sync?.stop();
-    sync = null;
-    started = false;
+    stopAll();
     const r = record();
     if (r) ls.set(RECORD, { ...r, on: false });
-    setState("off");
+    clearStates();
     changed();
   }
 
@@ -136,8 +240,7 @@ export function createAccount({ ls, icon, esc, toast, data, changed }) {
   // On start: a device that was signed in reconnects; one that never was does not load Firebase.
   async function init() {
     if (!enabled || !record()?.on) return;
-    state = "saving";
-    try { await connect(); } catch (e) { console.warn("account", e); setState("offline"); }
+    try { await connect(); } catch (e) { console.warn("account", e); setState("data", "offline"); }
   }
 
   async function signIn() {
@@ -154,21 +257,22 @@ export function createAccount({ ls, icon, esc, toast, data, changed }) {
 
   async function signOut() {
     sync?.flush();
+    sourcesSync?.flush();
     await cloud?.signOut();
     toast("Вы вышли из аккаунта. Прогресс на этом устройстве остался");
   }
 
   // "Удалить данные из браузера": sign out here and forget what was agreed with the account.
   async function forget() {
-    sync?.stop();
-    sync = null;
+    stopAll();
     try { await cloud?.signOut(); } catch { /* not signed in */ }
     ls.del(RECORD);
+    ls.del(SOURCES);
   }
 
-  addEventListener("online", () => { if (user && !started) begin(user); else sync?.status(); });
-  addEventListener("offline", () => sync?.status());
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") sync?.flush(); });
+  addEventListener("online", () => { if (user && !started) begin(user); else { sync?.status(); sourcesSync?.status(); } });
+  addEventListener("offline", () => { sync?.status(); sourcesSync?.status(); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { sync?.flush(); sourcesSync?.flush(); } });
 
   // ---------------------------------------------------------------- screens
 
@@ -195,7 +299,7 @@ export function createAccount({ ls, icon, esc, toast, data, changed }) {
   }
 
   return {
-    init, forget, chip, menuHtml, landingHtml,
+    init, forget, chip, menuHtml, landingHtml, setsChanged,
     notify: (section) => { if (!applying) sync?.notify(section); },
     signedIn: () => !!user,
     actions: { "sign-in": signIn, "sign-out": signOut },

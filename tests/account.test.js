@@ -31,3 +31,36 @@ test("activity: a day studied on both devices keeps the larger counts", () => {
 test("flags: unflagging on one device reaches the account", () => {
   eq(MERGE.flags(["q1", "q2"], ["q2"], ["q1", "q2"]), ["q2"]);
 });
+
+import { syncSources } from "../assets/account.js";
+
+const want = { list: { s1: { fileName: "a.pdf", importedAt: 1 } }, numbers: { q1: 1, q2: 2 } };
+
+test("sources wait for a missing pdf, then build the questions once it arrives", async () => {
+  const installs = [];
+  const install = async (list, numbers) => { installs.push({ ids: list.map((s) => s.id), numbers }); };
+  eq(await syncSources(want, { ids: [], numbers: {} }, async () => null, install), "waiting", "pdf not uploaded yet");
+  eq(installs.length, 0, "nothing built while waiting");
+  eq(await syncSources(want, { ids: [], numbers: {} }, async () => new Uint8Array([1]), install), "done", "pdf arrived");
+  eq(installs, [{ ids: ["s1"], numbers: { q1: 1, q2: 2 } }]);
+});
+
+test("sources already in place do nothing", async () => {
+  let built = false;
+  eq(await syncSources(want, { ids: ["s1"], numbers: { q1: 1, q2: 2 } }, async () => new Uint8Array([1]), async () => { built = true; }), "same");
+  eq(built, false);
+});
+
+test("an account without sources leaves the device's questions alone", async () => {
+  let built = false;
+  const install = async () => { built = true; };
+  eq(await syncSources(undefined, { ids: ["s1"], numbers: {} }, async () => null, install), "same");
+  eq(await syncSources({ list: {}, numbers: {} }, { ids: ["s1"], numbers: {} }, async () => null, install), "same");
+  eq(built, false);
+});
+
+test("new question numbers from the account rebuild the set", async () => {
+  let got = null;
+  eq(await syncSources(want, { ids: ["s1"], numbers: { q1: 2, q2: 1 } }, async () => new Uint8Array([1]), async (list, numbers) => { got = numbers; }), "done");
+  eq(got, { q1: 1, q2: 2 });
+});

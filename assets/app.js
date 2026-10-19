@@ -224,6 +224,33 @@ account = createAccount({
     vocab: { read: () => S.vocab, write: (v) => { S.vocab = Object.assign(VOCAB_DEFAULT(), v); ls.set(KEY.vocab, S.vocab); vocab.invalidate(); vocab.resetSession(); } },
     activity: { read: () => S.activity, write: (v) => { S.activity = Object.assign(ACTIVITY_DEFAULT(), v); ls.set(KEY.activity, S.activity); } },
   },
+  sets: {
+    current: () => (S.set ? {
+      list: Object.fromEntries(S.set.sources.map((s) => [s.id, { fileName: s.fileName, importedAt: s.importedAt }])),
+      numbers: Object.fromEntries(S.set.questions.map((q) => [q.id, q.n])),
+    } : null),
+    have: () => ({ ids: S.set?.sources.map((s) => s.id) || [], numbers: Object.fromEntries((S.set?.questions || []).map((q) => [q.id, q.n])) }),
+    stored: async (id) => { try { return (await db.get(pdfKey(id))) || null; } catch { return null; } },
+    store: async (id, bytes) => { try { await db.set(pdfKey(id), bytes); } catch (e) { console.warn("IndexedDB unavailable", e); } },
+    // questions from the account: on a new device they replace the start page
+    install: async (list, numbers) => {
+      const first = !S.set;
+      if (first) showImporting();
+      try {
+        const set = await installSources(list, numbers, async (id) => { try { return await db.get(pdfKey(id)); } catch { return null; } }, { skills: S.set?.skills, label: "Загружаю вопросы" });
+        if (!set) { if (first) showLanding(); return; }
+        await saveSet(set, S.set);
+        S.set = set;
+        S.pdfs = new Map();
+        if (first) { S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null }; saveUi(); }
+        showTrainer();
+        if (first) toast(`Вопросы из аккаунта: ${qWord(set.questions.length)}`);
+      } catch (e) {
+        console.error(e);
+        if (first) showLanding(importError(e));
+      }
+    },
+  },
   // the account brought changes: redraw, but not under someone typing
   changed: () => {
     if (S.set && $("#main")) {
@@ -531,6 +558,7 @@ async function restoreProgress(file) {
         S.pdfs = new Map();
         S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null };
         saveUi();
+        account.setsChanged();
         built = true;
       }
     } catch (e) {
@@ -618,6 +646,7 @@ async function runImport(bytes, fileName, { mode = "add" } = {}) {
     S.pdfs = new Map();
     if (!base) S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null };
     saveUi();
+    account.setsChanged({ replace: mode === "replace" });
     showTrainer();
     if (!base) toast(`Готово: ${qWord(set.questions.length)}`);
     else if (!added) toast(`Новых вопросов нет: все ${parsed.questions.length} уже есть в тренажёре`);
