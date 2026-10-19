@@ -98,6 +98,16 @@ export function newState() {
   return { due: 0, ivl: 0, ease: 2.5, reps: 0, lapses: 0, last: 0 };
 }
 
+// Days until the next review after "hard", "good" and "easy". Each waits longer than the one before:
+// after "easy" on first sight (4 days) "hard" scales those 4 days, so "good" must not stay at 3.
+function intervals(s) {
+  if (s.reps === 0) return { hard: 1, good: 1, easy: 4 };
+  const hard = Math.max(1, Math.round(s.ivl * 1.2));
+  const good = Math.max(hard + 1, s.reps === 1 ? 3 : Math.round(s.ivl * s.ease));
+  const easy = Math.max(good + 1, Math.round(s.ivl * s.ease * 1.3));
+  return { hard, good, easy };
+}
+
 // grade: 1 again, 2 hard, 3 good, 4 easy
 export function schedule(st, grade, now = Date.now()) {
   const s = { ...(st || newState()) };
@@ -110,13 +120,14 @@ export function schedule(st, grade, now = Date.now()) {
     s.due = now + 60_000;            // comes back later in the same session
     return s;
   }
+  const next = intervals(s);
   if (grade === 2) {
-    s.ivl = s.reps === 0 ? 1 : Math.max(1, Math.round(s.ivl * 1.2));
+    s.ivl = next.hard;
     s.ease = Math.max(1.3, s.ease - 0.15);
   } else if (grade === 3) {
-    s.ivl = s.reps === 0 ? 1 : s.reps === 1 ? 3 : Math.max(s.ivl + 1, Math.round(s.ivl * s.ease));
+    s.ivl = next.good;
   } else {
-    s.ivl = s.reps === 0 ? 4 : Math.max(s.ivl + 2, Math.round(s.ivl * s.ease * 1.3));
+    s.ivl = next.easy;
     s.ease += 0.15;
   }
   s.reps += 1;
