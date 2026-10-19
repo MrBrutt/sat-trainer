@@ -1296,7 +1296,8 @@ const ACTIONS = {
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-action]");
   if (!e.target.closest(".menu-wrap")) toggleMenu(false);
-  if (!el || !S.set) return;
+  // without questions only the start page's own buttons work: signing in brings the questions
+  if (!el || (!S.set && !(el.dataset.action in account.actions))) return;
   const fn = ACTIONS[el.dataset.action];
   if (fn) fn(el);
 });
