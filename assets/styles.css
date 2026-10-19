@@ -482,6 +482,10 @@ kbd {
 .grade.g4 span { color: var(--primary); }
 .flash-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
 .flash-foot .hints { margin: 0; }
+/* a phone or tablet has no keyboard: key hints would only take space */
+@media (hover: none) and (pointer: coarse) {
+  kbd, .hints { display: none; }
+}
 .done-card { padding: 40px 28px; text-align: center; }
 .done-card h2 { margin: 14px 0 8px; font-size: 22px; letter-spacing: -0.01em; }
 .done-card p { color: var(--text-2); margin: 0 auto 22px; max-width: 420px; }
