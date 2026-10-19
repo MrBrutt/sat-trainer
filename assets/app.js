@@ -229,7 +229,7 @@ account = createAccount({
       list: Object.fromEntries(S.set.sources.map((s) => [s.id, { fileName: s.fileName, importedAt: s.importedAt }])),
       numbers: Object.fromEntries(S.set.questions.map((q) => [q.id, q.n])),
     } : null),
-    have: () => ({ ids: S.set?.sources.map((s) => s.id) || [], numbers: Object.fromEntries((S.set?.questions || []).map((q) => [q.id, q.n])) }),
+    have: () => ({ ids: S.set?.sources.map((s) => s.id) || [], covered: S.set?.covered || [], numbers: Object.fromEntries((S.set?.questions || []).map((q) => [q.id, q.n])) }),
     stored: async (id) => { try { return (await db.get(pdfKey(id))) || null; } catch { return null; } },
     store: async (id, bytes) => { try { await db.set(pdfKey(id), bytes); } catch (e) { console.warn("IndexedDB unavailable", e); } },
     // questions from the account: on a new device they replace the start page
@@ -597,14 +597,19 @@ async function restoreProgress(file) {
 // brings them). `bytesOf(id)` gives a PDF's bytes, or null when it is not here: that one is left out.
 async function installSources(list, numbers, bytesOf, { skills = [], label = "Читаю PDF" } = {}) {
   const pinned = new Map(Object.entries(numbers || {}));
+  const fed = [];           // every PDF read in; a copy of another one adds no questions and drops out of `sources`
   let acc = null;
   for (const [i, src] of list.entries()) {
     const bytes = await bytesOf(src.id);
     if (!bytes) continue;
     const parsed = await parseWithProgress(bytes, list.length > 1 ? `${label} ${i + 1} из ${list.length}` : label);
     acc = addQuestions(acc, parsed, { id: src.id, fileName: src.fileName, importedAt: src.importedAt }, pinned).set;
+    fed.push(src.id);
   }
-  if (acc) acc.skills = finishSet(acc.questions, acc.sources, skills).skills;
+  if (acc) {
+    acc.skills = finishSet(acc.questions, acc.sources, skills).skills;
+    acc.covered = fed;
+  }
   return acc;
 }
 
@@ -641,6 +646,7 @@ async function runImport(bytes, fileName, { mode = "add" } = {}) {
     const parsed = await parseWithProgress(bytes);
     const source = { id: `s${Date.now().toString(36)}`, fileName, importedAt: Date.now() };
     const { set, added, same } = addQuestions(base, parsed, source);
+    set.covered = [...new Set([...(base?.covered || base?.sources.map((s) => s.id) || []), source.id])];
     try { await db.set(pdfKey(source.id), bytes); } catch (e) { console.warn("IndexedDB unavailable", e); }
     await saveSet(set, S.set);
     S.set = set;

@@ -59,7 +59,10 @@ export async function syncSources(want, have, bytesOf, install) {
   const ids = list.map((s) => s.id);
   // numbers the account keeps for questions that are not here do not count
   const numbered = Object.entries(have.numbers || {}).every(([qid, n]) => (want.numbers?.[qid] ?? n) === n);
-  if (same([...ids].sort(), [...have.ids].sort()) && numbered) return "same";
+  // in place: every listed PDF went into the set (`covered` — a copy of the same PDF adds no
+  // questions and drops out of the set's sources), and the set uses no PDF the account dropped
+  const covered = new Set([...(have.covered || []), ...have.ids]);
+  if (ids.every((id) => covered.has(id)) && have.ids.every((id) => ids.includes(id)) && numbered) return "same";
   const ready = [];
   for (const s of list) if (await bytesOf(s.id)) ready.push(s);
   if (!ready.length) return "waiting";

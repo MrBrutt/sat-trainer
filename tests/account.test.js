@@ -71,3 +71,18 @@ test("numbers the account keeps for questions not on this device do not rebuild 
   eq(await syncSources(more, { ids: ["s1"], numbers: { q1: 1, q2: 2 } }, async () => new Uint8Array([1]), async () => { built = true; }), "same");
   eq(built, false);
 });
+
+test("the same PDF loaded on two devices does not rebuild the set over and over", async () => {
+  // both copies were built in; the questions came from s2, so s1 is no longer a source of the set
+  const two = { list: { s1: { importedAt: 1 }, s2: { importedAt: 2 } }, numbers: { q1: 1 } };
+  let built = false;
+  eq(await syncSources(two, { ids: ["s2"], covered: ["s1", "s2"], numbers: { q1: 1 } }, async () => new Uint8Array([1]), async () => { built = true; }), "same");
+  eq(built, false);
+});
+
+test("a PDF removed in the account is removed here", async () => {
+  let got = null;
+  const one = { list: { s2: { importedAt: 2 } }, numbers: { q1: 1 } };
+  eq(await syncSources(one, { ids: ["s1", "s2"], covered: ["s1", "s2"], numbers: { q1: 1 } }, async () => new Uint8Array([1]), async (list) => { got = list.map((s) => s.id); }), "done");
+  eq(got, ["s2"]);
+});
