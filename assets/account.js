@@ -299,7 +299,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
   }
 
   return {
-    init, forget, chip, menuHtml, landingHtml, setsChanged,
+    enabled, init, forget, chip, menuHtml, landingHtml, setsChanged,
     notify: (section) => { if (!applying) sync?.notify(section); },
     signedIn: () => !!user,
     actions: { "sign-in": signIn, "sign-out": signOut },

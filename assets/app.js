@@ -454,7 +454,7 @@ function showLanding(error, note) {
       <span class="muted">Файл, сохранённый в меню «Сохранить прогресс в файл»</span>
     </div>
     ${account.landingHtml()}
-    <div class="privacy">${icon("lock", "icon-sm")}<span>Файл обрабатывается прямо в браузере и никуда не отправляется. Вопросы и прогресс хранятся только на этом устройстве.</span></div>
+    <div class="privacy">${icon("lock", "icon-sm")}<span>Файл обрабатывается прямо в браузере. Вопросы и прогресс хранятся на этом устройстве${account.enabled ? ", а если войти через Google — ещё и в вашем аккаунте, доступном только вам" : " и никуда не отправляются"}.</span></div>
     <ol class="steps">
       <li><div class="n">1</div>Откройте <a href="https://satsuiteeducatorquestionbank.collegeboard.org/digital/search" target="_blank" rel="noopener">Educator Question Bank</a></li>
       <li><div class="n">2</div>Выберите тест, раздел, домены и сложность, отметьте вопросы</li>
