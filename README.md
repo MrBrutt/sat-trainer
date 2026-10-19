@@ -53,7 +53,7 @@ PDF разбирается прямо в браузере с помощью [pdf
 - `assets/timer.js` — честный таймер на вопрос (пауза при уходе со вкладки, из приложения или при бездействии).
 - `assets/today.js` — расписание повторов ошибок, план дня, серия, календарь активности, достижения.
 - `assets/merge.js`, `assets/sync.js` — трёхстороннее слияние данных устройства и аккаунта (последняя согласованная копия — база, поэтому удаления и сброс тоже переносятся) и движок синхронизации по разделам.
-- `assets/account.js`, `assets/cloud.js`, `assets/cloud-config.js` — вход через Google, правила слияния каждого раздела, PDF в аккаунте кусками по 900 КБ; Firebase SDK грузится с gstatic.com только после входа. Правила Firestore: `match /users/{uid}/{document=**} { allow read, write: if request.auth != null && request.auth.uid == uid; }`.
+- `assets/account.js`, `assets/cloud.js`, `assets/cloud-config.js` — вход через Google, правила слияния каждого раздела, PDF в аккаунте кусками по 900 КБ; Firebase SDK грузится с gstatic.com, только когда это нужно: открыто меню или стартовая страница (чтобы окно входа открылось сразу по нажатию) или устройство уже входило. Правила Firestore: `match /users/{uid}/{document=**} { allow read, write: if request.auth != null && request.auth.uid == uid; }`.
 - `assets/bytes.js` — PDF в base64 для файла прогресса.
 - `assets/assistant.js` — ассистент Claude: работает, только когда страница открыта как артефакт на claude.ai (через аккаунт зрителя); на GitHub Pages скрыт.
 - `artifact.html` — та же страница в формате артефакта claude.ai.

@@ -57,7 +57,9 @@ export async function syncSources(want, have, bytesOf, install) {
   const list = Object.entries(want?.list || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => (a.importedAt || 0) - (b.importedAt || 0));
   if (!list.length) return "same";
   const ids = list.map((s) => s.id);
-  if (same([...ids].sort(), [...have.ids].sort()) && same(want.numbers || {}, have.numbers || {})) return "same";
+  // numbers the account keeps for questions that are not here do not count
+  const numbered = Object.entries(have.numbers || {}).every(([qid, n]) => (want.numbers?.[qid] ?? n) === n);
+  if (same([...ids].sort(), [...have.ids].sort()) && numbered) return "same";
   const ready = [];
   for (const s of list) if (await bytesOf(s.id)) ready.push(s);
   if (!ready.length) return "waiting";
@@ -85,7 +87,7 @@ function signInError(e) {
 // sets: { current() → {list, numbers} | null, have() → {ids, numbers}, stored(id), store(id, bytes), install(list, numbers) }
 //   — the questions on this device, the PDFs behind them, and building them from PDFs.
 export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
-  const enabled = !!firebaseConfig && !window.claude;
+  const enabled = () => !!firebaseConfig && !window.claude;   // asked each time: claude.ai may set window.claude after load
   let cloudP = null;
   let cloud = null;
   let sync = null;
@@ -196,7 +198,10 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
     clearTimeout(waitTimer);
   }
 
-  async function begin(u) {
+  let beginning = null;
+  const begin = (u) => (beginning ||= startFor(u).finally(() => { beginning = null; }));
+
+  async function startFor(u) {
     stopAll();
     let r = record();
     if (!r || r.uid !== u.uid) { r = { uid: u.uid, base: {} }; uploaded.clear(); }   // another account starts from nothing agreed
@@ -239,20 +244,28 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
 
   // On start: a device that was signed in reconnects; one that never was does not load Firebase.
   async function init() {
-    if (!enabled || !record()?.on) return;
+    if (!enabled() || !record()?.on) return;
     try { await connect(); } catch (e) { console.warn("account", e); setState("data", "offline"); }
   }
 
   async function signIn() {
-    if (!enabled) return;
+    if (!enabled()) return;
+    const fresh = !cloud;
     try {
       await connect();
       const res = await cloud.signIn();
       toast(`Вы вошли: ${res.user.email || "аккаунт Google"}. Прогресс сохраняется в аккаунте`);
     } catch (e) {
+      // Safari opens Google's window only right after a tap; a first tap may be spent loading the sign-in
+      if (fresh && /popup-blocked/.test(e?.code || "")) return toast("Вход загрузился — нажмите «Войти через Google» ещё раз");
       const msg = e?.code ? signInError(e) : "Не удалось загрузить вход — проверьте интернет.";
       if (msg) toast(msg);
     }
+  }
+
+  // Load the sign-in before the tap (menu opened, start page shown), so the tap opens Google's window at once.
+  function prefetch() {
+    if (enabled() && !cloud) connect().catch(() => { /* tried again on the tap */ });
   }
 
   async function signOut() {
@@ -270,27 +283,27 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
     ls.del(SOURCES);
   }
 
-  addEventListener("online", () => { if (user && !started) begin(user); else { sync?.status(); sourcesSync?.status(); } });
+  addEventListener("online", () => { if (user && !started && !beginning) begin(user); else { sync?.status(); sourcesSync?.status(); } });
   addEventListener("offline", () => { sync?.status(); sourcesSync?.status(); });
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { sync?.flush(); sourcesSync?.flush(); } });
 
   // ---------------------------------------------------------------- screens
 
   function chip() {
-    if (!enabled || !user || !STATUS[state]) return `<span id="sync-chip" hidden></span>`;
+    if (!enabled() || !user || !STATUS[state]) return `<span id="sync-chip" hidden></span>`;
     const [ic, text] = STATUS[state];
     return `<span id="sync-chip" class="sync-chip ${state}" title="${esc(`${text} · ${user.email || ""}`)}" role="status">${icon(ic, "icon-sm")}<span class="label">${state === "saved" ? "В аккаунте" : esc(text.split(" — ")[0])}</span></span>`;
   }
 
   function menuHtml() {
-    if (!enabled) return "";
+    if (!enabled()) return "";
     if (user) return `<div class="menu-note">${icon("cloudCheck", "icon-sm")} ${esc(user.email || "Аккаунт Google")}</div>
       <button role="menuitem" data-action="sign-out">${icon("x")} Выйти из аккаунта</button><hr>`;
     return `<button role="menuitem" data-action="sign-in">${icon("cloud")} Войти через Google — прогресс на всех устройствах</button><hr>`;
   }
 
   function landingHtml() {
-    if (!enabled) return "";
+    if (!enabled()) return "";
     if (user) return `<div class="landing-alt"><span class="muted">${icon("cloudCheck", "icon-sm")} Вы вошли: ${esc(user.email || "аккаунт Google")}. Если на другом устройстве уже есть вопросы, они появятся здесь сами.</span></div>`;
     return `<div class="landing-alt">
       <button class="btn btn-ghost" data-action="sign-in">${icon("cloud", "icon-sm")} Войти через Google</button>
@@ -299,7 +312,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
   }
 
   return {
-    enabled, init, forget, chip, menuHtml, landingHtml, setsChanged,
+    enabled, init, prefetch, forget, chip, menuHtml, landingHtml, setsChanged,
     notify: (section) => { if (!applying) sync?.notify(section); },
     signedIn: () => !!user,
     actions: { "sign-in": signIn, "sign-out": signOut },

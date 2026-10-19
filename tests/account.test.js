@@ -64,3 +64,10 @@ test("new question numbers from the account rebuild the set", async () => {
   eq(await syncSources(want, { ids: ["s1"], numbers: { q1: 2, q2: 1 } }, async () => new Uint8Array([1]), async (list, numbers) => { got = numbers; }), "done");
   eq(got, { q1: 1, q2: 2 });
 });
+
+test("numbers the account keeps for questions not on this device do not rebuild the set", async () => {
+  let built = false;
+  const more = { list: want.list, numbers: { q1: 1, q2: 2, q9: 9 } };
+  eq(await syncSources(more, { ids: ["s1"], numbers: { q1: 1, q2: 2 } }, async () => new Uint8Array([1]), async () => { built = true; }), "same");
+  eq(built, false);
+});

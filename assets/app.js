@@ -454,7 +454,7 @@ function showLanding(error, note) {
       <span class="muted">Файл, сохранённый в меню «Сохранить прогресс в файл»</span>
     </div>
     ${account.landingHtml()}
-    <div class="privacy">${icon("lock", "icon-sm")}<span>Файл обрабатывается прямо в браузере. Вопросы и прогресс хранятся на этом устройстве${account.enabled ? ", а если войти через Google — ещё и в вашем аккаунте, доступном только вам" : " и никуда не отправляются"}.</span></div>
+    <div class="privacy">${icon("lock", "icon-sm")}<span>Файл обрабатывается прямо в браузере. Вопросы и прогресс хранятся на этом устройстве${account.enabled() ? ", а если войти через Google — ещё и в вашем аккаунте, доступном только вам" : " и никуда не отправляются"}.</span></div>
     <ol class="steps">
       <li><div class="n">1</div>Откройте <a href="https://satsuiteeducatorquestionbank.collegeboard.org/digital/search" target="_blank" rel="noopener">Educator Question Bank</a></li>
       <li><div class="n">2</div>Выберите тест, раздел, домены и сложность, отметьте вопросы</li>
@@ -466,6 +466,7 @@ function showLanding(error, note) {
   const dz = $("#dz");
   $("#file").addEventListener("change", (e) => importFile(e.target.files[0]));
   $("#file-restore").addEventListener("change", (e) => { importFile(e.target.files[0], { restore: true }); e.target.value = ""; });
+  account.prefetch();
   dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("drag"); });
   dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
   dz.addEventListener("drop", (e) => { e.preventDefault(); dz.classList.remove("drag"); importFile(e.dataTransfer.files[0]); });
@@ -1232,7 +1233,7 @@ const ACTIONS = {
     renderTopbar();
     if (cur() && isOriginal(cur())) renderQuestion();
   },
-  menu: () => toggleMenu(),
+  menu: () => { account.prefetch(); toggleMenu(); },
   "load-new": () => { toggleMenu(false); S.importMode = "add"; $("#file2").click(); },
   "load-replace": async () => {
     toggleMenu(false);
