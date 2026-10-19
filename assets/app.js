@@ -5,6 +5,7 @@ import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, REVIE
 import { createTimer, fmtTime, paceFor } from "./timer.js";
 import { createPrep } from "./prep.js";
 import { toB64, fromB64 } from "./bytes.js";
+import { createAccount } from "./account.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -35,9 +36,16 @@ const DIFF_RU = { easy: "Лёгкие", medium: "Средние", hard: "Сло�
 
 // ---------------------------------------------------------------- storage
 
+// Sections of data that also live in the student's account: saving one here tells the account.
+const SYNCED = { [KEY.progress]: "progress", [KEY.review]: "review", [KEY.flags]: "flags", [KEY.vocab]: "vocab", [KEY.activity]: "activity" };
+let account = null;
+
 const ls = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
+  set(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ }
+    if (SYNCED[k]) account?.notify(SYNCED[k]);
+  },
   del(k) { try { localStorage.removeItem(k); } catch { /* storage unavailable */ } },
 };
 
@@ -126,6 +134,9 @@ const ICONS = {
   timer: '<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  cloudCheck: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="m9.5 13.5 2 2 3.5-3.5"/>',
+  cloudOff: '<path d="m2 2 20 20"/><path d="M5.78 5.78A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.31-.2"/><path d="M21.53 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7 7 0 0 0 10.5 5.1"/>',
 };
 const icon = (n, cls = "") =>
   `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
@@ -203,6 +214,22 @@ const today = createToday({
   wordsStudied: () => vocab.studied(),
   readyCount: () => S.set.questions.filter(isReady).length,
   refreshChrome: () => renderTopbar(),
+});
+account = createAccount({
+  ls, icon, esc, toast,
+  data: {
+    progress: { read: () => S.progress, write: (v) => { S.progress = v; saveProgress(); } },
+    review: { read: () => S.review, write: (v) => { S.review = v; saveReview(); } },
+    flags: { read: () => [...S.flags], write: (v) => { S.flags = new Set(v); saveFlags(); } },
+    vocab: { read: () => S.vocab, write: (v) => { S.vocab = Object.assign(VOCAB_DEFAULT(), v); ls.set(KEY.vocab, S.vocab); vocab.invalidate(); vocab.resetSession(); } },
+    activity: { read: () => S.activity, write: (v) => { S.activity = Object.assign(ACTIVITY_DEFAULT(), v); ls.set(KEY.activity, S.activity); } },
+  },
+  // the account brought changes: redraw, but not under someone typing
+  changed: () => {
+    if (S.set && $("#main")) {
+      if (document.activeElement?.matches("input, textarea")) renderTopbar(); else renderAll();
+    } else if ($("#dz")) showLanding();
+  },
 });
 
 // ---------------------------------------------------------------- rich text
@@ -399,6 +426,7 @@ function showLanding(error, note) {
       </label>
       <span class="muted">Файл, сохранённый в меню «Сохранить прогресс в файл»</span>
     </div>
+    ${account.landingHtml()}
     <div class="privacy">${icon("lock", "icon-sm")}<span>Файл обрабатывается прямо в браузере и никуда не отправляется. Вопросы и прогресс хранятся только на этом устройстве.</span></div>
     <ol class="steps">
       <li><div class="n">1</div>Откройте <a href="https://satsuiteeducatorquestionbank.collegeboard.org/digital/search" target="_blank" rel="noopener">Educator Question Bank</a></li>
@@ -749,10 +777,12 @@ function renderTopbar() {
       <div class="ring" style="--p:${answered / qs.length};--ok-p:${right / qs.length}"></div>
       <div><b>${answered}</b>/${qs.length}<span class="label"> решено</span>${answered ? ` · <b>${acc}%</b><span class="label"> верно</span>` : ""}</div>
     </div>
+    ${account.chip()}
     <button class="icon-btn" data-action="theme" aria-label="Сменить тему" title="Сменить тему">${icon(isDark() ? "sun" : "moon")}</button>
     <div class="menu-wrap">
       <button class="icon-btn" data-action="menu" aria-label="Меню" aria-haspopup="menu" aria-expanded="false">${icon("dots")}</button>
       <div class="menu" id="menu" role="menu" hidden>
+        ${account.menuHtml()}
         <button role="menuitem" data-action="load-new">${icon("upload")} Добавить ещё PDF</button>
         <button role="menuitem" data-action="load-replace">${icon("file")} Начать заново с другим PDF</button>
         <hr>
@@ -1198,7 +1228,8 @@ const ACTIONS = {
   wipe: async () => {
     ls.del(KEY.timing);
     toggleMenu(false);
-    if (!(await confirmDialog("Удалить все данные?", "Из браузера будут удалены загруженный PDF, вопросы, прогресс и отметки.", "Удалить", true))) return;
+    if (!(await confirmDialog("Удалить все данные?", `Из браузера будут удалены загруженный PDF, вопросы, прогресс и отметки.${account.signedIn() ? " Вы выйдете из аккаунта, а в самом аккаунте всё останется." : ""}`, "Удалить", true))) return;
+    await account.forget();
     try { await db.clear(); } catch { /* nothing stored */ }
     [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict, KEY.review, KEY.activity].forEach(ls.del);
     ai.wipe();
@@ -1216,6 +1247,7 @@ const ACTIONS = {
   ...vocab.actions,
   ...ai.actions,
   ...today.actions,
+  ...account.actions,
   ...prep.actions,
   "today-review": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "review"); },
   "timer-visible": () => { S.ui.hideTimer = !S.ui.hideTimer; saveUi(); renderAll(); toast(S.ui.hideTimer ? "Таймер скрыт — время всё равно считается" : "Таймер показан"); },
@@ -1305,6 +1337,7 @@ async function freshen() {
 
 (async function boot() {
   if (await freshen()) return;
+  account.init();       // a device that was signed in reconnects in the background
   const params = new URLSearchParams(location.search);
   const src = params.get("src");
   if (src) {
