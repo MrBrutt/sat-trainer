@@ -198,6 +198,10 @@ kbd {
 .privacy svg { margin-top: 1px; color: var(--ok); }
 .alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; margin-top: 16px; font-size: 14px; border: 1px solid var(--bad-border); background: var(--bad-soft); color: var(--text); }
 .alert svg { color: var(--bad); margin-top: 2px; }
+.alert.note { border-color: var(--ok-border); background: var(--ok-soft); }
+.alert.note svg { color: var(--ok); }
+.landing-alt { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 14px; font-size: 13px; }
+.landing-alt .btn { border: 1px solid var(--border); margin-left: -2px; cursor: pointer; }
 .import-progress { margin-top: 6px; width: min(360px, 90%); }
 .bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
 .bar > span { display: block; height: 100%; background: var(--primary); border-radius: inherit; transition: width .2s; }

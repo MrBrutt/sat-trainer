@@ -4,6 +4,7 @@ import { createAssistant } from "./assistant.js";
 import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, REVIEW_DAYS, dayKey } from "./today.js";
 import { createTimer, fmtTime, paceFor } from "./timer.js";
 import { createPrep } from "./prep.js";
+import { toB64, fromB64 } from "./bytes.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -375,7 +376,8 @@ function addQuestions(base, parsed, source, numbers = null) {
 
 // ---------------------------------------------------------------- landing & import
 
-function showLanding(error) {
+// `note` is a message that is not an error, e.g. after progress came from a file without questions.
+function showLanding(error, note) {
   document.body.classList.remove("sidebar-open");
   app.innerHTML = `
   <div class="landing"><div class="landing-card">
@@ -389,6 +391,14 @@ function showLanding(error) {
       <div class="dz-sub">Экспорт с вариантом «With correct answers and explanations»</div>
     </label>
     ${error ? `<div class="alert" role="alert">${icon("alert")}<div>${esc(error)}</div></div>` : ""}
+    ${note ? `<div class="alert note" role="status">${icon("check")}<div>${esc(note)}</div></div>` : ""}
+    <div class="landing-alt">
+      <label class="btn btn-ghost">
+        <input type="file" id="file-restore" hidden>
+        ${icon("history", "icon-sm")} Перенести прогресс с другого устройства
+      </label>
+      <span class="muted">Файл, сохранённый в меню «Сохранить прогресс в файл»</span>
+    </div>
     <div class="privacy">${icon("lock", "icon-sm")}<span>Файл обрабатывается прямо в браузере и никуда не отправляется. Вопросы и прогресс хранятся только на этом устройстве.</span></div>
     <ol class="steps">
       <li><div class="n">1</div>Откройте <a href="https://satsuiteeducatorquestionbank.collegeboard.org/digital/search" target="_blank" rel="noopener">Educator Question Bank</a></li>
@@ -400,6 +410,7 @@ function showLanding(error) {
   </div></div>`;
   const dz = $("#dz");
   $("#file").addEventListener("change", (e) => importFile(e.target.files[0]));
+  $("#file-restore").addEventListener("change", (e) => { importFile(e.target.files[0], { restore: true }); e.target.value = ""; });
   dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("drag"); });
   dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
   dz.addEventListener("drop", (e) => { e.preventDefault(); dz.classList.remove("drag"); importFile(e.dataTransfer.files[0]); });
@@ -419,10 +430,13 @@ function showImporting() {
   </div></div>`;
 }
 
-async function importFile(file) {
+// `restore`: picked with a progress-file button. Its picker has no type filter (iOS greys out .json
+// files behind one), and a phone may save the file as "….json.txt", so anything but a PDF is tried as progress.
+async function importFile(file, { restore = false } = {}) {
   if (!file) return;
-  if (/\.json$/i.test(file.name) || /json$/i.test(file.type)) return restoreProgress(file);
-  if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) {
+  const pdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name);
+  if (/\.json$/i.test(file.name) || /json$/i.test(file.type) || (restore && !pdf)) return restoreProgress(file);
+  if (!pdf) {
     if (S.set) toast("Нужен PDF-файл"); else showLanding("Нужен PDF-файл.");
     return;
   }
@@ -433,8 +447,16 @@ async function importFile(file) {
 
 // ---------------------------------------------------------------- progress backup
 
+// The file carries the PDFs and question numbers too, so on another device it is all that is needed.
 async function backupProgress() {
-  const data = { app: "sat-trainer", kind: "progress", version: 1, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags], vocab: S.vocab, chats: ai.threads(), review: S.review, activity: S.activity };
+  const pdfs = [];
+  for (const src of S.set?.sources || []) {
+    let bytes = null;
+    try { bytes = await db.get(pdfKey(src.id)); } catch { /* IndexedDB unavailable */ }
+    if (bytes) pdfs.push({ id: src.id, fileName: src.fileName, importedAt: src.importedAt, data: toB64(bytes) });
+  }
+  const numbers = Object.fromEntries((S.set?.questions || []).map((q) => [q.id, q.n]));
+  const data = { app: "sat-trainer", kind: "progress", version: 2, exportedAt: new Date().toISOString(), progress: S.progress, flags: [...S.flags], vocab: S.vocab, chats: ai.threads(), review: S.review, activity: S.activity, numbers, pdfs };
   const json = JSON.stringify(data, null, 1);
   const filename = `sat-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
   if (window.claude) {
@@ -461,8 +483,33 @@ async function restoreProgress(file) {
   let data;
   try { data = JSON.parse(await file.text()); } catch { data = null; }
   if (!data || data.app !== "sat-trainer" || typeof data.progress !== "object") {
-    toast("Это не файл прогресса SAT Trainer");
+    if (S.set) toast("Это не файл прогресса SAT Trainer"); else showLanding("Это не файл прогресса SAT Trainer. Нужен файл, сохранённый в меню «Сохранить прогресс в файл».");
     return;
+  }
+  // a device without questions builds them from the PDFs in the file (files saved before October 19 have none)
+  const pdfs = Array.isArray(data.pdfs) ? data.pdfs.filter((p) => p?.id && p.data) : [];
+  let built = false;
+  if (!S.set && pdfs.length) {
+    showImporting();
+    try {
+      const bytes = new Map(pdfs.map((p) => [p.id, fromB64(p.data)]));
+      for (const [id, b] of bytes) {
+        try { await db.set(pdfKey(id), b); } catch (e) { console.warn("IndexedDB unavailable", e); }
+      }
+      const set = await installSources(pdfs, data.numbers, async (id) => bytes.get(id) || null);
+      if (set) {
+        await saveSet(set, null);
+        S.set = set;
+        S.pdfs = new Map();
+        S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null };
+        saveUi();
+        built = true;
+      }
+    } catch (e) {
+      console.error(e);
+      showLanding(importError(e));
+      return;
+    }
   }
   // merge: for a question answered in both places keep the most recent attempt
   let added = 0;
@@ -482,8 +529,26 @@ async function restoreProgress(file) {
   today.merge(data.activity);
   saveProgress();
   saveFlags();
-  if (S.set) renderAll();
-  toast(`Восстановлено ответов: ${added}${words ? `, слов: ${words}` : ""}`);
+  const summary = `Восстановлено ответов: ${added}${words ? `, слов: ${words}` : ""}`;
+  if (built) showTrainer();
+  else if (S.set) renderAll();
+  else return showLanding(null, `${summary}. В файле нет вопросов — выберите PDF, тот же, что на другом устройстве, и ответы встанут на свои места.`);
+  toast(summary);
+}
+
+// Builds the set from PDFs by source, keeping question numbers (a progress file or a stored set
+// brings them). `bytesOf(id)` gives a PDF's bytes, or null when it is not here: that one is left out.
+async function installSources(list, numbers, bytesOf, { skills = [], label = "Читаю PDF" } = {}) {
+  const pinned = new Map(Object.entries(numbers || {}));
+  let acc = null;
+  for (const [i, src] of list.entries()) {
+    const bytes = await bytesOf(src.id);
+    if (!bytes) continue;
+    const parsed = await parseWithProgress(bytes, list.length > 1 ? `${label} ${i + 1} из ${list.length}` : label);
+    acc = addQuestions(acc, parsed, { id: src.id, fileName: src.fileName, importedAt: src.importedAt }, pinned).set;
+  }
+  if (acc) acc.skills = finishSet(acc.questions, acc.sources, skills).skills;
+  return acc;
 }
 
 function keepStorage() {
@@ -538,18 +603,11 @@ async function runImport(bytes, fileName, { mode = "add" } = {}) {
 // After a parser update every stored PDF is read again; question numbers stay as they were.
 async function rebuildSet(saved) {
   normalizeSet(saved);
-  const numbers = new Map(saved.questions.map((q) => [q.id, q.n]));
+  const numbers = Object.fromEntries(saved.questions.map((q) => [q.id, q.n]));
   showImporting();
-  let acc = null;
   try {
-    for (const [i, src] of saved.sources.entries()) {
-      const bytes = await db.get(pdfKey(src.id));
-      if (!bytes) continue;
-      const parsed = await parseWithProgress(bytes, saved.sources.length > 1 ? `Обновляю PDF ${i + 1} из ${saved.sources.length}` : "Обновляю вопросы");
-      acc = addQuestions(acc, parsed, { id: src.id, fileName: src.fileName, importedAt: src.importedAt }, numbers).set;
-    }
+    const acc = await installSources(saved.sources, numbers, (id) => db.get(pdfKey(id)), { skills: saved.skills, label: "Обновляю PDF" });
     if (!acc) return showLanding();
-    acc.skills = finishSet(acc.questions, acc.sources, saved.skills).skills;
     await saveSet(acc, saved);
     S.set = acc;
     S.pdfs = new Map();
@@ -632,9 +690,9 @@ function showTrainer() {
     </div>
     <div class="backdrop" data-action="close-sidebar"></div>
     <input type="file" id="file2" accept="application/pdf,.pdf" hidden>
-    <input type="file" id="file3" accept="application/json,.json" hidden>`;
+    <input type="file" id="file3" hidden>`;
   $("#file2").addEventListener("change", (e) => { importFile(e.target.files[0]); e.target.value = ""; });
-  $("#file3").addEventListener("change", (e) => { importFile(e.target.files[0]); e.target.value = ""; });
+  $("#file3").addEventListener("change", (e) => { importFile(e.target.files[0], { restore: true }); e.target.value = ""; });
   keepStorage();
   vocab.rebuild();
   S.session = null;
