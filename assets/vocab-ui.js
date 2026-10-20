@@ -1,5 +1,5 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
-import { buildDeck, schedule, previewIntervals, statusOf, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { buildDeck, schedule, previewIntervals, readyIndex, requeue, statusOf, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
 import { createSizeTest } from "./size-test.js";
 import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
 
@@ -22,6 +22,7 @@ export function createVocab(ctx) {
   let cache = null;           // cards built during the current render pass
   let addOpen = false;
   let openRow = null;
+  let waitTimer = null;        // counts down while every card left is waiting out its minutes
 
   const save = () => { cache = null; ls.set(KEY.vocab, S.vocab); };
   const saveDict = () => { cache = null; ls.set(KEY.dict, dict); };
@@ -161,6 +162,12 @@ export function createVocab(ctx) {
     const inQueue = new Set(s.queue);
     const now = Date.now();
     for (const c of all) if (!c.known && c.st?.last && c.st.due <= now && !inQueue.has(c.key)) s.queue.push(c.key);
+    // a word just missed waits out its minutes while the cards behind it go first
+    if (!s.revealed) {
+      const i = readyIndex(s.queue, (k) => byKey.get(k).st, now);
+      if (i > 0) s.queue.unshift(...s.queue.splice(i, 1));
+      s.waitUntil = i < 0 && s.queue.length ? Math.min(...s.queue.map((k) => byKey.get(k).st.due)) : 0;
+    }
     const fresh = s.queue.filter((k) => !byKey.get(k).st?.last).length;
     return { s, all, byKey, fresh, review: s.queue.length - fresh };
   }
@@ -311,6 +318,7 @@ export function createVocab(ctx) {
       <button class="${tab === "list" ? "active" : ""}" data-action="v-tab" data-tab="list">${icon("list", "icon-sm")} Все слова</button>
     </div>`;
     main.innerHTML = tab === "test" ? sizeTest.html() : seg + (tab === "list" ? listHtml() : studyHtml());
+    if (document.getElementById("v-wait")) startWait();
     if (scrollTop) window.scrollTo({ top: 0 });
     ctx.ai()?.follow();
   }
@@ -323,6 +331,7 @@ export function createVocab(ctx) {
     }
     const { s, byKey, fresh: newInQueue } = todayCards();
     if (!s.queue.length) return doneHtml(all);
+    if (s.waitUntil && !s.revealed) return waitHtml(s);
     const c = byKey.get(s.queue[0]);
     if (s.revealed) fetchDef(c);
     const left = s.queue.length;
@@ -363,6 +372,30 @@ export function createVocab(ctx) {
         <span class="hints"><span><kbd>Пробел</kbd> показать</span><span><kbd>1</kbd>–<kbd>4</kbd> оценка</span><span><kbd>K</kbd> знаю</span></span>
       </div>
     </div>`;
+  }
+
+  const clock = (ms) => { const sec = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; };
+
+  // Only words just missed are left: a short pause before they come back helps them stick.
+  function waitHtml(s) {
+    const n = s.queue.length;
+    return `<div class="vwrap"><div class="card done-card">
+      <div class="done-icon wait">${icon("clock")}</div>
+      <h2>${n === 1 ? "Слово вернётся" : "Слова вернутся"} через <span id="v-wait">${clock(s.waitUntil - Date.now())}</span></h2>
+      <p>${n === 1 ? "Осталось только слово, которое вы сейчас не вспомнили" : `Остались только слова, которые вы сейчас не вспомнили: ${n}`}. Короткая пауза перед повтором помогает запомнить.</p>
+      <div class="row"><button class="btn btn-primary" data-action="v-reveal">Показать сейчас <kbd>Пробел</kbd></button></div>
+    </div></div>`;
+  }
+
+  function startWait() {
+    clearInterval(waitTimer);
+    waitTimer = setInterval(() => {
+      const el = document.getElementById("v-wait");
+      const left = (S.session?.waitUntil || 0) - Date.now();
+      if (!el) { clearInterval(waitTimer); return; }
+      if (left <= 0) { clearInterval(waitTimer); renderMain(); ctx.refreshChrome(); return; }
+      el.textContent = clock(left);
+    }, 500);
   }
 
   function doneHtml(all) {
@@ -578,8 +611,11 @@ export function createVocab(ctx) {
 
   // A check before a question counts as a review of the word's card: right on the first try is
   // "remember", right after a slip is "hard", wrong is "again".
-  function quizResult(key, ok, slipped) {
-    S.vocab.srs[key] = schedule(S.vocab.srs[key], ok ? (slipped ? 2 : 3) : 1);
+  function quizResult(key, ok) {
+    // A miss sends the word back to the start, so the right answer after it moves the word to
+    // tomorrow, as "помню" (not "сложно": its 10-minute step would leave the word unlearned and
+    // close the question again).
+    S.vocab.srs[key] = schedule(S.vocab.srs[key], ok ? 3 : 1);
     save();
     S.session = null;
     if (ok) ctx.onWordDone?.();
@@ -663,8 +699,12 @@ export function createVocab(ctx) {
       s.learnedNew++;
       if (!S.vocab.user[key]) daily().newCount++; // own words don't use up the daily allowance
     }
-    S.vocab.srs[key] = schedule(prev, g);
-    if (g === 1) s.queue.push(key); // see it again this session
+    const st = schedule(prev, g);
+    S.vocab.srs[key] = st;
+    // seen again today: after "не помню" four cards on (and a minute later at the earliest),
+    // after "сложно" on a new word at the end, in 10 minutes at the earliest
+    if (g === 1) s.queue = requeue(s.queue, key, 4);
+    else if (!st.ivl) s.queue = requeue(s.queue, key, Infinity);
     s.reviewed++;
     s.revealed = false;
     save();

@@ -138,7 +138,7 @@ export function createPrep(ctx) {
     if (!it || it.picked !== null) return;
     it.picked = it.options[i];
     const ok = it.picked === it.def;
-    vocab.quizResult(it.key, ok, quiz.slipped.has(it.key));
+    vocab.quizResult(it.key, ok);
     if (ok) {
       quiz.right++;
       ctx.refresh();

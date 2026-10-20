@@ -98,10 +98,14 @@ export function newState() {
   return { due: 0, ivl: 0, ease: 2.5, reps: 0, lapses: 0, last: 0 };
 }
 
+const AGAIN = 60_000;              // "не помню": back in this session after a minute
+const HARD_STEP = 10 * 60_000;     // "сложно" on a new or forgotten card: back in this session after 10 minutes
+
 // Days until the next review after "hard", "good" and "easy". Each waits longer than the one before:
 // after "easy" on first sight (4 days) "hard" scales those 4 days, so "good" must not stay at 3.
+// A new or forgotten card (reps 0) has no "hard" in days: it comes back in this session instead.
 function intervals(s) {
-  if (s.reps === 0) return { hard: 1, good: 1, easy: 4 };
+  if (s.reps === 0) return { hard: 0, good: 1, easy: 4 };
   const hard = Math.max(1, Math.round(s.ivl * 1.2));
   const good = Math.max(hard + 1, s.reps === 1 ? 3 : Math.round(s.ivl * s.ease));
   const easy = Math.max(good + 1, Math.round(s.ivl * s.ease * 1.3));
@@ -117,7 +121,12 @@ export function schedule(st, grade, now = Date.now()) {
     s.reps = 0;
     s.ivl = 0;
     s.ease = Math.max(1.3, s.ease - 0.2);
-    s.due = now + 60_000;            // comes back later in the same session
+    s.due = now + AGAIN;
+    return s;
+  }
+  if (grade === 2 && s.reps === 0) {
+    s.ivl = 0;
+    s.due = now + HARD_STEP;
     return s;
   }
   const next = intervals(s);
@@ -138,8 +147,22 @@ export function schedule(st, grade, now = Date.now()) {
 export function previewIntervals(st, now = Date.now()) {
   return [1, 2, 3, 4].map((g) => {
     const n = schedule(st, g, now);
-    return g === 1 ? "<1 мин" : fmtDays(n.ivl);
+    if (g === 1) return "<1 мин";
+    return n.ivl ? fmtDays(n.ivl) : `${Math.round((n.due - now) / 60_000)} мин`;
   });
+}
+
+// The card to show next: the first in the queue that is not waiting out its minutes after
+// "не помню" or "сложно". -1 when every card left is waiting.
+export function readyIndex(queue, stOf, now = Date.now()) {
+  return queue.findIndex((k) => { const st = stOf(k); return !(st?.last && st.due > now); });
+}
+
+// A word shown again in this session goes `gap` cards back (to the end of a shorter queue).
+export function requeue(queue, key, gap) {
+  const q = queue.filter((k) => k !== key);
+  q.splice(Math.min(gap, q.length), 0, key);
+  return q;
 }
 
 export function fmtDays(d) {
