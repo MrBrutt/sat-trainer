@@ -8,8 +8,13 @@
 // base: { get(name), set(name, value) } — kept by the caller between visits
 import { same } from "./merge.js";
 
+// The trainer changes its data in place (S.progress[id] = …, a day's counts ++). The engine works
+// on its own copies, so the account's copy it remembers never changes behind its back.
+const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
+
 export function createSync({ adapter, sections, base, onStatus = () => {}, delay = 1500 }) {
   const remote = {};          // the account's value as last seen, per section
+  const heard = {};           // how many values the account has sent, per section
   const queue = {};           // one reconcile at a time per section
   const timers = {};
   const unsubs = [];
@@ -22,17 +27,19 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
   async function reconcile(name) {
     if (stopped) return;
     const s = sections[name];
-    const local = s.read();
-    const merged = s.merge(base.get(name), local, remote[name]);
-    if (!same(merged, local)) s.apply(merged);
-    if (same(merged, remote[name])) { base.set(name, merged); return; }
+    const local = copy(s.read());
+    const merged = s.merge(copy(base.get(name)), local, copy(remote[name]));
+    if (!same(merged, local)) s.apply(copy(merged));
+    if (same(merged, remote[name])) { base.set(name, copy(merged)); return; }
     pending++;
     report();
+    const before = heard[name] || 0;
     try {
-      await adapter.set(name, merged);
+      await adapter.set(name, copy(merged));
       // the base moves only once the account has the value: a write lost offline is sent again next time
-      remote[name] = merged;
-      base.set(name, merged);
+      base.set(name, copy(merged));
+      // a newer value the account sent meanwhile stays; its own reconcile is already queued
+      if ((heard[name] || 0) === before) remote[name] = copy(merged);
       failed = false;
     } catch (e) {
       console.warn("sync", name, e);
@@ -48,11 +55,12 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
   async function start() {
     stopped = false;
     for (const name of Object.keys(sections)) {
-      remote[name] = await adapter.get(name);
+      remote[name] = copy(await adapter.get(name));
       await run(name);
       unsubs.push(adapter.watch(name, (value) => {
         if (same(value, remote[name])) return;
-        remote[name] = value;
+        remote[name] = copy(value);
+        heard[name] = (heard[name] || 0) + 1;
         run(name);
       }));
     }
