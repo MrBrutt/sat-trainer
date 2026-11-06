@@ -11,9 +11,12 @@ const SCALE = 2;             // render scale used for style detection
 const ITALIC_Q = 1.07;       // slant score above which a font is italic
 const BOLD_DENSITY = 0.345;  // ink density above which a font is bold
 const LINE_TOL = 1.5;        // pt — items closer than this share a baseline
-const PARA_GAP = 20;         // pt — baseline gap that starts a new paragraph
-const HARD_BREAK_X = 500;    // pt — a line ending before this is an intentional break (poems)
 const CONTENT_X0 = 17, CONTENT_X1 = 595;
+// Two layouts of the same questions. paraGap: pt, the baseline gap that starts a new paragraph;
+// hardBreak: pt, a line ending before this is an intentional break (poems, notes); figure: how much
+// ink outside the text makes a figure.
+const EXPORT = { saved: false, paraGap: 20, hardBreak: 500, figure: 600 };
+const SAVED = { saved: true, paraGap: 21.5, hardBreak: 515, figure: 2500, box: { x0: 0, x1: 595 } };   // the page saved from a browser
 
 export function openPdf(bytes) {
   // pdf.js transfers the buffer to its worker, so hand it a copy
@@ -60,6 +63,14 @@ function canonicalize(questions, keys) {
 
 // ---------------------------------------------------------------- page analysis
 
+// The export's Type3 fonts: real spaces arrive as their own items, and pdf.js invents spaces inside
+// words from kerning ("impor tance"). Ordinary fonts (a page saved from a browser) keep their spaces.
+export const cleanText = (s, type3) => (type3 && s.trim() ? s.replace(/(\S)\s+(?=\S)/g, "$1") : s);
+
+function fontOf(page, name) {
+  try { return page.commonObjs.get(name); } catch { return null; }
+}
+
 async function analyzePage(page, fontStats) {
   const vp1 = page.getViewport({ scale: 1 });
   const PW = vp1.width, PH = vp1.height;
@@ -84,9 +95,7 @@ async function analyzePage(page, fontStats) {
   for (const it of tc.items) {
     if (!it.str) continue;
     const x = it.transform[4];
-    // Real spaces arrive as their own items; pdf.js invents spaces inside words
-    // from kerning in these Type3 fonts ("impor tance"), so drop those.
-    const s = it.str.trim() ? it.str.replace(/(\S)\s+(?=\S)/g, "$1") : it.str;
+    const s = cleanText(it.str, fontOf(page, it.fontName)?.isType3Font ?? true);
     items.push({ s, f: it.fontName, x, x1: x + it.width, w: it.width, yb: PH - it.transform[5] });
   }
 
@@ -94,11 +103,11 @@ async function analyzePage(page, fontStats) {
   for (const it of items) {
     const letters = it.s.replace(/[^A-Za-z]/g, "").length;
     if (letters < 2) continue;
+    const st = fontStats.get(it.f) || { n: 0, q: 0, dens: 0, name: fontOf(page, it.f)?.name || "" };
+    fontStats.set(it.f, st);
     const m = measureItem(ink, W, H, it);
     if (!m) continue;
-    const st = fontStats.get(it.f) || { n: 0, q: 0, dens: 0 };
     st.n++; st.q += m.q; st.dens += m.dens;
-    fontStats.set(it.f, st);
   }
 
   const lines = groupLines(items);
@@ -223,6 +232,12 @@ function uncoveredInkProfile(ink, W, H, items, PH) {
 function classifyFonts(stats) {
   const out = new Map();
   for (const [f, s] of stats) {
+    // a real font says what it is; only the export's nameless fonts have to be measured
+    if (/regular|italic|oblique|bold/i.test(s.name)) {
+      out.set(f, { italic: /italic|oblique/i.test(s.name), bold: /bold/i.test(s.name) });
+      continue;
+    }
+    if (!s.n) continue;
     const q = s.q / s.n, dens = s.dens / s.n;
     out.set(f, { italic: q > ITALIC_Q, bold: dens > BOLD_DENSITY });
   }
@@ -231,76 +246,101 @@ function classifyFonts(stats) {
 
 // ---------------------------------------------------------------- document structure
 
-const RE_ID = /^Question ID:\s*([0-9a-f]{6,})/i;
+// A page saved from a browser cuts off the Q of the title.
+const RE_ID = /^Q?uestion ID:?\s*([0-9a-f]{6,})/i;
 const RE_CORRECT = /^Correct Answer:\s*(.*)$/i;
+const RE_BOX = /^ID:\s*[0-9a-f]{6,}$/i;                    // saved page: stands where the export says "Question"
+const RE_BOX_ANSWER = /^ID:\s*[0-9a-f]{6,}\s+Answer$/i;    // saved page: closes the question
+const RE_LEVEL = /^Question Difficulty:\s*(\w+)/i;         // saved page: the table shows it as bars
 
-// A question whose "Correct Answer" is not on its first page cannot be read and is left out: `skipped` counts them.
+// A question whose answer cannot be found is left out: `skipped` counts them.
 export function buildQuestions(pages, fonts) {
   const questions = [];
   questions.skipped = 0;
-  let cur = null;
-  pages.forEach((pg, pi) => {
-    const L = pg.lines.map((l) => ({ ...l, page: pi }));
-    const idIdx = L.findIndex((l) => RE_ID.test(l.text));
-    if (idIdx < 0) {
-      if (cur && L.length) {
-        cur.ratLines.push(...L);
-        cur.src.rationale.push({ page: pi, y0: L[0].yb - 11, y1: L[L.length - 1].yb + 4 });
-      }
-      return;
-    }
-    if (cur) questions.push(finish(cur, fonts, pages));
-    const find = (pred, from) => L.findIndex((l, i) => i > from && pred(l));
-    const qIdx = find((l) => l.text === "Question", idIdx);
-    const cIdx = find((l) => RE_CORRECT.test(l.text), qIdx);
-    const aIdx = L.findIndex((l, i) => i > qIdx && i < cIdx && l.text === "Answer");
-    const rIdx = find((l) => l.text === "Rationale", cIdx);
-    if (qIdx < 0 || cIdx < 0) { cur = null; questions.skipped++; return; }
-    const last = L[L.length - 1];
-    cur = {
-      id: L[idIdx].text.match(RE_ID)[1],
-      meta: parseHeader(L.slice(idIdx + 1, qIdx)),
-      stemLines: L.slice(qIdx + 1, aIdx >= 0 ? aIdx : cIdx),
-      choiceLines: aIdx >= 0 ? L.slice(aIdx + 1, cIdx) : [],
-      correct: L[cIdx].text.match(RE_CORRECT)[1].trim(),
-      ratLines: rIdx >= 0 ? L.slice(rIdx + 1) : [],
-      src: {
-        page: pi,
-        question: { page: pi, y0: L[qIdx].yb + 3, y1: L[cIdx].yb - 10 },
-        rationale: rIdx >= 0 ? [{ page: pi, y0: L[rIdx].yb + 3, y1: last.yb + 4 }] : [],
-      },
-    };
+  const lines = pages.flatMap((pg, pi) => pg.lines.map((l) => ({ ...l, page: pi })));
+  const starts = lines.flatMap((l, i) => (RE_ID.test(l.text) ? [i] : []));
+  starts.forEach((start, n) => {
+    const part = readQuestion(lines.slice(start, starts[n + 1] ?? lines.length), pages);
+    if (part) questions.push(finish(part, fonts, pages));
+    else questions.skipped++;
   });
-  if (cur) questions.push(finish(cur, fonts, pages));
   return questions;
 }
 
+// The lines of one question, from its title to the next one, possibly over several pages.
+function readQuestion(L, pages) {
+  const find = (pred, from) => L.findIndex((l, i) => i > from && pred(l));
+  const qIdx = find((l) => l.text === "Question" || RE_BOX.test(l.text), 0);
+  const cIdx = find((l) => RE_CORRECT.test(l.text), qIdx);
+  if (qIdx < 0 || cIdx < 0) return null;
+  const layout = RE_BOX.test(L[qIdx].text) ? SAVED : EXPORT;
+  const box = layout.saved ? find((l) => RE_BOX_ANSWER.test(l.text), qIdx) : -1;
+  const end = box >= 0 ? box : cIdx;
+  const label = layout.saved ? -1 : L.findIndex((l, i) => i > qIdx && i < cIdx && l.text === "Answer");
+  const first = layout.saved ? L.findIndex((l, i) => i > qIdx && i < end && /^A\.\s/.test(l.text) && l.x0 < CONTENT_X0 + 10) : label + 1;
+  const hasChoices = layout.saved ? first >= 0 : label >= 0;
+  const rIdx = find((l) => l.text === "Rationale", cIdx);
+  const rest = rIdx >= 0 ? L.slice(rIdx + 1) : [];
+  const level = rest.map((l) => l.text.match(RE_LEVEL)).find(Boolean);
+  return {
+    id: L[0].text.match(RE_ID)[1],
+    layout,
+    level: level?.[1] || "",
+    meta: parseHeader(L.slice(1, qIdx)),
+    stemLines: L.slice(qIdx + 1, hasChoices ? first - (layout.saved ? 0 : 1) : end),
+    choiceLines: hasChoices ? L.slice(first, end) : [],
+    correct: L[cIdx].text.match(RE_CORRECT)[1].trim(),
+    ratLines: rest.filter((l) => !RE_LEVEL.test(l.text)),
+    src: { page: L[0].page, ...questionRegions(L, qIdx, end, layout, pages), rationale: rationaleRegions(L, rIdx) },
+  };
+}
+
+// Where the question stands on its pages, for the original view.
+function questionRegions(L, qIdx, end, { saved, box }, pages) {
+  const top = L[qIdx], bottom = L[end];
+  const y0 = top.yb + (saved ? 14 : 3), y1 = bottom.yb - (saved ? 20 : 10);
+  if (top.page === bottom.page) return { question: { page: top.page, y0, y1, ...box }, more: [] };
+  const height = (page) => pages[page].PH || 842;
+  const more = [];
+  for (let page = top.page + 1; page <= bottom.page; page++) more.push({ page, y0: 0, y1: page === bottom.page ? y1 : height(page), ...box });
+  return { question: { page: top.page, y0, y1: height(top.page), ...box }, more };
+}
+
+function rationaleRegions(L, rIdx) {
+  if (rIdx < 0) return [];
+  const byPage = new Map();
+  for (const l of L.slice(rIdx)) (byPage.get(l.page) || byPage.set(l.page, []).get(l.page)).push(l);
+  return [...byPage].map(([page, ls], i) => ({ page, y0: i ? ls[0].yb - 11 : L[rIdx].yb + 3, y1: ls[ls.length - 1].yb + 4 }));
+}
+
 function finish(c, fonts, pages) {
-  const stem = paragraphs(c.stemLines, fonts);
+  const { layout } = c;
+  const stem = paragraphs(c.stemLines, fonts, layout);
   // the question prompt is the last stem paragraph that asks something
   let promptIdx = -1;
   for (let i = stem.length - 1; i >= 0; i--) if (/\?\s*$/.test(plain(stem[i]))) { promptIdx = i; break; }
   const prompt = promptIdx >= 0 ? stem.splice(promptIdx, 1)[0] : null;
-  const choices = splitChoices(c.choiceLines, fonts);
+  const choices = splitChoices(c.choiceLines, fonts, layout);
   const letter = /^[A-D]$/.test(c.correct) ? c.correct : null;
-  const q = c.src.question;
-  const pg = pages[q.page];
   let figureInk = 0;
-  for (let y = Math.max(0, Math.floor(q.y0)); y < Math.min(pg.uncovered.length, Math.ceil(q.y1)); y++) figureInk += pg.uncovered[y];
+  for (const q of [c.src.question, ...c.src.more]) {
+    const rows = pages[q.page].uncovered;
+    for (let y = Math.max(0, Math.floor(q.y0)); y < Math.min(rows.length, Math.ceil(q.y1)); y++) figureInk += rows[y];
+  }
   return {
     id: c.id,
     assessment: c.meta.assessment || "",
     section: c.meta.test || c.meta.section || "",
     domain: c.meta.domain || "",
     skill: c.meta.skill || "",
-    difficulty: c.meta.difficulty || "",
+    difficulty: c.meta.difficulty || c.level,
     stem,
     prompt,
     choices,
     correct: letter,
     correctText: letter ? null : c.correct,
-    rationale: paragraphs(c.ratLines, fonts),
-    hasFigure: figureInk > 600,
+    rationale: paragraphs(c.ratLines, fonts, layout),
+    hasFigure: figureInk > layout.figure,
     src: c.src,
   };
 }
@@ -368,13 +408,13 @@ function lineRuns(ln, fonts, skip = 0) {
 }
 
 // Joins visual lines into paragraphs, keeping intentional line breaks (poetry).
-function paragraphs(lines, fonts) {
+function paragraphs(lines, fonts, layout) {
   const paras = [];
   let cur = null, prev = null;
   for (const ln of lines) {
     const samePage = prev && prev.page === ln.page;
     const gap = samePage ? ln.yb - prev.yb : 0;
-    const newPara = !cur || (samePage ? gap > PARA_GAP : prev.x1 < HARD_BREAK_X);
+    const newPara = !cur || (samePage ? gap > layout.paraGap : prev.x1 < layout.hardBreak);
     if (newPara) {
       cur = { lines: [], gap };
       paras.push(cur);
@@ -384,7 +424,7 @@ function paragraphs(lines, fonts) {
   }
   return paras
     .map((p) => ({
-      ...tidy(joinLines(p.lines, fonts)),
+      ...tidy(joinLines(p.lines, fonts, layout)),
       // indented blocks are verse or quoted lines; keep them visually apart
       indent: Math.min(...p.lines.map((l) => l.x0)) > CONTENT_X0 + 14,
       gap: Math.round(p.gap),
@@ -392,12 +432,12 @@ function paragraphs(lines, fonts) {
     .filter((p) => p.runs.length);
 }
 
-function joinLines(lines, fonts) {
+function joinLines(lines, fonts, layout) {
   const runs = [];
   lines.forEach((ln, i) => {
     if (i) {
       const prevText = lines[i - 1].text;
-      if (lines[i - 1].x1 < HARD_BREAK_X) pushRun(runs, "\n", { i: false, b: false, u: false, v: "" });
+      if (lines[i - 1].x1 < layout.hardBreak) pushRun(runs, "\n", { i: false, b: false, u: false, v: "" });
       else if (!/[-‐–—\/]$/.test(prevText)) {
         const a = runs[runs.length - 1] || {};
         const b = lineRuns(ln, fonts)[0] || {};
@@ -409,7 +449,7 @@ function joinLines(lines, fonts) {
   return { runs };
 }
 
-function splitChoices(lines, fonts) {
+function splitChoices(lines, fonts, layout) {
   const choices = [];
   let cur = null;
   for (const ln of lines) {
@@ -421,7 +461,7 @@ function splitChoices(lines, fonts) {
     if (cur) cur.lines.push(ln);
   }
   return choices.map((c) => {
-    const para = tidy(joinLines(c.lines, fonts));
+    const para = tidy(joinLines(c.lines, fonts, layout));
     // strip the "A." label from the first run(s)
     let strip = (c.letter + ".").length;
     while (strip > 0 && para.runs.length) {
@@ -449,10 +489,13 @@ export function plain(p) {
 
 // ---------------------------------------------------------------- original-view rendering
 
+// The width to show of a page: a saved page uses all of it.
+export const renderBox = (region) => [region.x0 ?? CONTENT_X0, region.x1 ?? CONTENT_X1 - 1];
+
 export async function renderRegion(pdf, region, cssWidth) {
   const page = await pdf.getPage(region.page + 1);
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
-  const x0 = CONTENT_X0, x1 = CONTENT_X1 - 1;
+  const [x0, x1] = renderBox(region);
   const scale = (cssWidth / (x1 - x0)) * dpr;
   const vp = page.getViewport({ scale });
   const canvas = document.createElement("canvas");

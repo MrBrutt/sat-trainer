@@ -1098,7 +1098,7 @@ function renderQuestion(scrollTop = false) {
       </div>
     </div>
     ${orig
-      ? `<div class="orig" data-region="question"></div><div class="orig-note">${icon("image", "icon-sm")} Оригинальная вёрстка из PDF</div>`
+      ? `<div class="orig" data-region="question"></div>${(q.src.more || []).map((_, i) => `<div class="orig" data-region="more-${i}"></div>`).join("")}<div class="orig-note">${icon("image", "icon-sm")} Оригинальная вёрстка из PDF</div>`
       : `<article class="card passage">${stemHtml(q)}</article>${q.prompt ? `<div class="prompt">${runsHtml(q.prompt.runs)}</div>` : ""}`}
     ${think.locked(q) ? think.html(q) : choicesHtml(q, pr, orig)}
     ${feedbackHtml(q, pr)}
@@ -1134,7 +1134,8 @@ async function fillOriginals(q) {
     }
     for (const el of els) {
       const key = el.dataset.region;
-      const region = key === "question" ? q.src.question : q.src.rationale[+key.split("-")[1]];
+      const [part, i] = key.split("-");
+      const region = part === "question" ? q.src.question : part === "more" ? q.src.more[+i] : q.src.rationale[+i];
       const canvas = await renderRegion(S.pdfs.get(id), region, el.clientWidth - 28);
       if (cur()?.id !== q.id) return;
       el.replaceChildren(canvas);
