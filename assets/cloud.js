@@ -23,14 +23,17 @@ export async function loadCloud(config) {
 
     // Sections are stored as JSON text: Firestore has no undefined, no nested arrays and limits on key names.
     adapter: (uid) => ({
+      // From the server only: a cached reply can say "no such document" just because the cache is
+      // empty. Offline this throws, and syncing starts when the connection is back.
       async get(name) {
-        const snap = await F.getDoc(ref(uid, "state", name));
+        const snap = await F.getDocFromServer(ref(uid, "state", name));
         return snap.exists() ? JSON.parse(snap.data().json) : undefined;
       },
       set: (name, value) => F.setDoc(ref(uid, "state", name), { json: JSON.stringify(value), at: F.serverTimestamp() }),
       watch: (name, cb) => F.onSnapshot(ref(uid, "state", name), (snap) => {
-        if (snap.metadata.hasPendingWrites) return;        // our own write, not news
-        cb(snap.exists() ? JSON.parse(snap.data().json) : undefined);
+        // our own write is not news, and a reply from the cache is not the account's word
+        if (snap.metadata.hasPendingWrites || snap.metadata.fromCache || !snap.exists()) return;
+        cb(JSON.parse(snap.data().json));
       }, (e) => console.warn("watch", name, e)),
       online: () => navigator.onLine,
     }),

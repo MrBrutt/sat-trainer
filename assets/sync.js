@@ -15,6 +15,7 @@ const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v))
 export function createSync({ adapter, sections, base, onStatus = () => {}, delay = 1500 }) {
   const remote = {};          // the account's value as last seen, per section
   const heard = {};           // how many values the account has sent, per section
+  const loaded = new Set();   // sections whose account copy has arrived: nothing is merged before that
   const queue = {};           // one reconcile at a time per section
   const timers = {};
   const unsubs = [];
@@ -25,10 +26,13 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
   const report = () => onStatus(!adapter.online() ? "offline" : pending ? "saving" : failed ? "error" : "saved");
 
   async function reconcile(name) {
-    if (stopped) return;
+    if (stopped || !loaded.has(name)) return;
     const s = sections[name];
     const local = copy(s.read());
-    const merged = s.merge(copy(base.get(name)), local, copy(remote[name]));
+    // Nothing in the account is not a request to delete: it means "no change since we last agreed"
+    // (a first sign-in has no agreed copy either), so what is here stays and goes up.
+    const known = remote[name] === undefined ? base.get(name) : remote[name];
+    const merged = s.merge(copy(base.get(name)), local, copy(known));
     if (!same(merged, local)) s.apply(copy(merged));
     if (same(merged, remote[name])) { base.set(name, copy(merged)); return; }
     pending++;
@@ -54,11 +58,13 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
 
   async function start() {
     stopped = false;
+    loaded.clear();
     for (const name of Object.keys(sections)) {
       remote[name] = copy(await adapter.get(name));
+      loaded.add(name);
       await run(name);
       unsubs.push(adapter.watch(name, (value) => {
-        if (same(value, remote[name])) return;
+        if (value === undefined || same(value, remote[name])) return;
         remote[name] = copy(value);
         heard[name] = (heard[name] || 0) + 1;
         run(name);
@@ -69,7 +75,7 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
 
   // This device changed a section: merge and send it after a short pause, so a burst of changes is one write.
   function notify(name) {
-    if (stopped || !sections[name]) return;
+    if (stopped || !sections[name] || !loaded.has(name)) return;   // start() merges it anyway once it is in
     clearTimeout(timers[name]);
     timers[name] = setTimeout(() => { delete timers[name]; run(name); }, delay);
   }

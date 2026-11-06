@@ -13,10 +13,12 @@ function fakeAccount() {
   const watchers = [];
   const account = {
     store, hold: false,
-    adapter({ ack = () => Promise.resolve() } = {}) {
+    // what a dead connection delivers: a section that looks empty
+    emit(name, value) { for (const w of watchers) if (w.name === name) w.cb(value); },
+    adapter({ ack = () => Promise.resolve(), wait = () => Promise.resolve() } = {}) {
       const me = {};
       return {
-        get: async (name) => clone(store[name]),
+        get: async (name) => { await wait(); return clone(store[name]); },
         set: (name, v) => {
           if (account.hold) return new Promise(() => {});
           store[name] = clone(v);
@@ -200,4 +202,42 @@ test("a word learned on the phone after signing in survives the MacBook's next s
   mac.sync.notify("vocab"); await settle();
   eq(Object.keys(phone.vocab.srs).sort(), ["adorn", "cogent", "profusion"], "phone");
   eq(Object.keys(mac.vocab.srs).sort(), ["adorn", "cogent", "profusion"], "MacBook");
+});
+
+// A slow connection on opening the site: the account's copy has not arrived when the student acts.
+test("a change made before the account's copy arrives wipes nothing", async () => {
+  const acc = fakeAccount();
+  const answers = { q1: { c: "A", t: 1 }, q2: { c: "B", t: 2 } };
+  acc.store.progress = clone(answers);
+  let release;
+  const wait = () => new Promise((r) => { release = r; });
+  const a = device(acc, clone(answers), new Map([["progress", clone(answers)]]), { wait });
+  const started = a.sync.start();
+  await settle();
+  a.progress.q3 = { c: "C", t: 3 };
+  a.sync.notify("progress");
+  await settle();
+  eq(a.progress, { ...answers, q3: { c: "C", t: 3 } }, "device while waiting");
+  release();
+  await started; await settle();
+  eq(acc.store.progress, { ...answers, q3: { c: "C", t: 3 } }, "account");
+});
+
+test("an empty reply from the account wipes nothing", async () => {
+  const acc = fakeAccount();
+  const a = device(acc, { q1: { c: "A", t: 1 } });
+  await a.sync.start(); await settle();
+  acc.emit("progress", undefined);
+  await settle();
+  eq(a.progress, { q1: { c: "A", t: 1 } }, "device");
+  eq(acc.store.progress, { q1: { c: "A", t: 1 } }, "account");
+});
+
+test("an account that lost a section gets this device's copy back", async () => {
+  const acc = fakeAccount();
+  const kept = new Map([["progress", { q1: { c: "A", t: 1 } }]]);
+  const a = device(acc, { q1: { c: "A", t: 1 } }, kept);    // agreed before, the account has nothing now
+  await a.sync.start(); await settle();
+  eq(a.progress, { q1: { c: "A", t: 1 } }, "device");
+  eq(acc.store.progress, { q1: { c: "A", t: 1 } }, "account");
 });
