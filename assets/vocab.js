@@ -7,7 +7,7 @@ export const termKey = (t) => t.trim().toLowerCase().replace(/[’']/g, "'").rep
 
 const ABBREV = /(?:\b[A-Z]|\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|etc|al|e\.g|i\.e|U\.S|ca|No))\.$/;
 
-function sentences(text) {
+export function sentences(text) {
   const parts = text.split(/(?<=[.!?][”"’)]?)\s+(?=[“"(]?[A-Z])/);
   const out = [];
   for (const p of parts) {

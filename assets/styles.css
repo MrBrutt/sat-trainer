@@ -272,6 +272,20 @@ kbd {
 .skill-item.block-head.no-questions { font-weight: 400; color: var(--text-2); }
 .skill-item.block-head .split-bar { flex-basis: 100%; height: 4px; }
 .skill-item.sub { padding-left: 18px; font-size: 13px; }
+.think { padding: 16px 18px; display: grid; gap: 10px; margin-top: 14px; }
+.think p { margin: 0; }
+.think-head { display: flex; align-items: center; gap: 8px; }
+.think-head svg { color: var(--primary); }
+.think-head .muted { margin-left: auto; font-size: 13px; }
+.think-note { padding: 8px 10px; border-radius: 8px; font-size: 14px; }
+.think-note.ok { background: var(--ok-soft); }
+.think-note.bad { background: var(--bad-soft); }
+.think-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.think-row input { flex: 1; min-width: 160px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 16px; }
+.cw { cursor: pointer; border-radius: 4px; }
+.cw:hover { background: var(--primary-soft); }
+.clue-mark { background: var(--primary-soft); border-radius: 4px; padding: 0 2px; font-weight: 600; }
+.covered { color: var(--muted); letter-spacing: -1px; }
 .block-hint { padding: 8px 10px 12px; font-size: 13px; color: var(--text-2); display: grid; gap: 8px; justify-items: start; }
 .block-hint p { margin: 0; line-height: 1.45; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }

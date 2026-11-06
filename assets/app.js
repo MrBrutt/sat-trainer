@@ -7,6 +7,7 @@ import { createPrep } from "./prep.js";
 import { toB64, fromB64 } from "./bytes.js";
 import { createAccount } from "./account.js";
 import { outline, inFocus, domainOf } from "./domains.js";
+import { createThink } from "./think.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -198,6 +199,17 @@ const prep = createPrep({
   answerOf: (q) => answerOf(q),
   current: () => cur(),
   refresh: (scrollTop) => { if (S.set && $("#main") && S.ui.view === "questions") { renderSidebar(); renderQuestion(scrollTop); } },
+});
+const think = createThink({
+  esc, icon,
+  answerOf: (q) => answerOf(q),
+  isOriginal: (q) => isOriginal(q),
+  // the next step, or the choices, may be below the fold on a phone
+  refresh: () => {
+    if (!S.set || !$("#main") || S.ui.view !== "questions") return;
+    renderQuestion();
+    ($(".think") || $(".choices"))?.scrollIntoView({ block: "center" });
+  },
 });
 ai = createAssistant({
   S, $, icon, esc, toast, ls, KEY, confirmDialog,
@@ -984,14 +996,16 @@ function reviewBanner(q, pr) {
 function feedbackHtml(q, pr) {
   if (!pr) return "";
   const answer = q.correct || esc(q.correctText);
+  const own = pr.own ? `<span class="fnote">Ваше слово было: «${esc(pr.own)}»</span>` : "";
   if (pr.ok) {
     return `<div class="feedback ok" role="status"><div class="fic">${icon("check")}</div>
-      <div class="ftext"><strong>Верно!</strong>Правильный ответ — ${answer}${timeNote(q, pr)}</div></div>`;
+      <div class="ftext"><strong>Верно!</strong>Правильный ответ — ${answer}${own}${timeNote(q, pr)}</div></div>`;
   }
   const head = pr.revealed ? "Ответ показан" : `Неверно${pr.c ? ` — вы выбрали ${esc(pr.c)}` : ""}`;
   const queued = !inReview(q) && S.review[q.id] && !S.review[q.id].done;
   return `<div class="feedback bad" role="status"><div class="fic">${icon("x")}</div>
     <div class="ftext"><strong>${head}</strong>Правильный ответ — ${answer}
+      ${own}
       ${timeNote(q, pr)}
       ${queued ? `<span class="fnote">${icon("clock", "icon-sm")} Вопрос добавлен в повторение ошибок — вернётся ${whenDue(S.review[q.id])}.</span>` : ""}</div>
     ${inReview(q) ? "" : `<button class="btn btn-outline btn-sm" data-action="retry">${icon("rotate", "icon-sm")} Ещё раз</button>`}</div>`;
@@ -1086,7 +1100,7 @@ function renderQuestion(scrollTop = false) {
     ${orig
       ? `<div class="orig" data-region="question"></div><div class="orig-note">${icon("image", "icon-sm")} Оригинальная вёрстка из PDF</div>`
       : `<article class="card passage">${stemHtml(q)}</article>${q.prompt ? `<div class="prompt">${runsHtml(q.prompt.runs)}</div>` : ""}`}
-    ${choicesHtml(q, pr, orig)}
+    ${think.locked(q) ? think.html(q) : choicesHtml(q, pr, orig)}
     ${feedbackHtml(q, pr)}
     ${explainHtml(q, pr)}
     ${pr ? vocab.questionWordsHtml(q) : ""}
@@ -1097,7 +1111,10 @@ function renderQuestion(scrollTop = false) {
     </div>
   </div>`;
   S.anim = null;
-  if (!orig) vocab.decoratePassage(q, main.querySelector(".passage"));
+  // while the student looks for the clue a tap on a word is their answer, so hard words wait
+  const tapping = think.decorate(q, main);
+  if (!orig && !tapping) vocab.decoratePassage(q, main.querySelector(".passage"));
+  if (!matchMedia("(pointer: coarse)").matches) $("#think-own")?.focus();
   timerTick();
   ai.follow();
   if (orig || (pr && isOriginal(q))) fillOriginals(q);
@@ -1166,8 +1183,8 @@ function record(q, result) {
 
 function answer(letter) {
   const q = cur();
-  if (!q || answerOf(q) || prep.locked(q) || !q.choices.some((c) => c.letter === letter)) return;
-  record(q, { c: letter, ok: letter === q.correct, t: Date.now() });
+  if (!q || answerOf(q) || prep.locked(q) || think.locked(q) || !q.choices.some((c) => c.letter === letter)) return;
+  record(q, { c: letter, ok: letter === q.correct, t: Date.now(), ...think.take(q) });
   S.anim = { id: q.id, letter };
   S.explainOpen[q.id] = true;
   renderAll();
@@ -1189,6 +1206,7 @@ function retry() {
   if (!q || inReview(q)) return;
   delete S.progress[q.id];
   delete S.struck[q.id];
+  think.reset(q.id);
   timer.reset(q.id);   // a new attempt starts from zero
   saveProgress();
   renderAll();
@@ -1196,7 +1214,7 @@ function retry() {
 
 function strike(letter) {
   const q = cur();
-  if (!q || answerOf(q)) return;
+  if (!q || answerOf(q) || think.locked(q)) return;
   const set = (S.struck[q.id] ||= new Set());
   set.has(letter) ? set.delete(letter) : set.add(letter);
   renderQuestion();
@@ -1230,7 +1248,7 @@ const ACTIONS = {
   reveal: () => {
     const q = cur();
     if (!q || answerOf(q) || prep.locked(q)) return;
-    record(q, { c: null, ok: false, revealed: true, t: Date.now() });
+    record(q, { c: null, ok: false, revealed: true, t: Date.now(), ...think.take(q) });
     S.explainOpen[q.id] = true;
     renderAll();
   },
@@ -1326,6 +1344,7 @@ const ACTIONS = {
   ...today.actions,
   ...account.actions,
   ...prep.actions,
+  ...think.actions,
   "today-review": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "review"); },
   "timer-visible": () => { S.ui.hideTimer = !S.ui.hideTimer; saveUi(); renderAll(); toast(S.ui.hideTimer ? "Таймер скрыт — время всё равно считается" : "Таймер показан"); },
   "today-new": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "todo"); },
@@ -1357,6 +1376,7 @@ document.addEventListener("keydown", (e) => {
   }
   if (inField) {
     if (e.key === "Enter" && e.target.id === "spr") checkSpr();
+    if (e.key === "Enter" && e.target.id === "think-own") think.go();
     return;
   }
   if (cur() && prep.locked(cur())) {
@@ -1380,7 +1400,7 @@ document.addEventListener("keydown", (e) => {
   e.preventDefault();
 });
 
-document.addEventListener("input", (e) => { if (S.set) vocab.onInput(e); });
+document.addEventListener("input", (e) => { if (S.set && !think.onInput(e)) vocab.onInput(e); });
 document.addEventListener("submit", (e) => { if (S.set) vocab.onSubmit(e); });
 
 // a PDF dropped anywhere is added to the questions already here

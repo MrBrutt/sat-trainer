@@ -1,6 +1,7 @@
 // Daily routine: spaced review of mistakes, the "Today" plan, streaks, activity calendar and achievements.
 import { startOfDay } from "./vocab.js";
 import { fmtTime, paceFor } from "./timer.js";
+import { stepStats } from "./think.js";
 
 const DAY = 86400000;
 export const REVIEW_DAYS = [1, 3, 7];   // a mistake comes back after 1, 3, then 7 days; 3 right in a row = fixed
@@ -371,12 +372,15 @@ export function createToday(ctx) {
     const week = startOfDay() + 8 * DAY;
     const weekReviews = reviews.filter((r) => !r.done && r.due < week).length;
     const row = (label, value, sub = "") => `<div class="ov-row"><span>${label}</span><b>${value}</b>${sub ? `<small>${sub}</small>` : ""}</div>`;
+    const share = (r) => `${Math.round((r.ok / r.n) * 100)}%`;
+    const { steps, before } = stepStats(qs, S.progress);
     $("#sidebar").innerHTML = `
       <div>
         <div class="side-label">Вопросы</div>
         <div class="ov">
           ${row("Решено", `${answered}/${qs.length}`, `${qs.length ? Math.round((answered / qs.length) * 100) : 0}%`)}
           ${row("Верно с первого раза", answered ? `${Math.round((right / answered) * 100)}%` : "—")}
+          ${steps.n ? row("Со «сначала сами»", share(steps), `${steps.n} ${plural(steps.n, "ответ", "ответа", "ответов")}${before.n ? ` · раньше ${share(before)}` : ""}`) : ""}
         </div>
       </div>
       <div>
