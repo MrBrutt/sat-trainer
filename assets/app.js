@@ -6,6 +6,7 @@ import { createTimer, fmtTime, paceFor } from "./timer.js";
 import { createPrep } from "./prep.js";
 import { toB64, fromB64 } from "./bytes.js";
 import { createAccount } from "./account.js";
+import { outline, inFocus, domainOf } from "./domains.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -77,7 +78,7 @@ const S = {
   set: null,
   progress: ls.get(KEY.progress, {}),          // id -> { c, ok, t, revealed? }
   flags: new Set(ls.get(KEY.flags, [])),
-  ui: Object.assign({ skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" }, ls.get(KEY.ui, {})),
+  ui: Object.assign({ domain: "all", skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" }, ls.get(KEY.ui, {})),
   vocab: Object.assign(VOCAB_DEFAULT(), ls.get(KEY.vocab, {})),
   review: ls.get(KEY.review, {}),              // id -> spaced review of a mistake
   activity: Object.assign(ACTIVITY_DEFAULT(), ls.get(KEY.activity, {})),
@@ -242,7 +243,7 @@ account = createAccount({
         await saveSet(set, S.set);
         S.set = set;
         S.pdfs = new Map();
-        if (first) { S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null }; saveUi(); }
+        if (first) { S.ui = { ...S.ui, domain: "all", skill: "all", status: "all", diff: "all", cur: null }; saveUi(); }
         showTrainer();
         if (first) toast(`Вопросы из аккаунта: ${qWord(set.questions.length)}`);
       } catch (e) {
@@ -557,7 +558,7 @@ async function restoreProgress(file) {
         await saveSet(set, null);
         S.set = set;
         S.pdfs = new Map();
-        S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null };
+        S.ui = { ...S.ui, domain: "all", skill: "all", status: "all", diff: "all", cur: null };
         saveUi();
         account.setsChanged();
         built = true;
@@ -651,7 +652,7 @@ async function runImport(bytes, fileName, { mode = "add" } = {}) {
     await saveSet(set, S.set);
     S.set = set;
     S.pdfs = new Map();
-    if (!base) S.ui = { ...S.ui, skill: "all", status: "all", diff: "all", cur: null };
+    if (!base) S.ui = { ...S.ui, domain: "all", skill: "all", status: "all", diff: "all", cur: null };
     saveUi();
     account.setsChanged({ replace: mode === "replace" });
     showTrainer();
@@ -728,7 +729,7 @@ const upcomingReviews = () => S.set.questions
   .sort((a, b) => S.review[a.id].due - S.review[b.id].due || a.n - b.n);
 
 function matches(q) {
-  if (S.ui.skill !== "all" && q.skill !== S.ui.skill) return false;
+  if (!inFocus(q, S.ui.domain, S.ui.skill)) return false;
   if (S.ui.diff && S.ui.diff !== "all" && q.difficulty !== S.ui.diff) return false;
   if (S.ui.status === "all") return true;
   if (S.ui.status === "flag") return S.flags.has(q.id);
@@ -832,13 +833,43 @@ function renderTopbar() {
     </div>`;
 }
 
+// The four SAT blocks with their skills. The chosen block shows its skills; a block without questions
+// opens a note on how to add them.
+function blocksHtml() {
+  const qs = S.set.questions;
+  const picked = S.ui.domain && S.ui.domain !== "all" ? S.ui.domain
+    : S.ui.skill !== "all" ? domainOf(qs.find((q) => inFocus(q, "all", S.ui.skill)) || { skill: S.ui.skill }) : null;
+  const colors = new Map(S.set.skills.map((sk) => [sk.name, sk.color]));
+  const score = (r) => (r.done ? ` · ${Math.round((r.ok / r.done) * 100)}%` : "");
+  const bar = (r) => (r.count ? `<span class="split-bar"><span class="ok" style="width:${(r.ok / r.count) * 100}%"></span><span class="bad" style="width:${((r.done - r.ok) / r.count) * 100}%"></span></span>` : "");
+  const allOn = !picked;
+  return `<button class="skill-item ${allOn ? "active" : ""}" data-action="block" data-domain="all" aria-pressed="${allOn}">
+      <span class="name">Все блоки</span><span class="count">${qs.length}</span>
+    </button>${outline(qs, S.progress).map((d) => {
+      const on = picked === d.name;
+      const open = on || S.ui.openBlock === d.name;
+      const whole = on && S.ui.skill === "all";
+      return `<button class="skill-item block-head ${whole ? "active" : ""} ${d.count ? "" : "no-questions"}" data-action="block" data-domain="${esc(d.name)}" aria-pressed="${whole}" aria-expanded="${open}">
+          <span class="name">${esc(d.name)}</span><span class="count">${d.count ? `${d.done}/${d.count}${score(d)}` : "нет вопросов"}</span>${bar(d)}
+        </button>
+        ${open && d.count ? d.skills.map((sk) => {
+          const active = on && S.ui.skill !== "all" && sk.name === S.ui.skill;
+          return `<button class="skill-item sub ${active ? "active" : ""}" data-action="skill" data-domain="${esc(d.name)}" data-skill="${esc(sk.name)}" aria-pressed="${active}" ${sk.count ? "" : "disabled"}>
+            <span class="dot" style="--c:${colors.get(sk.name) || "var(--border)"}"></span><span class="name">${esc(sk.name)}</span><span class="count">${sk.count ? `${sk.done}/${sk.count}` : "0"}</span>
+          </button>`;
+        }).join("") : ""}
+        ${open && !d.count ? `<div class="block-hint">
+          <p>Вопросов этого блока пока нет. В <a href="https://satsuiteeducatorquestionbank.collegeboard.org/digital/search" target="_blank" rel="noopener">Question Bank</a> выберите <b>${esc(d.name)}</b>, отметьте вопросы, затем <b>Export</b> → <b>With correct answers and explanations</b> → <b>Download PDF</b>.</p>
+          <button class="btn btn-outline btn-sm" data-action="load-new">${icon("upload", "icon-sm")} Добавить PDF</button>
+        </div>` : ""}`;
+    }).join("")}`;
+}
+
 function renderSidebar() {
   const qs = S.set.questions;
-  const inSkill = (q) => (S.ui.skill === "all" || q.skill === S.ui.skill) && (!S.ui.diff || S.ui.diff === "all" || q.difficulty === S.ui.diff);
+  const inSkill = (q) => inFocus(q, S.ui.domain, S.ui.skill) && (!S.ui.diff || S.ui.diff === "all" || q.difficulty === S.ui.diff);
   const count = (st) => qs.filter((q) => inSkill(q) && (st === "all" || (st === "flag" ? S.flags.has(q.id) : st === "review" ? isDue(S.review[q.id]) : st === "ready" ? isReady(q) : statusOf(q.id) === st))).length;
   const list = visible();
-  const skills = [{ name: "all", label: "Все навыки", count: qs.length, color: "var(--text-2)" }, ...S.set.skills];
-  const multiDomain = new Set(S.set.skills.map((sk) => sk.domain)).size > 1;
   const diffs = S.set.difficulties || [];
   const statuses = [["all", "Все"], ["review", "Повторить"], ["todo", "Не решены"], ["ready", "Слова выучены"], ["wrong", "Ошибки"], ["right", "Верно"], ["flag", "Отмеченные"]];
   const stats = S.set.skills.map((s) => {
@@ -854,13 +885,8 @@ function renderSidebar() {
 
   $("#sidebar").innerHTML = `
     <div>
-      <div class="side-label">Навык</div>
-      <div class="skill-list">${skills.map((s, i) => `
-        ${multiDomain && s.domain && s.domain !== skills[i - 1]?.domain ? `<div class="skill-domain">${esc(s.domain)}</div>` : ""}
-        <button class="skill-item ${S.ui.skill === s.name ? "active" : ""}" data-action="skill" data-skill="${esc(s.name)}" aria-pressed="${S.ui.skill === s.name}">
-          <span class="dot" style="--c:${s.color}"></span><span class="name">${esc(s.label || s.name)}</span><span class="count">${s.count}</span>
-        </button>`).join("")}
-      </div>
+      <div class="side-label">Раздел</div>
+      <div class="skill-list">${blocksHtml()}</div>
     </div>
     ${diffs.length > 1 ? `<div>
       <div class="side-label">Сложность</div>
@@ -1175,6 +1201,11 @@ function strike(letter) {
   renderQuestion();
 }
 
+function setFocus(domain, skill) {
+  S.ui.domain = domain;
+  setFilter("skill", skill);
+}
+
 function setFilter(kind, value) {
   S.ui[kind] = value;
   const filtered = S.set.questions.filter(matches);
@@ -1206,10 +1237,20 @@ const ACTIONS = {
   next: () => step(1),
   prev: () => step(-1),
   go: (el) => go(el.dataset.id),
-  skill: (el) => setFilter("skill", el.dataset.skill),
+  block: (el) => {
+    const name = el.dataset.domain;
+    if (name !== "all" && !S.set.questions.some((q) => inFocus(q, name, "all"))) {
+      S.ui.openBlock = S.ui.openBlock === name ? null : name;   // nothing to filter yet: show how to add it
+      renderSidebar();
+      return;
+    }
+    S.ui.openBlock = null;
+    setFocus(name, "all");
+  },
+  skill: (el) => setFocus(el.dataset.domain, el.dataset.skill),
   diff: (el) => setFilter("diff", el.dataset.diff),
   status: (el) => setFilter("status", el.dataset.status),
-  "clear-filters": () => { S.ui.status = "all"; S.ui.diff = "all"; setFilter("skill", "all"); },
+  "clear-filters": () => { S.ui.status = "all"; S.ui.diff = "all"; setFocus("all", "all"); },
   flag: () => {
     const q = cur();
     if (!q) return;
@@ -1270,7 +1311,7 @@ const ACTIONS = {
     [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict, KEY.review, KEY.activity].forEach(ls.del);
     ai.wipe();
     Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdfs: new Map(), vocab: VOCAB_DEFAULT(), session: null, review: {}, activity: ACTIVITY_DEFAULT(), attempt: {} });
-    S.ui = { skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" };
+    S.ui = { domain: "all", skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" };
     showLanding();
   },
   view: (el) => {
@@ -1285,9 +1326,9 @@ const ACTIONS = {
   ...today.actions,
   ...account.actions,
   ...prep.actions,
-  "today-review": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "review"); },
+  "today-review": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "review"); },
   "timer-visible": () => { S.ui.hideTimer = !S.ui.hideTimer; saveUi(); renderAll(); toast(S.ui.hideTimer ? "Таймер скрыт — время всё равно считается" : "Таймер показан"); },
-  "today-new": () => { S.ui.view = "questions"; S.ui.skill = "all"; setFilter("status", "todo"); },
+  "today-new": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "todo"); },
   "today-words": () => { S.ui.view = "vocab"; S.ui.vtab = "study"; S.session = null; saveUi(); renderAll(true); },
   "open-sidebar": () => document.body.classList.add("sidebar-open"),
   "close-sidebar": () => document.body.classList.remove("sidebar-open"),
