@@ -66,3 +66,14 @@ test("focus: everything, a block, or one skill", () => {
 test("the blocks hold every skill the trainer orders", () => {
   eq(DOMAINS.flatMap((d) => d.skills).length, 10);
 });
+
+import { choiceWords, loadFrequencies } from "../assets/words.js";
+
+const withChoices = (skill, domain) => ({ id: "a", skill, domain, stem: [], choices: [{ letter: "A", runs: [{ t: "to assess and modify" }] }] });
+
+test("grammar questions do not ask to learn the words of their choices", async () => {
+  await loadFrequencies();
+  eq(choiceWords(withChoices("Boundaries", "Standard English Conventions"), 4.6), []);
+  eq(choiceWords(withChoices("Form, Structure, and Sense", ""), 4.6), []);
+  eq(choiceWords(withChoices("Central Ideas and Details", "Information and Ideas"), 4.6).includes("assess"), true);
+});

@@ -222,7 +222,7 @@ account = createAccount({
     progress: { read: () => S.progress, write: (v) => { S.progress = v; saveProgress(); } },
     review: { read: () => S.review, write: (v) => { S.review = v; saveReview(); } },
     flags: { read: () => [...S.flags], write: (v) => { S.flags = new Set(v); saveFlags(); } },
-    vocab: { read: () => S.vocab, write: (v) => { S.vocab = Object.assign(VOCAB_DEFAULT(), v); ls.set(KEY.vocab, S.vocab); vocab.invalidate(); vocab.resetSession(); } },
+    vocab: { read: () => S.vocab, write: (v) => { S.vocab = Object.assign(VOCAB_DEFAULT(), v); ls.set(KEY.vocab, S.vocab); vocab.accountChanged(); } },
     activity: { read: () => S.activity, write: (v) => { S.activity = Object.assign(ACTIVITY_DEFAULT(), v); ls.set(KEY.activity, S.activity); } },
   },
   sets: {
@@ -656,9 +656,10 @@ async function runImport(bytes, fileName, { mode = "add" } = {}) {
     saveUi();
     account.setsChanged({ replace: mode === "replace" });
     showTrainer();
-    if (!base) toast(`Готово: ${qWord(set.questions.length)}`);
-    else if (!added) toast(`Новых вопросов нет: все ${parsed.questions.length} уже есть в тренажёре`);
-    else toast(`Добавлено ${qWord(added)}${same ? ` · ${same} уже были` : ""} · всего ${set.questions.length}`);
+    const lost = parsed.skipped ? ` · не удалось разобрать: ${qWord(parsed.skipped)}` : "";
+    if (!base) toast(`Готово: ${qWord(set.questions.length)}${lost}`);
+    else if (!added) toast(`Новых вопросов нет: все ${parsed.questions.length} уже есть в тренажёре${lost}`);
+    else toast(`Добавлено ${qWord(added)}${same ? ` · ${same} уже были` : ""} · всего ${set.questions.length}${lost}`);
   } catch (e) {
     console.error(e);
     if (S.set) { showTrainer(); toast(importError(e)); } else showLanding(importError(e));
@@ -1303,12 +1304,11 @@ const ACTIONS = {
     toast("Прогресс сброшен");
   },
   wipe: async () => {
-    ls.del(KEY.timing);
     toggleMenu(false);
     if (!(await confirmDialog("Удалить все данные?", `Из браузера будут удалены загруженный PDF, вопросы, прогресс и отметки.${account.signedIn() ? " Вы выйдете из аккаунта, а в самом аккаунте всё останется." : ""}`, "Удалить", true))) return;
     await account.forget();
     try { await db.clear(); } catch { /* nothing stored */ }
-    [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict, KEY.review, KEY.activity].forEach(ls.del);
+    [KEY.progress, KEY.flags, KEY.ui, KEY.vocab, KEY.dict, KEY.review, KEY.activity, KEY.timing].forEach(ls.del);
     ai.wipe();
     Object.assign(S, { set: null, progress: {}, flags: new Set(), struck: {}, pdfs: new Map(), vocab: VOCAB_DEFAULT(), session: null, review: {}, activity: ACTIVITY_DEFAULT(), attempt: {} });
     S.ui = { domain: "all", skill: "all", status: "all", cur: null, original: {}, view: "questions", vtab: "study", vfilter: "all", vq: "" };
@@ -1388,6 +1388,7 @@ window.addEventListener("dragover", (e) => { if (S.set) e.preventDefault(); });
 window.addEventListener("drop", (e) => {
   if (!S.set) return;
   e.preventDefault();
+  S.importMode = null;      // "start over" chosen earlier and cancelled must not apply to this file
   importFile(e.dataTransfer.files[0]);
 });
 
@@ -1413,9 +1414,7 @@ async function freshen() {
   }
 }
 
-(async function boot() {
-  if (await freshen()) return;
-  account.init();       // a device that was signed in reconnects in the background
+async function open() {
   const params = new URLSearchParams(location.search);
   const src = params.get("src");
   if (src) {
@@ -1438,4 +1437,10 @@ async function freshen() {
   }
   if (saved) return rebuildSet(saved);
   showLanding();
+}
+
+(async function boot() {
+  if (await freshen()) return;
+  await open();
+  account.init();       // after the questions: a device that was signed in reconnects and compares them with the account
 })();

@@ -86,3 +86,50 @@ test("a PDF removed in the account is removed here", async () => {
   eq(await syncSources(one, { ids: ["s1", "s2"], covered: ["s1", "s2"], numbers: { q1: 1 } }, async () => new Uint8Array([1]), async (list) => { got = list.map((s) => s.id); }), "done");
   eq(got, ["s2"]);
 });
+
+test("a device that has not read its questions yet does not drop the list of PDFs", () => {
+  const list = { list: { s1: { importedAt: 1 } }, numbers: { q1: 1 } };
+  eq(MERGE.sources(list, undefined, list), list);
+});
+
+import { createAccount } from "../assets/account.js";
+
+function accountWith(cloud) {
+  const stored = new Map();
+  const box = (v) => ({ read: () => v, write: (x) => { v = x; } });
+  return createAccount({
+    ls: { get: (k, d) => (stored.has(k) ? JSON.parse(stored.get(k)) : d), set: (k, v) => stored.set(k, JSON.stringify(v)), del: (k) => stored.delete(k) },
+    icon: () => "", esc: (s) => s, toast: () => {},
+    data: { progress: box({}), review: box({}), flags: box([]), vocab: box({ srs: {}, known: [] }), activity: box({ days: {} }) },
+    sets: {
+      current: () => ({ list: { s1: { fileName: "a.pdf", importedAt: 1 } }, numbers: { q1: 1 } }),
+      have: () => ({ ids: ["s1"], covered: ["s1"], numbers: { q1: 1 } }),
+      stored: async () => new Uint8Array([1]), store: async () => {}, install: async () => {},
+    },
+    changed: () => {},
+    openCloud: async () => cloud,
+  });
+}
+
+test("a PDF upload that failed is tried again when the connection is back", async () => {
+  const store = {};
+  let tell = null, broken = true, uploads = 0;
+  const cloud = {
+    onUser: (cb) => { tell = cb; },
+    signIn: async () => { const user = { uid: "u1", email: "" }; await tell(user); return { user }; },
+    signOut: async () => tell(null),
+    adapter: () => ({ get: async (n) => store[n], set: async (n, v) => { store[n] = v; }, watch: () => () => {}, online: () => true }),
+    hasPdf: async () => uploads > 0,
+    putPdf: async () => { if (broken) throw new Error("no connection"); uploads++; },
+    getPdf: async () => null,
+  };
+  const account = accountWith(cloud);
+  await account.actions["sign-in"]();
+  eq(store.sources, undefined, "the list waits for its PDF");
+  broken = false;
+  dispatchEvent(new Event("online"));
+  for (let i = 0; i < 10; i++) await new Promise((r) => setTimeout(r, 5));
+  eq(uploads, 1, "uploaded");
+  eq(Object.keys(store.sources?.list || {}), ["s1"], "listed");
+  await cloud.signOut();
+});

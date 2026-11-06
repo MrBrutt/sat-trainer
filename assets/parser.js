@@ -38,7 +38,7 @@ export async function parseQuestionBank(bytes, onProgress = () => {}) {
     const sawIds = pages.some((pg) => pg.lines.some((l) => RE_ID.test(l.text)));
     throw new Error(sawIds ? "NO_ANSWERS" : "NOT_QUESTION_BANK");
   }
-  return { questions, pageCount: pages.length };
+  return { questions, pageCount: pages.length, skipped: questions.skipped };
 }
 
 // Same label spelled differently ("Cross-text" vs "Cross-Text") -> most common spelling.
@@ -234,8 +234,10 @@ function classifyFonts(stats) {
 const RE_ID = /^Question ID:\s*([0-9a-f]{6,})/i;
 const RE_CORRECT = /^Correct Answer:\s*(.*)$/i;
 
-function buildQuestions(pages, fonts) {
+// A question whose "Correct Answer" is not on its first page cannot be read and is left out: `skipped` counts them.
+export function buildQuestions(pages, fonts) {
   const questions = [];
+  questions.skipped = 0;
   let cur = null;
   pages.forEach((pg, pi) => {
     const L = pg.lines.map((l) => ({ ...l, page: pi }));
@@ -253,7 +255,7 @@ function buildQuestions(pages, fonts) {
     const cIdx = find((l) => RE_CORRECT.test(l.text), qIdx);
     const aIdx = L.findIndex((l, i) => i > qIdx && i < cIdx && l.text === "Answer");
     const rIdx = find((l) => l.text === "Rationale", cIdx);
-    if (qIdx < 0 || cIdx < 0) { cur = null; return; }
+    if (qIdx < 0 || cIdx < 0) { cur = null; questions.skipped++; return; }
     const last = L[L.length - 1];
     cur = {
       id: L[idIdx].text.match(RE_ID)[1],

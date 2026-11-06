@@ -68,7 +68,7 @@ export function createPrep(ctx) {
     const knownN = gate.cards.length - gate.missing.length;
     const wic = /words in context/i.test(q.skill);
     const todo = fresh.length && due.length
-      ? `Выучите ${fresh.length === 1 ? "новое слово" : `${fresh.length} ${plural(fresh.length, "новое слово", "новых слова", "новых слов")}`} и вспомните ${due.length === 1 ? "одно, которое уже учили" : `${due.length}, которые уже учили`}, — потом короткая проверка, и вопрос откроется.`
+      ? `Выучите ${fresh.length === 1 ? "одно слово" : words(fresh.length)} и вспомните ${due.length === 1 ? "одно, которое уже учили" : `${due.length}, которые уже учили`}, — потом короткая проверка, и вопрос откроется.`
       : fresh.length
         ? `Выучите ${fresh.length === 1 ? "это слово" : `эти ${words(fresh.length)}`} и пройдите короткую проверку — вопрос откроется.`
         : `${due.length === 1 ? "Это слово вы уже учили, но пришло время его повторить" : `Эти ${words(due.length)} вы уже учили, но пришло время их повторить`}: вспомните значения в проверке — вопрос откроется.`;

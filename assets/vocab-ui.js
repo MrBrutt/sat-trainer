@@ -23,6 +23,7 @@ export function createVocab(ctx) {
   let addOpen = false;
   let openRow = null;
   let waitTimer = null;        // counts down while every card left is waiting out its minutes
+  let builtFor = null;         // the level the word lists were built for
 
   const save = () => { cache = null; ls.set(KEY.vocab, S.vocab); };
   const saveDict = () => { cache = null; ls.set(KEY.dict, dict); };
@@ -44,6 +45,8 @@ export function createVocab(ctx) {
       if (!S.set) return;
       rebuildWords();
       loaded = true;
+      // the first screen draws before the lists are in: today's cards are chosen again, unless started
+      if (S.session && !S.session.reviewed && !S.session.revealed) S.session = null;
       ctx.refreshChrome();
       if (S.ui.view === "vocab") { renderSidebar(); renderMain(); }
       else if (S.ui.view === "questions") ctx.refreshTrainer();
@@ -56,6 +59,7 @@ export function createVocab(ctx) {
   // Words that depend on the learner's level: hard words of the texts and of the choices.
   function rebuildWords() {
     const level = threshold();
+    builtFor = level;
     textDeck = buildTextDeck(S.set.questions, level);
     gates = new Map(S.set.questions.map((q) => [q.id, choiceWords(q, level)]));
   }
@@ -609,12 +613,10 @@ export function createVocab(ctx) {
     }
   }
 
-  // A check before a question counts as a review of the word's card: right on the first try is
-  // "remember", right after a slip is "hard", wrong is "again".
+  // A check before a question counts as a review of the word's card: right is "помню", wrong is
+  // "не помню". After a miss the word comes round again, and the right answer then moves it to
+  // tomorrow ("сложно" with its 10-minute step would leave it unlearned and close the question).
   function quizResult(key, ok) {
-    // A miss sends the word back to the start, so the right answer after it moves the word to
-    // tomorrow, as "помню" (not "сложно": its 10-minute step would leave the word unlearned and
-    // close the question again).
     S.vocab.srs[key] = schedule(S.vocab.srs[key], ok ? 3 : 1);
     save();
     S.session = null;
@@ -860,7 +862,7 @@ export function createVocab(ctx) {
     const k = e.key.toLowerCase();
     if ((k === " " || k === "enter") && !S.session.revealed) { actions["v-reveal"](); return true; }
     if (S.session.revealed && "1234".includes(k) && k.length === 1) { grade(+k); return true; }
-    if (k === "k") { actions["v-known"](); return true; }
+    if (k === "k" && (S.session.revealed || !S.session.waitUntil)) { actions["v-known"](); return true; }
     return false;
   }
 
@@ -869,6 +871,11 @@ export function createVocab(ctx) {
   function merge(incoming) {
     if (!incoming || typeof incoming !== "object") return 0;
     let n = 0;
+    // a device that has studied nothing takes the settings too; a used one keeps its own
+    if (!Object.keys(S.vocab.srs).length) {
+      if (incoming.level) S.vocab.level = incoming.level;
+      if (incoming.newPerDay) S.vocab.newPerDay = incoming.newPerDay;
+    }
     for (const [k, st] of Object.entries(incoming.srs || {})) {
       const mine = S.vocab.srs[k];
       if (!mine || (st.last || 0) > (mine.last || 0)) { S.vocab.srs[k] = st; n++; }
@@ -878,15 +885,22 @@ export function createVocab(ctx) {
     S.vocab.known = [...new Set([...S.vocab.known, ...(incoming.known || [])])];
     if (incoming.test && (!S.vocab.test || incoming.test.at > S.vocab.test.at)) S.vocab.test = incoming.test;
     save();
-    S.session = null;
+    accountChanged();
     return n;
+  }
+
+  // The cards came from outside (the account, a file): today's queue and, with a new level, the word lists follow.
+  function accountChanged() {
+    cache = null;
+    S.session = null;
+    if (loaded && threshold() !== builtFor) rebuildWords();
   }
 
   const currentKey = () => ((S.ui.vtab || "study") === "study" && S.session?.queue.length ? S.session.queue[0] : openRow);
 
   return {
     rebuild, renderSidebar, renderMain, questionWordsHtml, dueTotal, actions, onInput, onSubmit, onKey, merge, decoratePassage, hideWord,
-    hidePop, resetSession: () => { S.session = null; },
+    hidePop, accountChanged,
     gateOf, fetchGateDefs, quizResult, invalidate: () => { cache = null; },
     card: (key) => cards().find((c) => c.key === key) || null,
     studied: () => cards().filter((c) => c.known || c.st?.last).length,

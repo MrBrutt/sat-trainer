@@ -43,7 +43,8 @@ export const MERGE = {
     bestRun: larger,
     bestStreak: larger,
   }),
-  sources: (b, l, r) => byField(b, l, r, {
+  // no list here yet (the set is still loading) is no opinion, not a deletion
+  sources: (b, l, r) => byField(b, l ?? b, r, {
     list: (b, l, r) => mergeMap(b, l, r, mine),
     numbers: (b, l, r) => mergeMap(b, l, r, mine),
   }),
@@ -89,7 +90,7 @@ function signInError(e) {
 // data: { [section]: { read(), write(value) } } — the trainer's own copy of each section.
 // sets: { current() → {list, numbers} | null, have() → {ids, numbers}, stored(id), store(id, bytes), install(list, numbers) }
 //   — the questions on this device, the PDFs behind them, and building them from PDFs.
-export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
+export function createAccount({ ls, icon, esc, toast, data, sets, changed, openCloud = () => import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)) }) {
   const enabled = () => !!firebaseConfig && !window.claude;   // asked each time: claude.ai may set window.claude after load
   let cloudP = null;
   let cloud = null;
@@ -102,7 +103,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
   let refreshTimer = null;
 
   const record = () => ls.get(RECORD, null);
-  const load = () => (cloudP ||= import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)).then((c) => (cloud = c)))
+  const load = () => (cloudP ||= openCloud().then((c) => (cloud = c)))
     .catch((e) => { cloudP = null; throw e; });
 
   // Several parts report (data, the list of PDFs, an upload); the chip shows the most pressing.
@@ -220,8 +221,8 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed }) {
         sourcesSync = createSync({ adapter, sections: sourcesSection, base, onStatus: (s) => setState("sources", s) });
         await sourcesSync.start();
         await ensureSources();
+        started = true;        // otherwise the next "online" starts over and uploads again
       }
-      started = true;
     } catch (e) {
       console.warn("sync start", e);
       setState("data", navigator.onLine ? "error" : "offline");

@@ -4,6 +4,7 @@
 // Definitions: assets/data/defs.txt, written for this trainer.
 import { plain } from "./parser.js";
 import { termKey, stripArticle } from "./vocab.js";
+import { domainOf } from "./domains.js";
 
 export const LEVELS = [
   { id: "basic", label: "Начальный", zipf: 4.6 },
@@ -198,6 +199,7 @@ export const passageText = (q) => q.stem.map(plain).join("\n");
 // choice is such a word; elsewhere the choices are sentences, and their hard words count.
 export function choiceWords(q, threshold) {
   if (!q.choices?.length) return [];
+  if (domainOf(q) === "Standard English Conventions") return [];    // grammar: what the words mean is not the point
   if (isWic(q)) {
     const terms = q.choices.map((c) => plain(c).trim()).filter((t) => t && t.split(/\s+/).length <= 4);
     return [...new Set(terms.map((t) => termKey(stripArticle(t))).filter((k) => k && k.length <= 40))];
