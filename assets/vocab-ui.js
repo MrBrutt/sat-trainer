@@ -1,5 +1,5 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
-import { buildDeck, schedule, previewIntervals, readyIndex, requeue, statusOf, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { buildDeck, schedule, previewIntervals, readyIndex, requeue, statusOf, isMastered, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
 import { createSizeTest } from "./size-test.js";
 import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
 
@@ -701,6 +701,7 @@ export function createVocab(ctx) {
     }
     const st = schedule(prev, g);
     S.vocab.srs[key] = st;
+    if (isMastered(st) && !isMastered(prev)) toast(`«${cards().byKey.get(key)?.term || key}» — выучено: теперь редкие повторы`);
     // seen again today: after "не помню" four cards on (and a minute later at the earliest),
     // after "сложно" on a new word at the end, in 10 minutes at the earliest
     if (g === 1) s.queue = requeue(s.queue, key, 4);

@@ -49,3 +49,70 @@ test("a forgotten word goes four cards back, or to the end of a shorter queue", 
   eq(requeue([], "a", 4), ["a"]);
   eq(requeue(["b", "c"], "a", Infinity), ["b", "c", "a"]);
 });
+
+// ---------------------------------------------------------------- «выучено»
+
+import { isMastered, statusOf } from "../assets/vocab.js";
+
+const DAY = 864e5;
+const onDay = (d) => now + d * DAY;
+// passes on the given days: grade 3 unless a pair [day, grade] says otherwise
+const study = (days, st = null) => days.reduce((s, d) => (Array.isArray(d) ? schedule(s, d[1], onDay(d[0])) : schedule(s, 3, onDay(d))), st);
+
+test("three passes on three days make a word learned", () => {
+  eq(statusOf(study([0, 1]), false), "learning", "after two");
+  const st = study([0, 1, 4]);
+  eq(statusOf(st, false), "mastered", "after three");
+  eq(isMastered(st), true);
+});
+
+test("«Легко» counts as a pass", () => {
+  eq(statusOf(study([[0, 4], [4, 4], [12, 3]]), false), "mastered");
+});
+
+test("two passes on one day count once", () => {
+  eq(statusOf(study([0, 0, 1]), false), "learning");
+  eq(statusOf(study([0, 0, 1, 4]), false), "mastered");
+});
+
+test("«Сложно» breaks the run", () => {
+  eq(statusOf(study([0, 1, [4, 2], 5, 6]), false), "learning");
+  eq(statusOf(study([0, 1, [4, 2], 5, 6, 9]), false), "mastered");
+});
+
+test("the pass that makes a word learned sends it 2–3 weeks ahead", () => {
+  const before = study([0, 1]);
+  eq(schedule(before, 3, onDay(4)).ivl, 14, "помню");
+  eq(schedule(before, 4, onDay(4)).ivl, 21, "легко");
+});
+
+test("a learned word comes back rarely and offers a week, three weeks and a month", () => {
+  const st = study([0, 1, 4]);
+  eq(previewIntervals(st, onDay(18)), ["<1 мин", "7 д", "21 д", "1 мес"]);
+});
+
+test("forgetting a learned word makes it «изучаю» again, and the run starts over", () => {
+  const forgot = schedule(study([0, 1, 4]), 1, onDay(18));
+  eq(statusOf(forgot, false), "learning");
+  eq(isMastered(forgot), false);
+  eq(statusOf(study([18, 19], forgot), false), "learning");
+  eq(statusOf(study([18, 19, 22], forgot), false), "mastered");
+});
+
+test("«Сложно» on a learned word keeps it learned, a week ahead", () => {
+  const hard = schedule(study([0, 1, 4]), 2, onDay(18));
+  eq(statusOf(hard, false), "mastered");
+  eq(hard.ivl, 7);
+});
+
+test("a card from before this change counts its earlier reviews", () => {
+  const old = { due: 0, ivl: 2, ease: 2.5, reps: 3, lapses: 0, last: 1 };   // no good, no mastered
+  eq(statusOf(old, false), "learning", "nothing changes until it is reviewed");
+  const st = schedule(old, 3, now);
+  eq(statusOf(st, false), "mastered", "next pass");
+  eq(st.ivl, 14);
+});
+
+test("a long interval from before this change still reads as learned", () => {
+  eq(statusOf({ due: 0, ivl: 21, ease: 2.5, reps: 5, lapses: 0, last: 1 }, false), "mastered");
+});

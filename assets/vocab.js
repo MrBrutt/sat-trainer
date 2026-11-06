@@ -100,12 +100,19 @@ export function newState() {
 
 const AGAIN = 60_000;              // "не помню": back in this session after a minute
 const HARD_STEP = 10 * 60_000;     // "сложно" on a new or forgotten card: back in this session after 10 minutes
+const PASSES = 3;                  // "помню" or "легко" in a row, on different days, make a word learned
+const LEARNED = { hard: 7, good: 21, easy: 30 };   // days between reviews of a learned word
+
+// Learned: three passes in a row. A card not reviewed since the rule came in has no count yet and
+// goes by its interval, as it did before.
+export const isMastered = (st) => !!st && (!!st.mastered || (st.good === undefined && st.ivl >= MASTERED_DAYS));
 
 // Days until the next review after "hard", "good" and "easy". Each waits longer than the one before:
 // after "easy" on first sight (4 days) "hard" scales those 4 days, so "good" must not stay at 3.
 // A new or forgotten card (reps 0) has no "hard" in days: it comes back in this session instead.
 function intervals(s) {
   if (s.reps === 0) return { hard: 0, good: 1, easy: 4 };
+  if (isMastered(s)) return LEARNED;
   const hard = Math.max(1, Math.round(s.ivl * 1.2));
   const good = Math.max(hard + 1, s.reps === 1 ? 3 : Math.round(s.ivl * s.ease));
   const easy = Math.max(good + 1, Math.round(s.ivl * s.ease * 1.3));
@@ -121,6 +128,9 @@ export function schedule(st, grade, now = Date.now()) {
     s.reps = 0;
     s.ivl = 0;
     s.ease = Math.max(1.3, s.ease - 0.2);
+    s.good = 0;
+    s.goodDay = 0;
+    s.mastered = false;
     s.due = now + AGAIN;
     return s;
   }
@@ -130,17 +140,24 @@ export function schedule(st, grade, now = Date.now()) {
     return s;
   }
   const next = intervals(s);
+  const wasLearned = isMastered(s);
+  const today = startOfDay(now);
   if (grade === 2) {
     s.ivl = next.hard;
     s.ease = Math.max(1.3, s.ease - 0.15);
-  } else if (grade === 3) {
-    s.ivl = next.good;
+    s.good = 0;
   } else {
-    s.ivl = next.easy;
-    s.ease += 0.15;
+    // one pass a day counts; a card from before this count has its reps instead
+    s.good = (s.good ?? s.reps) + (s.goodDay === today ? 0 : 1);
+    s.goodDay = today;
+    s.ivl = grade === 3 ? next.good : next.easy;
+    if (grade === 4) s.ease += 0.15;
+    // the pass that makes a word learned sends it 2–3 weeks ahead
+    if (!wasLearned && s.good >= PASSES) s.ivl = Math.max(s.ivl, grade === 3 ? 14 : 21);
   }
+  if (wasLearned || s.good >= PASSES) s.mastered = true;
   s.reps += 1;
-  s.due = startOfDay(now) + s.ivl * DAY;
+  s.due = today + s.ivl * DAY;
   return s;
 }
 
@@ -175,7 +192,7 @@ export function fmtDays(d) {
 export function statusOf(st, known) {
   if (known) return "known";
   if (!st || (!st.reps && !st.last)) return "new";
-  return st.ivl >= MASTERED_DAYS ? "mastered" : "learning";
+  return isMastered(st) ? "mastered" : "learning";
 }
 
 // ---------------------------------------------------------------- dictionary fallback
