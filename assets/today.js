@@ -36,6 +36,10 @@ export function gradeReview(r, ok, now = Date.now()) {
 
 export const isDue = (r, now = Date.now()) => !!r && !r.done && r.due <= now;
 
+// The answer given while reviewing a mistake. Answering always moves the mistake to a later day, so
+// once it is due again the answer is from an earlier round (a page left open overnight): ask afresh.
+export const reviewAttempt = (r, attempt, now = Date.now()) => (attempt && !isDue(r, now) ? attempt : null);
+
 export const ACTIVITY_DEFAULT = () => ({ days: {}, goalNew: 10, run: 0, bestRun: 0, bestStreak: 0, unlocked: [], remind: "19:00" });
 
 // ---------------------------------------------------------------- the module

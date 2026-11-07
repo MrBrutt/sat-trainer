@@ -1,7 +1,7 @@
 import { parseQuestionBank, openPdf, renderRegion, plain } from "./parser.js";
 import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 import { createAssistant } from "./assistant.js";
-import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, REVIEW_DAYS, dayKey } from "./today.js";
+import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, reviewAttempt, REVIEW_DAYS, dayKey } from "./today.js";
 import { createTimer, fmtTime, paceFor } from "./timer.js";
 import { createPrep } from "./prep.js";
 import { toB64, fromB64 } from "./bytes.js";
@@ -728,7 +728,7 @@ function timeNote(q, pr) {
 }
 // Reviewing a mistake shows the question fresh; the first answer stays in S.progress for the statistics.
 const inReview = (q) => S.ui.status === "review" && (isDue(S.review[q.id]) || !!S.attempt[q.id]);
-const answerOf = (q) => (inReview(q) ? S.attempt[q.id] || null : S.progress[q.id]);
+const answerOf = (q) => (inReview(q) ? reviewAttempt(S.review[q.id], S.attempt[q.id]) : S.progress[q.id]);
 const dueReviewCount = () => S.set.questions.filter((q) => isDue(S.review[q.id])).length;
 // Not answered yet, and every word of its answer choices is learned.
 const isReady = (q) => { if (S.progress[q.id]) return false; const g = vocab.gateOf(q); return !g.loading && !g.missing.length; };
@@ -918,7 +918,7 @@ function renderSidebar() {
       <div class="qgrid">${list.map((q) => {
         const st = statusOf(q.id);
         const rv = S.review[q.id];
-        const at = S.ui.status === "review" ? S.attempt[q.id] : null;
+        const at = S.ui.status === "review" ? reviewAttempt(rv, S.attempt[q.id]) : null;
         const g = !answerOf(q) && vocab.gateOf(q);
         const cls = [at ? (at.ok ? "ok" : "bad") : st === "right" ? "ok" : st === "wrong" ? "bad" : "",
           rv && !rv.done ? "rq" : "", rv?.done ? "fixed" : "", g && !g.loading && g.missing.length ? "closed" : "",
