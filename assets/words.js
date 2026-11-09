@@ -5,6 +5,7 @@
 import { plain } from "./parser.js";
 import { termKey, stripArticle } from "./vocab.js";
 import { domainOf } from "./domains.js";
+import { OBVIOUS } from "./obvious-words.js";
 
 export const LEVELS = [
   { id: "basic", label: "Начальный", zipf: 4.6 },
@@ -121,9 +122,8 @@ function hardness(form) {
   const lem = lemma(low);
   // "nineteenth-century" is easy if every part is easy; "self-effacement" is hard if any part is
   const parts = low.split("-");
-  const z = parts.length > 1
-    ? Math.min(...parts.map((p) => Math.max(zipf(p), zipf(lemma(p)))))
-    : Math.max(zipf(low), zipf(lem));
+  const common = (w) => (OBVIOUS.has(w) || OBVIOUS.has(lemma(w)) ? Infinity : Math.max(zipf(w), zipf(lemma(w))));
+  const z = OBVIOUS.has(low) ? Infinity : Math.min(...parts.map(common));
   return { low, lem: parts.length > 1 ? low : lem, z };
 }
 
