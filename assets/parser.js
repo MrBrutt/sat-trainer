@@ -291,7 +291,7 @@ function readQuestion(L, pages) {
     choiceLines: hasChoices ? L.slice(first, end) : [],
     correct: L[cIdx].text.match(RE_CORRECT)[1].trim(),
     ratLines: rest.filter((l) => !RE_LEVEL.test(l.text)),
-    src: { page: L[0].page, ...questionRegions(L, qIdx, end, layout, pages), rationale: rationaleRegions(L, rIdx) },
+    src: { page: L[0].page, ...questionRegions(L, qIdx, end, layout, pages) },
   };
 }
 
@@ -304,13 +304,6 @@ function questionRegions(L, qIdx, end, { saved, box }, pages) {
   const more = [];
   for (let page = top.page + 1; page <= bottom.page; page++) more.push({ page, y0: 0, y1: page === bottom.page ? y1 : height(page), ...box });
   return { question: { page: top.page, y0, y1: height(top.page), ...box }, more };
-}
-
-function rationaleRegions(L, rIdx) {
-  if (rIdx < 0) return [];
-  const byPage = new Map();
-  for (const l of L.slice(rIdx)) (byPage.get(l.page) || byPage.set(l.page, []).get(l.page)).push(l);
-  return [...byPage].map(([page, ls], i) => ({ page, y0: i ? ls[0].yb - 11 : L[rIdx].yb + 3, y1: ls[ls.length - 1].yb + 4 }));
 }
 
 function finish(c, fonts, pages) {
@@ -492,9 +485,8 @@ export function plain(p) {
 // The width to show of a page: a saved page uses all of it.
 export const renderBox = (region) => [region.x0 ?? CONTENT_X0, region.x1 ?? CONTENT_X1 - 1];
 
-export async function renderRegion(pdf, region, cssWidth) {
+export async function renderRegion(pdf, region, cssWidth, dpr = Math.min(window.devicePixelRatio || 1, 3)) {
   const page = await pdf.getPage(region.page + 1);
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
   const [x0, x1] = renderBox(region);
   const scale = (cssWidth / (x1 - x0)) * dpr;
   const vp = page.getViewport({ scale });

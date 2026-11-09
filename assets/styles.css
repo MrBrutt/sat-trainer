@@ -62,7 +62,7 @@
     --warn: #fbbf24;
     --ring: rgba(128, 152, 255, 0.45);
     --scrim: rgba(0, 0, 0, 0.55);
-    --orig-bg: #1a1a1d;
+    --orig-bg: #141414;
     --canvas-filter: invert(.92) hue-rotate(180deg);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
@@ -94,7 +94,7 @@
   --warn: #fbbf24;
   --ring: rgba(128, 152, 255, 0.45);
   --scrim: rgba(0, 0, 0, 0.55);
-  --orig-bg: #1a1a1d;
+  --orig-bg: #141414;
   --canvas-filter: invert(.92) hue-rotate(180deg);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
@@ -346,6 +346,8 @@ kbd {
 .orig { padding: 14px; background: var(--orig-bg); border-radius: 16px; border: 1px solid var(--border); }
 .orig canvas { display: block; }
 .orig canvas { filter: var(--canvas-filter); }
+.orig.figure { overflow-x: auto; margin-bottom: 14px; }
+.orig.figure canvas { margin: 0 auto; }
 .orig-note { font-size: 12.5px; color: var(--muted); margin: 8px 2px 0; display: flex; gap: 6px; align-items: center; }
 
 .choices { display: flex; flex-direction: column; gap: 10px; }

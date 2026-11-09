@@ -1,4 +1,5 @@
-import { parseQuestionBank, openPdf, renderRegion, plain } from "./parser.js";
+import { parseQuestionBank, openPdf, plain } from "./parser.js";
+import { passageOf, drawQuestion, drawFigure } from "./figure.js";
 import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 import { createAssistant } from "./assistant.js";
 import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, reviewAttempt, REVIEW_DAYS, dayKey } from "./today.js";
@@ -288,10 +289,10 @@ function runsHtml(runs) {
   }).join("");
 }
 
-function stemHtml(q) {
+function stemHtml(stem) {
   let html = "", verse = null, verseGap = 0;
   const flush = () => { if (verse) html += `<div class="verse">${verse}</div>`; verse = null; };
-  for (const p of q.stem) {
+  for (const p of stem) {
     const t = plain(p).trim();
     if (p.indent) {
       // the first gap inside a verse block sets the normal line pitch; bigger gaps are stanza breaks
@@ -701,7 +702,7 @@ async function rebuildSet(saved) {
 const skillOf = (q) => S.set.skills.find((s) => s.name === q.skill) || { color: "#888" };
 const cur = () => S.set.questions.find((q) => q.id === S.ui.cur);
 const statusOf = (id) => (!S.progress[id] ? "todo" : S.progress[id].ok ? "right" : "wrong");
-const isOriginal = (q) => S.ui.original[q.id] ?? q.hasFigure;
+const isOriginal = (q) => S.ui.original[q.id] ?? (q.hasFigure && !passageOf(q));
 // Each attempt is timed on its own: a first answer and a review of the same question.
 const timingKey = (q) => (inReview(q) ? `r:${q.id}` : q.id);
 function timerTick() {
@@ -1019,9 +1020,7 @@ function explainHtml(q, pr) {
     </section>`;
   }
   const open = S.explainOpen[q.id] !== false;
-  const body = isOriginal(q)
-    ? q.src.rationale.map((_, i) => `<div class="orig" data-region="rat-${i}"></div>`).join("")
-    : ratHtml(q);
+  const body = ratHtml(q);
   return `<section class="card explain ${open ? "open" : ""}">
     <button class="explain-head" data-action="toggle-explain" aria-expanded="${open}">${icon("bulb")} Разбор <span class="chev">${icon("down")}</span></button>
     ${open ? `<div class="explain-body">${body}</div>` : ""}
@@ -1098,8 +1097,8 @@ function renderQuestion(scrollTop = false) {
       </div>
     </div>
     ${orig
-      ? `<div class="orig" data-region="question"></div>${(q.src.more || []).map((_, i) => `<div class="orig" data-region="more-${i}"></div>`).join("")}<div class="orig-note">${icon("image", "icon-sm")} Оригинальная вёрстка из PDF</div>`
-      : `<article class="card passage">${stemHtml(q)}</article>${q.prompt ? `<div class="prompt">${runsHtml(q.prompt.runs)}</div>` : ""}`}
+      ? `<div class="orig" data-region="question"></div><div class="orig-note">${icon("image", "icon-sm")} Оригинальная вёрстка из PDF</div>`
+      : `${passageOf(q) ? `<div class="orig figure" data-region="figure"></div>` : ""}<article class="card passage">${stemHtml(passageOf(q) ? [passageOf(q)] : q.stem)}</article>${q.prompt ? `<div class="prompt">${runsHtml(q.prompt.runs)}</div>` : ""}`}
     ${think.locked(q) ? think.html(q) : choicesHtml(q, pr, orig)}
     ${feedbackHtml(q, pr)}
     ${explainHtml(q, pr)}
@@ -1117,13 +1116,19 @@ function renderQuestion(scrollTop = false) {
   if (!matchMedia("(pointer: coarse)").matches) $("#think-own")?.focus();
   timerTick();
   ai.follow();
-  if (orig || (pr && isOriginal(q))) fillOriginals(q);
+  fillOriginals(q);
   if (scrollTop) window.scrollTo({ top: 0 });
 }
 
+// The last picture drawn: answering or striking out a choice redraws the page, and the picture must not blink.
+let drawn = null;
+
 async function fillOriginals(q) {
-  const els = [...document.querySelectorAll("#main [data-region]")];
-  if (!els.length) return;
+  const el = document.querySelector("#main [data-region]");
+  if (!el) return;
+  const figure = el.dataset.region === "figure";
+  const key = `${q.id}:${figure ? "figure" : el.clientWidth}`;
+  if (drawn?.key === key) { el.replaceChildren(drawn.canvas); return; }
   try {
     S.pdfs ||= new Map();
     const id = sourceOf(q);
@@ -1132,17 +1137,13 @@ async function fillOriginals(q) {
       if (!bytes) throw new Error("no pdf");
       S.pdfs.set(id, await openPdf(bytes));
     }
-    for (const el of els) {
-      const key = el.dataset.region;
-      const [part, i] = key.split("-");
-      const region = part === "question" ? q.src.question : part === "more" ? q.src.more[+i] : q.src.rationale[+i];
-      const canvas = await renderRegion(S.pdfs.get(id), region, el.clientWidth - 28);
-      if (cur()?.id !== q.id) return;
-      el.replaceChildren(canvas);
-    }
+    const canvas = figure ? await drawFigure(S.pdfs.get(id), q) : await drawQuestion(S.pdfs.get(id), q, el.clientWidth - 28);
+    drawn = { key, canvas };
+    if (cur()?.id !== q.id) return;
+    el.replaceChildren(canvas);
   } catch (e) {
     console.warn(e);
-    els.forEach((el) => (el.innerHTML = `<div class="orig-note">Оригинал недоступен: загрузите PDF ещё раз.</div>`));
+    el.innerHTML = `<div class="orig-note">Оригинал недоступен: загрузите PDF ещё раз.</div>`;
   }
 }
 
