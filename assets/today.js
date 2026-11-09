@@ -40,6 +40,14 @@ export const isDue = (r, now = Date.now()) => !!r && !r.done && r.due <= now;
 // once it is due again the answer is from an earlier round (a page left open overnight): ask afresh.
 export const reviewAttempt = (r, attempt, now = Date.now()) => (attempt && !isDue(r, now) ? attempt : null);
 
+// The score of first answers, the one that says how the exam would go; mistakes put right later are counted apart.
+export function firstTryScore(questions, progress, review) {
+  const given = questions.filter((q) => progress[q.id]);
+  const right = given.filter((q) => progress[q.id].ok).length;
+  const fixed = given.filter((q) => !progress[q.id].ok && review[q.id]?.done).length;
+  return { answered: given.length, right, fixed, pct: given.length ? Math.round((right / given.length) * 100) : 0 };
+}
+
 export const ACTIVITY_DEFAULT = () => ({ days: {}, goalNew: 10, run: 0, bestRun: 0, bestStreak: 0, unlocked: [], remind: "19:00" });
 
 // ---------------------------------------------------------------- the module

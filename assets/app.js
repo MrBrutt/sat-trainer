@@ -2,7 +2,7 @@ import { parseQuestionBank, openPdf, plain } from "./parser.js";
 import { passageOf, drawQuestion, drawFigure } from "./figure.js";
 import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 import { createAssistant } from "./assistant.js";
-import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, reviewAttempt, REVIEW_DAYS, dayKey } from "./today.js";
+import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, reviewAttempt, firstTryScore, REVIEW_DAYS, dayKey } from "./today.js";
 import { createTimer, fmtTime, paceFor } from "./timer.js";
 import { createPrep } from "./prep.js";
 import { toB64, fromB64 } from "./bytes.js";
@@ -810,9 +810,10 @@ function renderAll(scrollTop = false) {
 
 function renderTopbar() {
   const qs = S.set.questions;
-  const answered = qs.filter((q) => S.progress[q.id]).length;
-  const right = qs.filter((q) => S.progress[q.id]?.ok).length;
-  const acc = answered ? Math.round((right / answered) * 100) : 0;
+  const { answered, right, fixed, pct: acc } = firstTryScore(qs, S.progress, S.review);
+  const scoreNote = answered
+    ? `${right} из ${answered} с первого раза${fixed ? `, ещё ${fixed} ${plural(fixed, "ошибка исправлена", "ошибки исправлены", "ошибок исправлены")} на повторе` : ""}`
+    : "Ответов пока нет";
   $("#topbar").innerHTML = `
     <button class="icon-btn only-mobile" data-action="open-sidebar" aria-label="Список вопросов">${icon("menu")}</button>
     <div class="brand">${LOGO}<span>SAT Trainer</span></div>
@@ -824,9 +825,9 @@ function renderTopbar() {
     </nav>
     <div class="spacer"></div>
     ${(() => { const n = today.streak(); return `<button class="streak-chip ${n ? "on" : ""} ${today.isClosed(dayKey()) ? "closed" : ""}" data-action="view" data-view="today" title="${n ? `Серия: ${n} ${plural(n, "день", "дня", "дней")} подряд` : "Закройте день, чтобы начать серию"}">${icon("flame", "icon-sm")}<b>${n}</b></button>`; })()}
-    <div class="score" title="Решено ${answered} из ${qs.length}, верно ${right}">
+    <div class="score" title="${scoreNote}">
       <div class="ring" style="--p:${answered / qs.length};--ok-p:${right / qs.length}"></div>
-      <div><b>${answered}</b>/${qs.length}<span class="label"> решено</span>${answered ? ` · <b>${acc}%</b><span class="label"> верно</span>` : ""}</div>
+      <div><b>${answered}</b>/${qs.length}<span class="label"> решено</span>${answered ? ` · <b>${acc}%</b><span class="label"> с первого раза</span>` : ""}</div>
     </div>
     ${account.chip()}
     <button class="icon-btn" data-action="theme" aria-label="Сменить тему" title="Сменить тему">${icon(isDark() ? "sun" : "moon")}</button>
@@ -919,13 +920,14 @@ function renderSidebar() {
       <div class="qgrid">${list.map((q) => {
         const st = statusOf(q.id);
         const rv = S.review[q.id];
+        const isFixed = rv?.done && st === "wrong";
         const at = S.ui.status === "review" ? reviewAttempt(rv, S.attempt[q.id]) : null;
         const g = !answerOf(q) && vocab.gateOf(q);
         const cls = [at ? (at.ok ? "ok" : "bad") : st === "right" ? "ok" : st === "wrong" ? "bad" : "",
-          rv && !rv.done ? "rq" : "", rv?.done ? "fixed" : "", g && !g.loading && g.missing.length ? "closed" : "",
+          rv && !rv.done ? "rq" : "", isFixed ? "fixed" : "", g && !g.loading && g.missing.length ? "closed" : "",
           q.id === S.ui.cur ? "current" : "", S.flags.has(q.id) ? "flag" : ""].join(" ");
         const lockNote = g && !g.loading && g.missing.length ? `, сначала ${g.missing.length} ${plural(g.missing.length, "слово", "слова", "слов")}` : "";
-        return `<button class="qcell ${cls}" style="--c:${skillOf(q).color}" data-action="go" data-id="${q.id}" aria-label="Вопрос ${q.n}${lockNote}" title="${lockNote ? `Вопрос ${q.n}${lockNote}` : ""}"${q.id === S.ui.cur ? ' aria-current="true"' : ""}>${q.n}</button>`;
+        return `<button class="qcell ${cls}" style="--c:${skillOf(q).color}" data-action="go" data-id="${q.id}" aria-label="Вопрос ${q.n}${lockNote}" title="${isFixed ? "Ошибка исправлена на повторе" : lockNote ? `Вопрос ${q.n}${lockNote}` : ""}"${q.id === S.ui.cur ? ' aria-current="true"' : ""}>${q.n}${isFixed ? icon("rotate", "qfix") : ""}</button>`;
       }).join("")}</div>
     </div>
     ${S.ui.status === "review" ? upcomingHtml() : ""}
