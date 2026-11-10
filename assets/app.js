@@ -3,7 +3,7 @@ import { passageOf, drawQuestion, drawFigure } from "./figure.js";
 import { createVocab, VOCAB_DEFAULT } from "./vocab-ui.js";
 import { createAssistant } from "./assistant.js";
 import { createToday, ACTIVITY_DEFAULT, enqueueReview, gradeReview, isDue, reviewAttempt, firstTryScore, REVIEW_DAYS, dayKey } from "./today.js";
-import { createTimer, fmtTime, paceFor } from "./timer.js";
+import { createTimer, fmtTime, paceFor, rushed } from "./timer.js";
 import { createPrep } from "./prep.js";
 import { toB64, fromB64 } from "./bytes.js";
 import { createAccount } from "./account.js";
@@ -714,7 +714,7 @@ function timerTick() {
   el.querySelector("b").textContent = fmtTime(st.ms);
   el.classList.toggle("paused", !st.running);
   el.classList.toggle("over", st.ms > paceFor(q));
-  el.title = st.running ? `Время на вопрос · темп SAT ${fmtTime(paceFor(q))}` : st.idle ? "Пауза: 3 минуты без действий" : "Пауза: вкладка не активна";
+  el.title = st.running ? `Время на вопрос · норма для этого вопроса ${fmtTime(paceFor(q))}` : st.idle ? "Пауза: 3 минуты без действий" : "Пауза: вкладка не активна";
 }
 // Average time of first answers (optionally for one skill).
 function avgTime(pred = () => true) {
@@ -723,9 +723,10 @@ function avgTime(pred = () => true) {
 }
 function timeNote(q, pr) {
   if (!pr?.ms) return "";
-  const pace = paceFor(q), avg = avgTime();
+  const pace = paceFor(q);
   const cls = pr.ms <= pace ? "fast" : pr.ms <= pace * 1.5 ? "slow" : "over";
-  return `<span class="fnote time ${cls}">${icon("timer", "icon-sm")} ${fmtTime(pr.ms)} на вопрос${avg ? ` · в среднем ${fmtTime(avg)}` : ""} · темп SAT ${fmtTime(pace)}</span>`;
+  const rush = rushed(q, pr) ? `<span class="fnote rush">Похоже на спешку: ошибка за ${fmtTime(pr.ms)} при норме ${fmtTime(pace)}.</span>` : "";
+  return `<span class="fnote time ${cls}">${icon("timer", "icon-sm")} ${fmtTime(pr.ms)} на вопрос · норма для этого вопроса ${fmtTime(pace)}</span>${rush}`;
 }
 // Reviewing a mistake shows the question fresh; the first answer stays in S.progress for the statistics.
 const inReview = (q) => S.ui.status === "review" && (isDue(S.review[q.id]) || !!S.attempt[q.id]);
@@ -1087,7 +1088,7 @@ function renderQuestion(scrollTop = false) {
     ${review ? reviewBanner(q, pr) : ""}
     <div class="qhead">
       <div class="qnum">Вопрос ${q.n} <span>· ${pos + 1} из ${list.length}</span></div>
-      ${!pr && !S.ui.hideTimer ? `<span class="qtimer" id="qtimer">${icon("timer", "icon-sm")}<b>0:00</b></span>` : ""}
+      ${!pr && S.ui.showTimer ? `<span class="qtimer" id="qtimer">${icon("timer", "icon-sm")}<b>0:00</b></span>` : ""}
       <span class="badge badge-skill" style="--c:${sk.color}"><span class="dot"></span>${esc(q.skill)}</span>
       ${q.difficulty ? `<span class="badge">${diffBars(q.difficulty)} ${esc(q.difficulty)}</span>` : ""}
       <div class="spacer"></div>
@@ -1350,7 +1351,7 @@ const ACTIONS = {
   ...prep.actions,
   ...think.actions,
   "today-review": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "review"); },
-  "timer-visible": () => { S.ui.hideTimer = !S.ui.hideTimer; saveUi(); renderAll(); toast(S.ui.hideTimer ? "Таймер скрыт — время всё равно считается" : "Таймер показан"); },
+  "timer-visible": () => { S.ui.showTimer = !S.ui.showTimer; saveUi(); renderAll(); toast(S.ui.showTimer ? "Таймер показан" : "Таймер скрыт — время всё равно считается"); },
   "today-new": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "todo"); },
   "today-words": () => { S.ui.view = "vocab"; S.ui.vtab = "study"; S.session = null; saveUi(); renderAll(true); },
   "open-sidebar": () => document.body.classList.add("sidebar-open"),

@@ -1,6 +1,6 @@
 // Daily routine: spaced review of mistakes, the "Today" plan, streaks, activity calendar and achievements.
 import { startOfDay } from "./vocab.js";
-import { fmtTime, paceFor } from "./timer.js";
+import { fmtTime, paceFor, rushStats } from "./timer.js";
 import { stepStats } from "./think.js";
 
 const DAY = 86400000;
@@ -337,8 +337,8 @@ export function createToday(ctx) {
         <div class="setting">
           <span>Таймер во время решения</span>
           <div class="chips">
-            <button class="chip ${S.ui.hideTimer ? "" : "active"}" ${S.ui.hideTimer ? 'data-action="timer-visible"' : ""}>Показывать</button>
-            <button class="chip ${S.ui.hideTimer ? "active" : ""}" ${S.ui.hideTimer ? "" : 'data-action="timer-visible"'}>Скрыть</button>
+            <button class="chip ${S.ui.showTimer ? "active" : ""}" ${S.ui.showTimer ? "" : 'data-action="timer-visible"'}>Показывать</button>
+            <button class="chip ${S.ui.showTimer ? "" : "active"}" ${S.ui.showTimer ? 'data-action="timer-visible"' : ""}>Скрыть</button>
           </div>
         </div>
         <div class="setting">
@@ -361,13 +361,16 @@ export function createToday(ctx) {
     if (!timed.length) return "";
     const avg = timed.reduce((a, q) => a + S.progress[q.id].ms, 0) / timed.length;
     const inPace = timed.filter((q) => S.progress[q.id].ms <= paceFor(q)).length;
+    const norm = timed.reduce((a, q) => a + paceFor(q), 0) / timed.length;
+    const rush = rushStats(S.set.questions, S.progress);
     const d = S.activity.days[today()];
     return `<div>
       <div class="side-label">Время на вопрос</div>
       <div class="ov">
-        ${row("В среднем", fmtTime(avg), `темп SAT ${fmtTime(paceFor(timed[0]))}`)}
+        ${row("В среднем", fmtTime(avg), `норма в среднем ${fmtTime(norm)}`)}
         ${d?.tq ? row("Сегодня", fmtTime(d.ms / d.tq), `${d.tq} ${plural(d.tq, "ответ", "ответа", "ответов")}`) : ""}
-        ${row("Уложились в темп", `${Math.round((inPace / timed.length) * 100)}%`)}
+        ${row("Уложились в норму", `${Math.round((inPace / timed.length) * 100)}%`)}
+        ${rush.wrong ? row("Ошибки в спешке", `${rush.rushed} из ${rush.wrong}`, "быстрее 60% нормы") : ""}
       </div>
     </div>`;
   }
