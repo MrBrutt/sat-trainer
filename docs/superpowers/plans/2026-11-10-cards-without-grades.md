@@ -24,3 +24,7 @@ Moved from `prep.js` (prep imports them). Tests in `tests/meanings.test.js`: 4 d
 
 ## Task 3: the card in assets/vocab-ui.js
 `S.session.ask = {key, def, options, picked}`; `pick(i)` (`-1` = «Не знаю») records the answer at once, `next()` closes the card. Keys: 1–4 pick, Space «Не знаю», Enter «Дальше», K «знаю». Fallback keeps reveal + «Не помню / Помню» (keys 1, 2). README updated. Checked in the browser on the signed-out copy (port 8767).
+
+## Changed the same day
+
+The user found picking among four meanings too easy ("узнавание, а не вспоминание") and asking a new word before showing it pointless. Cards now: a new word is shown with its meaning and example (`v-learn`: back in a minute, no ease lost); a word met before is recalled, opened, and marked «Вспомнил» (→, 2) or «Не вспомнил» (←, 1) through `answerCard`. The four meanings stay only in the check before a question. Tests: "a card: see a new word, then recall it" in `tests/vocab-ui.test.js`.
