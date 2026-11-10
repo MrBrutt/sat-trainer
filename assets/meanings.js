@@ -14,8 +14,9 @@ export const posOf = (p) => (p || "").split(/[./]/)[0];
 // letter, no full stop. A dictionary meaning (`dictionary`) is also cut to the length of the
 // trainer's own: they run to 70 characters, a longer option would be the answer.
 const POS = { noun: "n.", verb: "v.", adjective: "adj.", adverb: "adv." };
-// meanings saved from Wiktionary before its <style> was dropped
-export const noStyles = (d) => d.replace(/\.mw-parser-output[^}]*\}/g, "").trim();
+// meanings saved from Wiktionary before its <style> was dropped, some cut at 220 characters
+// in the middle of the style
+export const noStyles = (d) => d.replace(/\s*\.mw-parser-output[^}]*(?:\}|…?$)/g, "").trim();
 const MAX = 70;
 export function plainMeaning(def, pos = "", dictionary = false) {
   let d = noStyles(String(def || "").split(" · ")[0]);
@@ -34,9 +35,13 @@ export function plainMeaning(def, pos = "", dictionary = false) {
   return { def: d, pos };
 }
 
-// The trainer's meanings to draw wrong ones from. Meanings that name their part of speech
-// ("adj. main; n. the head of a school") would stand out.
-export const meaningPool = () => shuffle(defsPool().filter((x) => !/^(?:adj|n|v|adv)\.\s/.test(x.d)));
+// A meaning that can stand as a wrong option. Meanings that name their part of speech ("adj. main;
+// n. the head of a school") or a word's form ("past participle of eat", "British spelling of…")
+// would stand out as plainly not the answer.
+export const fitsAsWrong = (d) => !/^(?:adj|n|v|adv)\.\s/.test(d) && !/\b(?:spelling|participle|plural|past|form) of\b/i.test(d);
+
+// The trainer's meanings to draw wrong ones from.
+export const meaningPool = () => shuffle(defsPool().filter((x) => fitsAsWrong(x.d)));
 
 // Three wrong meanings: one of another choice of the same question (telling them apart is the
 // point), the rest from words of the same part of speech.

@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { meaningOptions, plainMeaning } from "../assets/meanings.js";
+import { meaningOptions, plainMeaning, noStyles, fitsAsWrong } from "../assets/meanings.js";
 
 const pool = [
   { p: "adj.", d: "very large" }, { p: "adj.", d: "easy to see" }, { p: "adj.", d: "full of hope" },
@@ -44,4 +44,15 @@ test("a long dictionary meaning is cut to the length of the trainer's own, witho
     "to walk slowly and without any particular aim or purpose through the…");
   const long = "1) to produce or provide a result, especially a good one; 2) to give way or surrender under pressure";
   eq(plainMeaning(long, "v.").def, long, "the trainer's own meanings are kept whole");
+});
+
+test("page styles go even when the saved meaning was cut in the middle of them", () => {
+  eq(noStyles("verb: To take in; to absorb. .mw-parser-output .defdate{font-size:smal…"), "verb: To take in; to absorb.");
+  eq(noStyles("noun: Dirt. .mw-parser-output .defdate{font-size:smaller} · verb: To soil."), "noun: Dirt. · verb: To soil.");
+});
+
+test("a note about a word's form is no wrong meaning: it is plainly not one", () => {
+  eq(["British spelling of splendor: magnificent beauty", "past participle of eat", "plural of crisis: times of great danger",
+    "adj. main; n. the head of a school"].map(fitsAsWrong), [false, false, false, false]);
+  eq(fitsAsWrong("the natural home of an animal or plant"), true);
 });
