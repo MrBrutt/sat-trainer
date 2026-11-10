@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { clueWords, coveredWord, stepStats, createThink } from "../assets/think.js";
+import { clueWords, coveredWord, stepStats, createThink, relationOf } from "../assets/think.js";
 
 const run = (t) => ({ runs: [{ t }] });
 const wic = (id, text, prompt = "Which choice completes the text with the most logical and precise word or phrase?") => ({
@@ -110,7 +110,7 @@ test("the original PDF view has no text to tap", () => {
 
 test("other questions, and answered ones, have no steps", () => {
   const t = setup();
-  eq(t.locked({ ...wic("a", CLUE), skill: "Transitions" }), false);
+  eq(t.locked({ ...wic("a", CLUE), skill: "Boundaries" }), false);
   eq(setup({ answered: true }).locked(wic("a", CLUE)), false);
 });
 
@@ -163,7 +163,74 @@ test("the word of a «most nearly mean» question is covered until the student w
 });
 
 test("results with the steps are told from those before them", () => {
-  const qs = [wic("a", ""), wic("b", ""), wic("c", ""), { ...wic("d", ""), skill: "Transitions" }];
-  const progress = { a: { ok: true, own: "x" }, b: { ok: false, own: "y" }, c: { ok: true }, d: { ok: true, own: "z" } };
-  eq(stepStats(qs, progress), { steps: { n: 2, ok: 1 }, before: { n: 1, ok: 1 } });
+  const qs = [wic("a", ""), wic("b", ""), wic("c", ""), { ...wic("d", ""), skill: "Transitions" }, { ...wic("e", ""), skill: "Boundaries" }];
+  const progress = { a: { ok: true, own: "x" }, b: { ok: false, own: "y" }, c: { ok: true }, d: { ok: true, rel: "cause" }, e: { ok: true } };
+  eq(stepStats(qs, progress), { steps: { n: 3, ok: 2 }, before: { n: 1, ok: 1 } });
+});
+
+// ---------------------------------------------------------------- Transitions, Command of Evidence, Inferences
+
+const choiceQ = (id, skill, correct, prompt = "Which choice completes the text with the most logical transition?") => ({
+  id, skill, stem: [run("One thing happened. ______ another did.")], prompt: run(prompt),
+  choices: [correct, "Meanwhile,", "For example,", "Similarly,"].map((t, i) => ({ letter: "ABCD"[i], runs: [{ t }] })), correct: "A",
+});
+
+test("relations of transitions", () => {
+  const rel = (t) => relationOf(choiceQ("a", "Transitions", t));
+  eq([rel("By contrast,"), rel("Thus,"), rel("For instance,"), rel("Similarly,"), rel("Previously,"), rel("In so doing,")],
+    ["contrast", "cause", "example", "more", "time", "cause"]);
+  eq(rel("Of course,"), null);
+});
+
+test("in Transitions the student names the relation first, and a wrong one is corrected", () => {
+  const t = setup();
+  const q = choiceQ("a", "Transitions", "Therefore,");
+  eq(t.locked(q), true);
+  eq((t.html(q).match(/data-action="think-rel"/g) || []).length, 5);
+  t.actions["think-rel"]({ dataset: { rel: "contrast" } });
+  eq(t.locked(q), false, "the choices open");
+  eq(/причин/i.test(t.note(q)), true, "says which relation it is");
+  eq(t.take(q), { rel: "contrast", relOk: false });
+});
+
+test("a right relation is confirmed", () => {
+  const t = setup();
+  const q = choiceQ("a", "Transitions", "However,");
+  t.locked(q);
+  t.actions["think-rel"]({ dataset: { rel: "contrast" } });
+  eq(t.take(q), { rel: "contrast", relOk: true });
+});
+
+test("an unknown transition is asked without a verdict", () => {
+  const t = setup();
+  const q = choiceQ("a", "Transitions", "Of course,");
+  t.locked(q);
+  t.actions["think-rel"]({ dataset: { rel: "time" } });
+  eq([t.locked(q), /неверно|нет,|здесь связь/i.test(t.note(q))], [false, false]);
+  eq(t.take(q), { rel: "time" });
+});
+
+test("in Command of Evidence the student says what the answer must show", () => {
+  const t = setup();
+  const q = choiceQ("a", "Command of Evidence", "x", "Which quotation most effectively illustrates the claim?");
+  eq(/должен показать/.test(t.html(q)), true);
+  own(t, "she is lonely");
+  eq(t.locked(q), false);
+  eq(t.take(q), { own: "she is lonely" });
+});
+
+test("in Inferences the student writes an ending of their own", () => {
+  const t = setup();
+  const q = choiceQ("a", "Inferences", "x", "Which choice most logically completes the text?");
+  eq(/закончили/.test(t.html(q)), true);
+  own(t, "the data were wrong");
+  eq(t.take(q), { own: "the data were wrong" });
+});
+
+test("the feedback shows what the student did", () => {
+  const t = setup();
+  eq(/Ваше слово было: «rare»/.test(t.feedback(wic("a", CLUE), { own: "rare" })), true);
+  eq(/Ваша мысль была: «x»/.test(t.feedback(choiceQ("b", "Inferences", "x"), { own: "x" })), true);
+  eq(/причин/i.test(t.feedback(choiceQ("c", "Transitions", "Thus,"), { rel: "contrast", relOk: false })), true);
+  eq(t.feedback(choiceQ("d", "Transitions", "Thus,"), {}), "");
 });

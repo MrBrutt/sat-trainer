@@ -999,7 +999,7 @@ function reviewBanner(q, pr) {
 function feedbackHtml(q, pr) {
   if (!pr) return "";
   const answer = q.correct || esc(q.correctText);
-  const own = pr.own ? `<span class="fnote">Ваше слово было: «${esc(pr.own)}»</span>` : "";
+  const own = think.feedback(q, pr);
   if (pr.ok) {
     return `<div class="feedback ok" role="status"><div class="fic">${icon("check")}</div>
       <div class="ftext"><strong>Верно!</strong>Правильный ответ — ${answer}${own}${timeNote(q, pr)}</div></div>`;
@@ -1101,7 +1101,7 @@ function renderQuestion(scrollTop = false) {
     ${orig
       ? `<div class="orig" data-region="question"></div><div class="orig-note">${icon("image", "icon-sm")} Оригинальная вёрстка из PDF</div>`
       : `${passageOf(q) ? `<div class="orig figure" data-region="figure"></div>` : ""}<article class="card passage">${stemHtml(passageOf(q) ? [passageOf(q)] : q.stem)}</article>${q.prompt ? `<div class="prompt">${runsHtml(q.prompt.runs)}</div>` : ""}`}
-    ${think.locked(q) ? think.html(q) : choicesHtml(q, pr, orig)}
+    ${think.locked(q) ? think.html(q) : `${pr ? "" : think.note(q)}${choicesHtml(q, pr, orig)}`}
     ${feedbackHtml(q, pr)}
     ${explainHtml(q, pr)}
     ${pr ? vocab.questionWordsHtml(q) : ""}

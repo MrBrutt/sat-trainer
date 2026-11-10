@@ -1,7 +1,8 @@
-// Words in Context: the choices appear after the student has thought for themselves, the strategy
-// "use your clues, then pick a word of your own" made into steps. First the word that steers the
-// sentence with the blank, when there is one; then their own word for the blank. The trainer checks
-// the first against a list of signal words; the second it only asks for.
+// "Think first": the choices appear after the student has thought for themselves.
+// Words in Context: the word that steers the sentence with the blank, when there is one, then their own
+// word for the blank. Transitions: the relation between the sentences, checked against the right answer.
+// Command of Evidence and Inferences: what the answer must show, or their own ending. The trainer checks
+// what it can (signal words, relations); the rest it only asks for.
 import { plain } from "./parser.js";
 import { sentences } from "./vocab.js";
 
@@ -20,7 +21,27 @@ const SIGNALS = [
 const SMALL = new Set(["in", "to", "a", "as", "of", "by", "on", "the", "that"]);     // not the clue on their own
 const WORD = /\p{L}+(?:['’-]\p{L}+)*/gu;
 
-const isWic = (q) => /words in context/i.test(q.skill);
+const KINDS_BY_SKILL = [[/words in context/i, "wic"], [/^transitions$/i, "transition"], [/command of evidence/i, "claim"], [/inferences/i, "infer"]];
+const kindOf = (q) => KINDS_BY_SKILL.find(([re]) => re.test(q.skill || ""))?.[1] || null;
+
+// The five relations a transition can carry, with the words that carry them.
+const RELATIONS = {
+  contrast: { label: "Противопоставление или уступка", hint: "«но», «однако», «зато»", words: ["however", "nevertheless", "nonetheless", "still", "though", "yet", "by contrast", "in contrast", "on the other hand", "conversely", "on the contrary", "instead", "rather", "that said", "that being said", "granted", "admittedly", "regardless", "even so"] },
+  more: { label: "Продолжение или сходство", hint: "«и ещё», «так же», «более того»", words: ["additionally", "moreover", "furthermore", "in addition", "besides", "also", "indeed", "similarly", "likewise"] },
+  cause: { label: "Причина и следствие", hint: "«поэтому», «в результате»", words: ["thus", "hence", "therefore", "consequently", "as a result", "accordingly", "for this reason", "as such", "to that end", "in so doing"] },
+  example: { label: "Пример или уточнение", hint: "«например», «а именно»", words: ["for example", "for instance", "specifically", "in particular", "in other words", "that is", "to illustrate"] },
+  time: { label: "Порядок во времени или итог", hint: "«потом», «раньше», «в итоге»", words: ["previously", "earlier", "finally", "lastly", "subsequently", "afterward", "next", "then", "later", "meanwhile", "ultimately", "eventually", "in the end", "in conclusion", "in sum", "in summary", "to conclude"] },
+};
+const RELATION_OF = new Map(Object.entries(RELATIONS).flatMap(([rel, r]) => r.words.map((w) => [w, rel])));
+const relLabel = (rel) => RELATIONS[rel]?.label.toLowerCase() || "";
+
+// The relation the right answer of a Transitions question carries, or null when the list does not know it.
+export function relationOf(q) {
+  if (kindOf(q) !== "transition" || !q.correct) return null;
+  const choice = q.choices.find((c) => c.letter === q.correct);
+  const text = choice ? plain(choice).trim().toLowerCase().replace(/[\s.,;:—–-]+$/, "") : "";
+  return RELATION_OF.get(text) || null;
+}
 
 // The word asked about in "what does the word X most nearly mean".
 export const coveredWord = (q) => plain(q.prompt).match(/the word ["“]([^"”]+)["”]/i)?.[1] || null;
@@ -44,13 +65,13 @@ export function clueWords(q) {
   return [...found.values()].sort((a, b) => a.at - b.at).map(({ text, kind }) => ({ text, kind }));
 }
 
-// Words in Context answers with the steps and from before them, to see whether the steps help.
+// Answers with the steps and from before them, to see whether the steps help.
 export function stepStats(questions, progress) {
   const out = { steps: { n: 0, ok: 0 }, before: { n: 0, ok: 0 } };
   for (const q of questions) {
     const p = progress[q.id];
-    if (!p || !isWic(q)) continue;
-    const row = p.own ? out.steps : out.before;
+    if (!p || !kindOf(q)) continue;
+    const row = p.own || p.rel ? out.steps : out.before;
     row.n++;
     if (p.ok) row.ok++;
   }
@@ -127,13 +148,15 @@ export function createThink({ esc, icon, answerOf, isOriginal, refresh }) {
   function state(q) {
     current = q;
     if (!states.has(q.id)) {
-      const clues = isOriginal(q) ? [] : clueWords(q);
-      states.set(q.id, { clues, step: clues.length ? "clue" : "own", picked: null, hit: null, tapped: "", own: "" });
+      const kind = kindOf(q);
+      const clues = kind === "wic" && !isOriginal(q) ? clueWords(q) : [];
+      const step = kind === "transition" ? "rel" : clues.length ? "clue" : "own";
+      states.set(q.id, { kind, clues, step, picked: null, hit: null, tapped: "", own: "", rel: null, relation: relationOf(q) });
     }
     return states.get(q.id);
   }
 
-  const locked = (q) => !!q && isWic(q) && !answerOf(q) && state(q).step !== "open";
+  const locked = (q) => !!q && !!kindOf(q) && !answerOf(q) && state(q).step !== "open";
 
   function html(q) {
     const s = state(q);
@@ -143,14 +166,28 @@ export function createThink({ esc, icon, answerOf, isOriginal, refresh }) {
         <p>Нажмите в тексте слово, которое задаёт направление мысли в предложении с пропуском.</p>
       </section>`;
     }
+    if (s.step === "rel") {
+      return `<section class="card think">${head(1)}
+        <p>Как предложение с пропуском связано с предыдущим? Выберите связь, потом откроются варианты.</p>
+        <div class="think-rels">${Object.entries(RELATIONS).map(([rel, r]) => `
+          <button class="think-rel" data-action="think-rel" data-rel="${rel}"><b>${r.label}</b><span>${r.hint}</span></button>`).join("")}
+        </div>
+      </section>`;
+    }
     const kind = s.picked ? KINDS[s.picked.kind] : "";
     const note = s.picked ? `<p class="think-note ${s.hit ? "ok" : "bad"}">${s.hit
       ? `«${esc(s.tapped)}» — да. ${kind}`
       : `«${esc(s.tapped)}» не меняет ход мысли. Здесь подсказка — «${esc(s.picked.text)}». ${kind}`}</p>` : "";
+    const ask = {
+      wic: `${coveredWord(q) && !isOriginal(q) ? "Слово закрыто. Что бы вы сами поставили на его место?" : "Какое слово вы бы поставили сами?"} Можно по-русски: важна мысль.`,
+      claim: "Что должен показать правильный ответ? Скажите своими словами, можно по-русски.",
+      infer: "Как бы вы сами закончили текст? Своими словами, можно по-русски.",
+    }[s.kind];
+    const placeholder = { wic: "Ваше слово", claim: "Что должен показать ответ", infer: "Ваше продолжение" }[s.kind];
     return `<section class="card think">${head(2)}${note}
-      <p>${coveredWord(q) && !isOriginal(q) ? "Слово закрыто. Что бы вы сами поставили на его место?" : "Какое слово вы бы поставили сами?"} Можно по-русски: важна мысль.</p>
+      <p>${ask}</p>
       <div class="think-row">
-        <input id="think-own" value="${esc(s.own)}" placeholder="Ваше слово" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Ваше слово">
+        <input id="think-own" value="${esc(s.own)}" placeholder="${placeholder}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${placeholder}">
         <button class="btn btn-primary" data-action="think-go">Показать варианты</button>
       </div>
     </section>`;
@@ -158,7 +195,7 @@ export function createThink({ esc, icon, answerOf, isOriginal, refresh }) {
 
   // Dresses the rendered question for the step. True when the words were made tappable.
   function decorate(q, root) {
-    if (!locked(q) || isOriginal(q)) return false;
+    if (!locked(q) || isOriginal(q) || state(q).kind !== "wic") return false;
     const s = state(q);
     const passage = root.querySelector(".passage");
     const word = coveredWord(q);
@@ -192,6 +229,37 @@ export function createThink({ esc, icon, answerOf, isOriginal, refresh }) {
     refresh();
   }
 
+  function pickRelation(el) {
+    const s = current && state(current);
+    if (!s || s.step !== "rel") return;
+    s.rel = el.dataset.rel;
+    s.step = "open";
+    refresh();
+  }
+
+  // Over the choices once they open: whether the relation the student named is the one here.
+  function note(q) {
+    const s = states.get(q.id);
+    if (!s?.rel) return "";
+    if (!s.relation) return `<p class="think-note think-verdict">Ваш выбор: ${relLabel(s.rel)}.</p>`;
+    return s.rel === s.relation
+      ? `<p class="think-note think-verdict ok">${RELATIONS[s.rel].label} — да.</p>`
+      : `<p class="think-note think-verdict bad">Нет, здесь связь — ${relLabel(s.relation)}. Вы выбрали: ${relLabel(s.rel)}.</p>`;
+  }
+
+  // In the feedback after the answer: what the student did before seeing the choices.
+  function feedback(q, pr) {
+    if (pr.rel) {
+      const rel = relationOf(q);
+      const text = pr.relOk === true ? `Связь вы определили верно: ${relLabel(pr.rel)}`
+        : pr.relOk === false ? `Вы выбрали связь «${relLabel(pr.rel)}», а здесь — ${relLabel(rel)}`
+        : `Вы выбрали связь: ${relLabel(pr.rel)}`;
+      return `<span class="fnote">${text}</span>`;
+    }
+    if (!pr.own) return "";
+    return `<span class="fnote">${kindOf(q) === "wic" ? "Ваше слово было" : "Ваша мысль была"}: «${esc(pr.own)}»</span>`;
+  }
+
   function onInput(e) {
     if (e.target.id !== "think-own" || !current) return false;
     state(current).own = e.target.value;
@@ -202,13 +270,14 @@ export function createThink({ esc, icon, answerOf, isOriginal, refresh }) {
   function take(q) {
     const s = states.get(q.id);
     states.delete(q.id);
+    if (s?.kind === "transition") return s.rel ? { rel: s.rel, ...(s.relation ? { relOk: s.rel === s.relation } : {}) } : {};
     if (!s?.own.trim()) return {};
     return { own: s.own.trim(), ...(s.clues.length ? { clue: !!s.hit } : {}) };
   }
 
   return {
-    locked, html, decorate, take, go, onInput,
+    locked, html, decorate, take, go, onInput, note, feedback,
     reset: (id) => states.delete(id),
-    actions: { "think-clue": tap, "think-go": go },
+    actions: { "think-clue": tap, "think-go": go, "think-rel": pickRelation },
   };
 }

@@ -282,6 +282,12 @@ kbd {
 .think-note.ok { background: var(--ok-soft); }
 .think-note.bad { background: var(--bad-soft); }
 .think-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.think-rels { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.think-rel { display: grid; gap: 2px; padding: 10px 12px; text-align: left; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.think-rel:hover { border-color: var(--primary); }
+.think-rel b { font-weight: 600; font-size: 14.5px; }
+.think-rel span { font-size: 12.5px; color: var(--muted); }
+.think-verdict { margin: 14px 0 0; }
 .think-row input { flex: 1; min-width: 160px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 16px; }
 .cw { cursor: pointer; border-radius: 4px; }
 .cw:hover { background: var(--primary-soft); }
