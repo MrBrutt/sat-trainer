@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { createVocab, VOCAB_DEFAULT } from "../assets/vocab-ui.js";
+import { createVocab, VOCAB_DEFAULT, gateRanks } from "../assets/vocab-ui.js";
 import { createPrep } from "../assets/prep.js";
 
 const run = (t) => ({ runs: [{ t }] });
@@ -86,4 +86,40 @@ test("words studied before are not called new on the screen before a question", 
     answerOf: () => null, current: () => q, refresh: () => {},
   });
   eq(/нов/.test(prep.html(q).replace(/<[^>]+>/g, "")), false);
+});
+
+// ---------------------------------------------------------------- which new words come first
+
+const Q = (id, n, extra = {}) => ({ id, n, ...extra });
+const ranks = (questions, gates, opts) => Object.fromEntries(gateRanks(questions, new Map(Object.entries(gates)), { progress: {}, review: {}, focus: () => true, ...opts }));
+
+test("the words of a mistake waiting for review come before those of the questions ahead", () => {
+  const r = ranks([Q("a", 1), Q("b", 2)], { a: ["shrewd"], b: ["opaque"] }, { progress: { a: { ok: false } }, review: { a: { done: false } } });
+  eq([r.shrewd.tier, r.opaque.tier], [1, 2]);
+});
+
+test("words of a fixed mistake wait", () => {
+  const r = ranks([Q("a", 1)], { a: ["shrewd"] }, { progress: { a: { ok: false } }, review: { a: { done: true } } });
+  eq(r.shrewd, undefined);
+});
+
+test("answered questions pull nothing", () => {
+  const r = ranks([Q("a", 1)], { a: ["shrewd"] }, { progress: { a: { ok: true } } });
+  eq(r.shrewd, undefined);
+});
+
+test("the questions ahead go by number", () => {
+  const r = ranks([Q("b", 7), Q("a", 3)], { a: ["shrewd"], b: ["opaque"] });
+  eq(r.shrewd.n < r.opaque.n, true);
+});
+
+test("a shared word takes its earliest place", () => {
+  const r = ranks([Q("a", 3), Q("b", 9)], { a: ["opaque"], b: ["opaque", "shrewd"] });
+  eq([r.opaque.n < r.shrewd.n, Object.keys(r).length], [true, 2]);
+});
+
+test("the block in focus comes first", () => {
+  const r = ranks([Q("a", 1, { skill: "Transitions" }), Q("b", 200, { skill: "Command of Evidence" })], { a: ["opaque"], b: ["shrewd"] },
+    { focus: (q) => q.skill === "Command of Evidence" });
+  eq(r.shrewd.n < r.opaque.n, true);
 });

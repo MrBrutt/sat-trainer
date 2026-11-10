@@ -2,11 +2,31 @@
 import { buildDeck, schedule, previewIntervals, readyIndex, requeue, statusOf, isMastered, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
 import { createSizeTest } from "./size-test.js";
 import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
+import { inFocus } from "./domains.js";
 
 const DAY = 86400000;
 const STATUS_LABEL = { new: "новое", learning: "изучаю", mastered: "выучено", known: "знаю" };
 const ROLE_LABEL = { answer: "правильный ответ", target: "слово из текста", distractor: "неверный вариант", mine: "моё слово", text: "слово из текста", choice: "слово из вариантов ответа" };
 const DEF_SRC = { sat: "", dict: "из Wiktionary", ai: "объяснение Claude", user: "моё определение" };
+
+// The words that open questions, ranked for the new cards: {tier, n} by word. Tier 1 opens a mistake
+// waiting for review; tier 2 a question not answered yet, those of the block in focus first, then by
+// number. The cards run ahead of the questions, so a word is met a day or more before its question.
+export function gateRanks(questions, gates, { progress, review, focus }) {
+  const ranks = new Map();
+  const put = (key, tier, n) => {
+    const r = ranks.get(key);
+    if (!r || tier < r.tier || (tier === r.tier && n < r.n)) ranks.set(key, { tier, n });
+  };
+  for (const q of questions) {
+    const p = progress[q.id];
+    const tier = !p ? 2 : !p.ok && !review[q.id]?.done ? 1 : 0;
+    if (!tier) continue;
+    const n = tier === 2 && !focus(q) ? 1e6 + q.n : q.n;
+    for (const key of gates.get(q.id) || []) put(key, tier, n);
+  }
+  return ranks;
+}
 
 export const VOCAB_DEFAULT = () => ({ srs: {}, user: {}, edits: {}, known: [], daily: { date: "", newCount: 0, extra: 0 }, newPerDay: 20, level: "middle" });
 
@@ -123,24 +143,16 @@ export function createVocab(ctx) {
 
   const cards = allCards;
 
-  // Own words first, then words from questions answered wrong, then the words of the answer choices
-  // of the questions ahead (they open those questions), then the other words of those questions.
-  // Within a question the choices come in a fixed shuffled order, so the answer is never first.
+  // Own words first; then the words that open questions (gateRanks); then the other words of
+  // questions answered wrong, of the questions ahead, and the rest. Within a question the choices
+  // come in a fixed shuffled order, so the answer is never first.
   const mix = (k) => { let h = 2166136261; for (const ch of k) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
-  function gateNumbers() {
-    const first = new Map();
-    for (const q of S.set.questions) {
-      if (S.progress[q.id]) continue;
-      for (const k of gates.get(q.id) || []) if (!first.has(k)) first.set(k, q.n);
-    }
-    return first;
-  }
-  function priority(c, gateN) {
-    if (c.mine) return 0;
-    if (c.qids.some((id) => S.progress[id] && !S.progress[id].ok)) return 1;
-    if (gateN.has(c.key)) return 2;
-    if (c.qids.some((id) => !S.progress[id])) return 3;
-    return 4;
+  function rankOf(c, ranks) {
+    if (c.mine) return { tier: 0, n: 0 };
+    const r = ranks.get(c.key);
+    if (r) return r;
+    if (c.qids.some((id) => S.progress[id] && !S.progress[id].ok)) return { tier: 3, n: c.n };
+    return { tier: c.qids.some((id) => !S.progress[id]) ? 4 : 5, n: c.n };
   }
 
   function counts(all = cards()) {
@@ -184,9 +196,10 @@ export function createVocab(ctx) {
   function startSession() {
     const { due, mineFresh, autoFresh, newLeft } = counts();
     due.sort((a, b) => a.st.due - b.st.due);
-    const gateN = gateNumbers();
-    const n = (c) => gateN.get(c.key) ?? c.n;
-    autoFresh.sort((a, b) => priority(a, gateN) - priority(b, gateN) || n(a) - n(b) || (b.zipf || 0) - (a.zipf || 0) || mix(a.key) - mix(b.key));
+    const ranks = gateRanks(S.set.questions, gates, { progress: S.progress, review: S.review || {}, focus: (q) => inFocus(q, S.ui.domain, S.ui.skill) });
+    const rank = new Map(autoFresh.map((c) => [c.key, rankOf(c, ranks)]));
+    autoFresh.sort((a, b) => rank.get(a.key).tier - rank.get(b.key).tier || rank.get(a.key).n - rank.get(b.key).n
+      || (b.zipf || 0) - (a.zipf || 0) || mix(a.key) - mix(b.key));
     S.session = {
       queue: [...due.map((c) => c.key), ...mineFresh.map((c) => c.key), ...autoFresh.slice(0, newLeft).map((c) => c.key)],
       revealed: false, reviewed: 0, learnedNew: 0, day: today(),
