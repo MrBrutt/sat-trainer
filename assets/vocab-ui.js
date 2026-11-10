@@ -1,9 +1,9 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
-import { buildDeck, schedule, answerCard, previewIntervals, readyIndex, requeue, statusOf, isMastered, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { buildDeck, schedule, answerCard, readyIndex, requeue, statusOf, isMastered, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
 import { createSizeTest } from "./size-test.js";
 import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
 import { inFocus } from "./domains.js";
-import { meaningOptions, meaningPool, plainMeaning, posOf, noStyles } from "./meanings.js";
+import { noStyles } from "./meanings.js";
 
 const DAY = 86400000;
 const STATUS_LABEL = { new: "новое", learning: "изучаю", mastered: "выучено", known: "знаю" };
@@ -274,7 +274,9 @@ export function createVocab(ctx) {
       ["mastered", "Выучено", by("mastered")], ["known", "Знаю", by("known")], ["mine", "Мои", all.filter((c) => c.mine).length]];
     const total = all.length || 1;
     const seg = (st, cls) => `<span class="${cls}" style="width:${(by(st) / total) * 100}%"></span>`;
-    $("#sidebar").innerHTML = `
+    const side = $("#sidebar");
+    if (!side) return;
+    side.innerHTML = `
       <div>
         <div class="side-label">Сегодня</div>
         <div class="vtoday">
@@ -348,46 +350,17 @@ export function createVocab(ctx) {
         <p>В этом наборе нет вопросов Words in Context. Добавляйте слова сами: выделите слово в тексте вопроса.</p></div></div>`;
     }
     const { s, byKey, fresh: newInQueue } = todayCards();
-    // the card on screen: its meaning is asked, and after the answer it stays until «Дальше»
-    let a = s.ask && byKey.has(s.ask.key) ? s.ask : null;
-    if (a && a.picked === null && a.key !== s.queue[0]) a = null;       // the queue moved on
-    s.ask = a;
-    if (!a && !s.queue.length) return doneHtml(all);
-    if (!a && s.waitUntil && !s.revealed) return waitHtml(s);
-    const c = byKey.get(a ? a.key : s.queue[0]);
-    if (!a && askable(c)) { a = s.ask = askFor(c, all); s.revealed = false; }
-    if (!a) fetchDef(c);
+    if (!s.queue.length) return doneHtml(all);
+    if (s.waitUntil && !s.revealed) return waitHtml(s);
+    const c = byKey.get(s.queue[0]);
+    fetchDef(c);
+    // a new word is shown with its meaning; a word met before is recalled first, then opened
+    const fresh = !c.st?.last;
+    const open = fresh || s.revealed;
     const left = s.queue.length;
-    const pct = Math.round((s.reviewed / (s.reviewed + left || 1)) * 100);
+    const pct = Math.round((s.reviewed / (s.reviewed + left)) * 100);
     const qs = c.practiced ? [...new Set(c.examples.filter((e) => e.n).map((e) => e.n))] : [];
-    const answered = !!a && a.picked !== null;
-    const missed = answered && a.picked !== a.def;
-    const body = a ? `
-        <div class="quiz-term">${esc(c.term)}${c.pos ? ` <span class="pos">${esc(c.pos)}</span>` : ""}</div>
-        <p class="quiz-ask">Что значит это слово?</p>
-        <div class="quiz-options" role="group" aria-label="Значения">${a.options.map((d, i) => {
-          const cls = !answered ? "" : d === a.def ? "correct" : d === a.picked ? "wrong" : "dim";
-          return `<button class="quiz-opt ${cls}" data-action="v-pick" data-i="${i}" ${answered ? "disabled" : ""}><kbd>${i + 1}</kbd><span>${esc(d)}</span></button>`;
-        }).join("")}</div>
-        ${!answered ? `<button class="btn btn-ghost quiz-skip" data-action="v-pick" data-i="-1">Не знаю <kbd>Пробел</kbd></button>` : ""}
-        ${missed ? `<div class="quiz-miss">
-          ${a.full ? `<div class="flash-def">${c.pos ? `<span class="pos">${esc(c.pos)}</span> ` : ""}${esc(a.full)}</div>` : ""}
-          ${c.sample ? `<p class="flash-sample">${esc(c.sample)}</p>` : ""}
-          ${examplesHtml(c)}
-          <label class="field"><span>Мой перевод / заметка</span>
-            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>
-          <p class="muted">Слово вернётся через несколько карточек.</p>
-          <button class="btn btn-primary" data-action="v-next">Дальше <kbd>Enter</kbd></button>
-        </div>` : ""}`
-      : `<div class="flash-term">${esc(c.term)}</div>
-        ${s.revealed ? `
-          ${defHtml(c)}
-          ${examplesHtml(c)}
-          <label class="field"><span>Мой перевод / заметка</span>
-            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>`
-        : `<p class="flash-hint">Вспомните значение, потом откройте карточку</p>
-           <button class="btn btn-primary btn-lg" data-action="v-reveal">Показать значение <kbd>Пробел</kbd></button>`}`;
-    const iv = a ? null : previewIntervals(c.st);
+    const recalled = !fresh && s.revealed ? fmtDays(answerCard(c.st, true).ivl) : "";
     return `<div class="vwrap">
       <div class="sess-top">
         <span class="sess-count">Осталось <b>${left}</b></span>
@@ -401,37 +374,31 @@ export function createVocab(ctx) {
           <div class="spacer"></div>
           ${qs.length ? `<span class="mono">вопрос ${qs.join(", ")}</span>` : ""}
         </div>
-        ${body}
+        <div class="flash-term">${esc(c.term)}</div>
+        ${open ? `
+          ${defHtml(c)}
+          ${examplesHtml(c)}
+          <label class="field"><span>Мой перевод / заметка</span>
+            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>
+          ${fresh ? `<p class="flash-hint learn-hint">Новое слово: прочитайте значение и пример. Через несколько карточек его нужно будет вспомнить.</p>
+            <button class="btn btn-primary btn-lg" data-action="v-learn">Дальше <kbd>Пробел</kbd></button>` : ""}`
+        : `<p class="flash-hint">Вспомните значение, потом откройте карточку</p>
+           <button class="btn btn-primary btn-lg" data-action="v-reveal">Показать значение <kbd>Пробел</kbd></button>`}
       </article>
-      ${!a && s.revealed ? `<div class="grades two" role="group" aria-label="Вспомнили?">
-        ${[["Не помню", "g1", 1, iv[0]], ["Помню", "g3", 3, iv[2]]].map(([label, cls, g, when], i) => `
-          <button class="grade ${cls}" data-action="v-grade" data-g="${g}"><span>${label}</span><small>${when}</small><kbd>${i + 1}</kbd></button>`).join("")}
-      </div>` : ""}
+      ${!fresh && s.revealed ? `<div class="grades two" role="group" aria-label="Вспомнили значение?">
+          <button class="grade g1" data-action="v-grade" data-ok="0"><span>Не вспомнил</span><small>ещё раз сегодня</small><kbd>←</kbd></button>
+          <button class="grade g3" data-action="v-grade" data-ok="1"><span>Вспомнил</span><small>${recalled}</small><kbd>→</kbd></button>
+        </div>` : ""}
       <div class="flash-foot">
         <span class="row">
-          ${!answered ? `<button class="btn btn-ghost btn-sm" data-action="v-known" title="Убрать из повторений (K)">${icon("check", "icon-sm")} Уже знаю это слово</button>` : ""}
+          <button class="btn btn-ghost btn-sm" data-action="v-known" title="Убрать из повторений (K)">${icon("check", "icon-sm")} Уже знаю это слово</button>
           ${ctx.ai()?.available() ? `<button class="btn btn-ghost btn-sm ai-only" data-action="ai-ask-word" data-key="${esc(c.key)}">${icon("sparkles", "icon-sm")} Спросить Claude</button>` : ""}
         </span>
-        <span class="hints">${a
-          ? `<span><kbd>1</kbd>–<kbd>4</kbd> значение</span><span><kbd>Пробел</kbd> не знаю</span><span><kbd>K</kbd> знаю</span>`
-          : `<span><kbd>Пробел</kbd> показать</span><span><kbd>1</kbd> не помню</span><span><kbd>2</kbd> помню</span><span><kbd>K</kbd> знаю</span>`}</span>
+        <span class="hints">${fresh
+          ? `<span><kbd>Пробел</kbd> дальше</span><span><kbd>K</kbd> знаю</span>`
+          : `<span><kbd>Пробел</kbd> показать</span><span><kbd>←</kbd> не вспомнил</span><span><kbd>→</kbd> вспомнил</span><span><kbd>K</kbd> знаю</span>`}</span>
       </div>
     </div>`;
-  }
-
-  // A card asks the word's meaning when it has one to show. Wrong meanings come from the other
-  // choices of the word's questions first, as in the check before a question.
-  const askable = (c) => !!c?.def && !c.hideDef;
-  let pool = null;
-  function askFor(c, all) {
-    if (!pool?.length) pool = meaningPool();
-    const fromDict = (x) => x.defSrc !== "sat" && x.defSrc !== "user";
-    const card = plainMeaning(c.def, c.pos, fromDict(c));
-    const siblings = all.filter((x) => x.key !== c.key && askable(x) && x.qids?.some((id) => c.qids?.includes(id)))
-      .map((x) => plainMeaning(x.def, x.pos, fromDict(x))).filter((x) => posOf(x.pos) === posOf(card.pos));
-    // a meaning cut to its first part is shown in full after a miss
-    const full = card.def !== plainMeaning(c.def, c.pos).def || / · |;\s*(?:adj|n|v|adv)\.\s/.test(c.def) ? c.def : null;
-    return { key: c.key, def: card.def, full, options: meaningOptions(card, siblings, pool), picked: null };
   }
 
   const clock = (ms) => { const sec = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; };
@@ -768,36 +735,23 @@ export function createVocab(ctx) {
   }
   const refreshAll = () => { renderMain(); renderSidebar(); ctx.refreshChrome(); };
 
-  // A card without a meaning to ask: «Не помню» (1) or «Помню» (3) after it is opened.
-  function grade(g) {
+  // A new word, read: it is asked a few cards later. Not knowing a word never learned costs no ease.
+  function learn() {
     const s = S.session;
-    if (!s || s.ask || !s.revealed || !s.queue.length) return;
-    record(s.queue[0], schedule(S.vocab.srs[s.queue[0]], g), g === 1);
+    const key = s?.queue[0];
+    if (!key || S.vocab.srs[key]?.last) return;
+    record(key, answerCard(S.vocab.srs[key], false), true);
+    refreshAll();
+  }
+
+  // A word met before, recalled and opened: «Вспомнил» or «Не вспомнил», a plain fact, not a degree.
+  function grade(ok) {
+    const s = S.session;
+    const key = s?.queue[0];
+    if (!key || !s.revealed || !S.vocab.srs[key]?.last) return;
+    record(key, answerCard(S.vocab.srs[key], ok), !ok);
     s.revealed = false;
     refreshAll();
-  }
-
-  // i: the meaning picked, -1 for «Не знаю». A right answer goes on by itself.
-  let advance = null;
-  function pick(i) {
-    const a = S.session?.ask;
-    if (!a || a.picked !== null) return;
-    const picked = i < 0 ? "" : a.options[i];
-    if (picked === undefined) return;
-    a.picked = picked;
-    const ok = picked === a.def;
-    record(a.key, answerCard(S.vocab.srs[a.key], ok), !ok);
-    refreshAll();
-    clearTimeout(advance);
-    if (ok) advance = setTimeout(next, 650);
-  }
-
-  function next() {
-    clearTimeout(advance);
-    const s = S.session;
-    if (!s?.ask || s.ask.picked === null) return;
-    s.ask = null;
-    if (S.ui.view === "vocab" && (S.ui.vtab || "study") === "study") renderMain();
   }
 
   function markKnown(key, on) {
@@ -829,14 +783,12 @@ export function createVocab(ctx) {
     "v-filter": (el) => { S.ui.vfilter = el.dataset.filter; S.ui.vtab = "list"; ctx.saveUi(); renderSidebar(); renderMain(true); document.body.classList.remove("sidebar-open"); },
     "v-perday": (el) => { S.vocab.newPerDay = +el.dataset.n; save(); S.session = null; renderSidebar(); renderMain(); ctx.refreshChrome(); },
     "v-reveal": () => { if (S.session?.queue.length) { S.session.revealed = true; renderMain(); } },
-    "v-grade": (el) => grade(+el.dataset.g),
-    "v-pick": (el) => pick(+el.dataset.i),
-    "v-next": () => next(),
+    "v-grade": (el) => grade(el.dataset.ok === "1"),
+    "v-learn": () => learn(),
     "v-known": () => {
       const s = S.session;
-      if (!s?.queue.length || s.ask?.picked != null) return;
+      if (!s?.queue.length) return;
       const key = s.queue.shift();
-      s.ask = null;
       markKnown(key, true);
       s.revealed = false;
       ctx.onWordDone?.();
@@ -945,19 +897,17 @@ export function createVocab(ctx) {
   function onKey(e) {
     if (S.ui.vtab === "test") return sizeTest.onKey(e);
     const s = S.session;
-    if ((S.ui.vtab || "study") !== "study" || !s) return false;
+    if ((S.ui.vtab || "study") !== "study" || !s?.queue.length) return false;
     const k = e.key.toLowerCase();
-    const a = s.ask;
-    if (a) {
-      if (a.picked !== null) { if (k === "enter") { next(); return true; } return false; }
-      if ("1234".includes(k) && k.length === 1) { pick(+k - 1); return true; }
-      if (k === " ") { pick(-1); return true; }
+    const fresh = !S.vocab.srs[s.queue[0]]?.last;
+    if (fresh && !s.waitUntil) {
+      if (k === " " || k === "enter" || k === "arrowright") { learn(); return true; }
       if (k === "k") { actions["v-known"](); return true; }
       return false;
     }
-    if (!s.queue.length) return false;
     if ((k === " " || k === "enter") && !s.revealed) { actions["v-reveal"](); return true; }
-    if (s.revealed && (k === "1" || k === "2")) { grade(k === "1" ? 1 : 3); return true; }
+    if (s.revealed && (k === "arrowleft" || k === "1")) { grade(false); return true; }
+    if (s.revealed && (k === "arrowright" || k === "2")) { grade(true); return true; }
     if (k === "k" && (s.revealed || !s.waitUntil)) { actions["v-known"](); return true; }
     return false;
   }

@@ -76,6 +76,53 @@ test("K on the waiting screen does not mark a word nobody is looking at", async 
   eq(S.vocab.known, []);
 });
 
+// ---------------------------------------------------------------- a card: see a new word, then recall it
+
+const MIN = 60_000;
+async function cardsOf(srs = {}) {
+  const q = question("q1", "Words in Context", ["adorn", "cogent", "terse", "prudent"]);
+  const { S, v } = setup([q], { srs });
+  v.rebuild();
+  await wordsIn(v, q);
+  S.ui.view = "vocab";
+  S.session = { queue: ["adorn", "cogent", "terse", "prudent"], revealed: false, reviewed: 0, learnedNew: 0, day: new Date().toDateString() };
+  return { S, v };
+}
+const learned = (now = Date.now()) => ({ last: now - 3 * 864e5, due: now - 1, ivl: 3, ease: 2.5, reps: 2, lapses: 0, good: 2, goodDay: 0 });
+
+test("a new word is shown with its meaning, not asked; it comes back a few cards later at no cost", async () => {
+  const { S, v } = await cardsOf();
+  const t = Date.now();
+  eq(v.onKey({ key: " " }), true);
+  const st = S.vocab.srs.adorn;
+  eq([st.ease, st.reps, st.due >= t + MIN, st.due < t + 2 * MIN], [2.5, 0, true, true]);
+  eq(S.session.queue, ["cogent", "terse", "prudent", "adorn"]);
+});
+
+test("a word met before is recalled: Space shows the meaning, → is «Вспомнил»", async () => {
+  const { S, v } = await cardsOf({ adorn: learned() });
+  eq(v.onKey({ key: "ArrowRight" }), false, "nothing to grade before the meaning is shown");
+  v.onKey({ key: " " });
+  eq(S.session.revealed, true);
+  v.onKey({ key: "ArrowRight" });
+  eq([S.vocab.srs.adorn.reps, S.vocab.srs.adorn.ivl > 3, S.session.queue.includes("adorn")], [3, true, false]);
+});
+
+test("← is «Не вспомнил»: the word comes back a few cards later", async () => {
+  const { S, v } = await cardsOf({ adorn: learned() });
+  v.onKey({ key: " " });
+  v.onKey({ key: "ArrowLeft" });
+  eq([S.vocab.srs.adorn.reps, S.vocab.srs.adorn.ease < 2.5, S.session.queue.indexOf("adorn")], [0, true, 3]);
+});
+
+test("a new word seen a minute ago and recalled goes to tomorrow, without ease lost", async () => {
+  const t = Date.now();
+  const { S, v } = await cardsOf({ adorn: { last: t - 2 * MIN, due: t - MIN, ivl: 0, ease: 2.5, reps: 0, lapses: 0 } });
+  v.onKey({ key: " " });
+  v.onKey({ key: "2" });
+  eq([S.vocab.srs.adorn.ivl, S.vocab.srs.adorn.ease], [1, 2.5]);
+});
+
 test("words studied before are not called new on the screen before a question", () => {
   const forgot = { key: "adorn", term: "adorn", def: "to decorate", st: { last: 1, reps: 0 }, review: false };
   const due = { key: "cogent", term: "cogent", def: "convincing", st: { last: 1, reps: 2 }, review: true };
