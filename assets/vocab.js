@@ -161,6 +161,16 @@ export function schedule(st, grade, now = Date.now()) {
   return s;
 }
 
+// A card asks the word's meaning; the answer sets the grade, not the student. A word answered right
+// at first sight was known already ("легко": 4 days). A word never learned and not known costs a
+// minute and no ease: not knowing it is not forgetting it, and its later reviews stay as far apart.
+export function answerCard(st, ok, now = Date.now()) {
+  if (ok) return schedule(st, st?.last ? 3 : 4, now);
+  const s = schedule(st, 1, now);
+  if (!st?.reps && !st?.lapses) s.ease = (st || newState()).ease;
+  return s;
+}
+
 export function previewIntervals(st, now = Date.now()) {
   return [1, 2, 3, 4].map((g) => {
     const n = schedule(st, g, now);
@@ -212,7 +222,12 @@ async function getJson(url, ms = 7000) {
   }
 }
 
-const textOf = (html) => new DOMParser().parseFromString(html, "text/html").body.textContent.replace(/\s+/g, " ").trim();
+// Wiktionary's definitions carry their own <style> ("…mw-parser-output .defdate{…}"): it is not text.
+const textOf = (html) => {
+  const body = new DOMParser().parseFromString(html, "text/html").body;
+  body.querySelectorAll("style, script").forEach((e) => e.remove());
+  return body.textContent.replace(/\s+/g, " ").trim();
+};
 const FORM_OF = /^(?:(?:simple\s+)?past(?:\s+tense)?|past\s+participle|present\s+participle|third-person\s+singular[\w\s-]*|plural|comparative|superlative)[^.]*?\bof\s+([A-Za-z-]+)/i;
 
 async function wiktionary(word, depth = 0, preferPos = null) {

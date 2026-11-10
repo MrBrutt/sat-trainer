@@ -1,14 +1,7 @@
 // Words before a question: a question opens once the student knows the words of its answer choices.
 // Unknown words are shown with their meanings, then checked one by one (word → pick its meaning).
 // Answering without knowing what the choices mean is guessing, not practice.
-import { defsPool } from "./words.js";
-
-const shuffle = (arr) => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-};
-const posOf = (p) => (p || "").split(/[./]/)[0];
+import { shuffle, posOf, meaningOptions, meaningPool, plainMeaning } from "./meanings.js";
 
 export function createPrep(ctx) {
   const { S, esc, icon, plural, toast, vocab } = ctx;
@@ -28,30 +21,17 @@ export function createPrep(ctx) {
   }
   const missingCount = (q) => vocab.gateOf(q).missing.length;
 
-  // Three wrong meanings: one of another choice of the same question (telling them apart is the
-  // point), the rest from words of the same part of speech.
-  function options(card, siblings, pool) {
-    const wrong = [];
-    const used = new Set([card.def]);
-    const take = (d) => { if (d && !used.has(d) && wrong.length < 3) { used.add(d); wrong.push(d); } };
-    for (const c of shuffle(siblings).slice(0, 1)) take(c.def);
-    const from = Math.floor(Math.random() * pool.length);     // a different stretch of the pool for every word
-    const around = pool.slice(from).concat(pool.slice(0, from));
-    for (const x of around) if (posOf(x.p) === posOf(card.pos)) take(x.d);
-    for (const x of around) take(x.d);
-    return shuffle([card.def, ...wrong]);
-  }
-
   function item(card, gate, pool) {
-    const siblings = gate.cards.filter((c) => c.key !== card.key && posOf(c.pos) === posOf(card.pos));
-    return { key: card.key, term: card.term, def: card.def, pos: card.pos, sample: card.sample, options: options(card, siblings, pool), picked: null };
+    const fromDict = (c) => c.defSrc !== "sat" && c.defSrc !== "user";
+    const own = plainMeaning(card.def, card.pos, fromDict(card));
+    const siblings = gate.cards.filter((c) => c.key !== card.key).map((c) => plainMeaning(c.def, c.pos, fromDict(c))).filter((c) => posOf(c.pos) === posOf(own.pos));
+    return { key: card.key, term: card.term, def: own.def, pos: own.pos, sample: card.sample, options: meaningOptions(own, siblings, pool), picked: null };
   }
 
   function start(q) {
     const gate = vocab.gateOf(q);
     if (!gate.missing.length) return;
-    // meanings that name their part of speech ("adj. main; n. the head of a school") would stand out
-    const pool = shuffle(defsPool().filter((x) => !/^(?:adj|n|v|adv)\.\s/.test(x.d)));
+    const pool = meaningPool();
     quiz = { qid: q.id, gate, pool, items: shuffle(gate.missing).map((c) => item(c, gate, pool)), i: 0, slipped: new Set(), right: 0 };
   }
 

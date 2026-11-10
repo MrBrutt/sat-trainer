@@ -1,8 +1,9 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
-import { buildDeck, schedule, previewIntervals, readyIndex, requeue, statusOf, isMastered, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
+import { buildDeck, schedule, answerCard, previewIntervals, readyIndex, requeue, statusOf, isMastered, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
 import { createSizeTest } from "./size-test.js";
 import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
 import { inFocus } from "./domains.js";
+import { meaningOptions, meaningPool, plainMeaning, posOf, noStyles } from "./meanings.js";
 
 const DAY = 86400000;
 const STATUS_LABEL = { new: "новое", learning: "изучаю", mastered: "выучено", known: "знаю" };
@@ -126,7 +127,7 @@ export function createVocab(ctx) {
       if (c.hideDef) { /* shown after the question is answered */ }
       else if (e.def) { c.def = e.def; c.defSrc = "user"; }
       else if (own) { c.def = own.d; c.pos = own.p; c.sample = own.x; c.defSrc = "sat"; }
-      else if (d) { c.def = typeof d === "string" ? d : d.d; c.defSrc = typeof d === "string" ? "dict" : d.s || "dict"; }
+      else if (d) { c.def = noStyles(typeof d === "string" ? d : d.d); c.defSrc = typeof d === "string" ? "dict" : d.s || "dict"; }
       c.st = S.vocab.srs[c.key] || null;
       c.known = known.has(c.key);
       c.status = statusOf(c.st, c.known);
@@ -347,14 +348,46 @@ export function createVocab(ctx) {
         <p>В этом наборе нет вопросов Words in Context. Добавляйте слова сами: выделите слово в тексте вопроса.</p></div></div>`;
     }
     const { s, byKey, fresh: newInQueue } = todayCards();
-    if (!s.queue.length) return doneHtml(all);
-    if (s.waitUntil && !s.revealed) return waitHtml(s);
-    const c = byKey.get(s.queue[0]);
-    if (s.revealed) fetchDef(c);
+    // the card on screen: its meaning is asked, and after the answer it stays until «Дальше»
+    let a = s.ask && byKey.has(s.ask.key) ? s.ask : null;
+    if (a && a.picked === null && a.key !== s.queue[0]) a = null;       // the queue moved on
+    s.ask = a;
+    if (!a && !s.queue.length) return doneHtml(all);
+    if (!a && s.waitUntil && !s.revealed) return waitHtml(s);
+    const c = byKey.get(a ? a.key : s.queue[0]);
+    if (!a && askable(c)) { a = s.ask = askFor(c, all); s.revealed = false; }
+    if (!a) fetchDef(c);
     const left = s.queue.length;
-    const pct = Math.round((s.reviewed / (s.reviewed + left)) * 100);
-    const iv = previewIntervals(c.st);
+    const pct = Math.round((s.reviewed / (s.reviewed + left || 1)) * 100);
     const qs = c.practiced ? [...new Set(c.examples.filter((e) => e.n).map((e) => e.n))] : [];
+    const answered = !!a && a.picked !== null;
+    const missed = answered && a.picked !== a.def;
+    const body = a ? `
+        <div class="quiz-term">${esc(c.term)}${c.pos ? ` <span class="pos">${esc(c.pos)}</span>` : ""}</div>
+        <p class="quiz-ask">Что значит это слово?</p>
+        <div class="quiz-options" role="group" aria-label="Значения">${a.options.map((d, i) => {
+          const cls = !answered ? "" : d === a.def ? "correct" : d === a.picked ? "wrong" : "dim";
+          return `<button class="quiz-opt ${cls}" data-action="v-pick" data-i="${i}" ${answered ? "disabled" : ""}><kbd>${i + 1}</kbd><span>${esc(d)}</span></button>`;
+        }).join("")}</div>
+        ${!answered ? `<button class="btn btn-ghost quiz-skip" data-action="v-pick" data-i="-1">Не знаю <kbd>Пробел</kbd></button>` : ""}
+        ${missed ? `<div class="quiz-miss">
+          ${a.full ? `<div class="flash-def">${c.pos ? `<span class="pos">${esc(c.pos)}</span> ` : ""}${esc(a.full)}</div>` : ""}
+          ${c.sample ? `<p class="flash-sample">${esc(c.sample)}</p>` : ""}
+          ${examplesHtml(c)}
+          <label class="field"><span>Мой перевод / заметка</span>
+            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>
+          <p class="muted">Слово вернётся через несколько карточек.</p>
+          <button class="btn btn-primary" data-action="v-next">Дальше <kbd>Enter</kbd></button>
+        </div>` : ""}`
+      : `<div class="flash-term">${esc(c.term)}</div>
+        ${s.revealed ? `
+          ${defHtml(c)}
+          ${examplesHtml(c)}
+          <label class="field"><span>Мой перевод / заметка</span>
+            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>`
+        : `<p class="flash-hint">Вспомните значение, потом откройте карточку</p>
+           <button class="btn btn-primary btn-lg" data-action="v-reveal">Показать значение <kbd>Пробел</kbd></button>`}`;
+    const iv = a ? null : previewIntervals(c.st);
     return `<div class="vwrap">
       <div class="sess-top">
         <span class="sess-count">Осталось <b>${left}</b></span>
@@ -363,32 +396,42 @@ export function createVocab(ctx) {
       </div>
       <article class="card flash">
         <div class="flash-meta">
-          <span class="badge">${c.mine && !auto.some((a) => a.key === c.key) && !textDeck.some((a) => a.key === c.key) ? ROLE_LABEL.mine : c.role === "text" || c.role === "choice" ? ROLE_LABEL[c.role] : c.practiced ? ROLE_LABEL[c.role] || "" : c.role === "target" ? ROLE_LABEL.target : ROLE_LABEL.choice}</span>
+          <span class="badge">${c.mine && !auto.some((x) => x.key === c.key) && !textDeck.some((x) => x.key === c.key) ? ROLE_LABEL.mine : c.role === "text" || c.role === "choice" ? ROLE_LABEL[c.role] : c.practiced ? ROLE_LABEL[c.role] || "" : c.role === "target" ? ROLE_LABEL.target : ROLE_LABEL.choice}</span>
           ${statusBadge(c)}
           <div class="spacer"></div>
           ${qs.length ? `<span class="mono">вопрос ${qs.join(", ")}</span>` : ""}
         </div>
-        <div class="flash-term">${esc(c.term)}</div>
-        ${s.revealed ? `
-          ${defHtml(c)}
-          ${examplesHtml(c)}
-          <label class="field"><span>Мой перевод / заметка</span>
-            <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>`
-        : `<p class="flash-hint">Вспомните значение, потом откройте карточку</p>
-           <button class="btn btn-primary btn-lg" data-action="v-reveal">Показать значение <kbd>Пробел</kbd></button>`}
+        ${body}
       </article>
-      ${s.revealed ? `<div class="grades" role="group" aria-label="Насколько хорошо вы помните">
-        ${[["Не помню", "g1"], ["Сложно", "g2"], ["Помню", "g3"], ["Легко", "g4"]].map(([label, cls], i) => `
-          <button class="grade ${cls}" data-action="v-grade" data-g="${i + 1}"><span>${label}</span><small>${iv[i]}</small><kbd>${i + 1}</kbd></button>`).join("")}
+      ${!a && s.revealed ? `<div class="grades two" role="group" aria-label="Вспомнили?">
+        ${[["Не помню", "g1", 1, iv[0]], ["Помню", "g3", 3, iv[2]]].map(([label, cls, g, when], i) => `
+          <button class="grade ${cls}" data-action="v-grade" data-g="${g}"><span>${label}</span><small>${when}</small><kbd>${i + 1}</kbd></button>`).join("")}
       </div>` : ""}
       <div class="flash-foot">
         <span class="row">
-          <button class="btn btn-ghost btn-sm" data-action="v-known" title="Убрать из повторений (K)">${icon("check", "icon-sm")} Уже знаю это слово</button>
+          ${!answered ? `<button class="btn btn-ghost btn-sm" data-action="v-known" title="Убрать из повторений (K)">${icon("check", "icon-sm")} Уже знаю это слово</button>` : ""}
           ${ctx.ai()?.available() ? `<button class="btn btn-ghost btn-sm ai-only" data-action="ai-ask-word" data-key="${esc(c.key)}">${icon("sparkles", "icon-sm")} Спросить Claude</button>` : ""}
         </span>
-        <span class="hints"><span><kbd>Пробел</kbd> показать</span><span><kbd>1</kbd>–<kbd>4</kbd> оценка</span><span><kbd>K</kbd> знаю</span></span>
+        <span class="hints">${a
+          ? `<span><kbd>1</kbd>–<kbd>4</kbd> значение</span><span><kbd>Пробел</kbd> не знаю</span><span><kbd>K</kbd> знаю</span>`
+          : `<span><kbd>Пробел</kbd> показать</span><span><kbd>1</kbd> не помню</span><span><kbd>2</kbd> помню</span><span><kbd>K</kbd> знаю</span>`}</span>
       </div>
     </div>`;
+  }
+
+  // A card asks the word's meaning when it has one to show. Wrong meanings come from the other
+  // choices of the word's questions first, as in the check before a question.
+  const askable = (c) => !!c?.def && !c.hideDef;
+  let pool = null;
+  function askFor(c, all) {
+    if (!pool?.length) pool = meaningPool();
+    const fromDict = (x) => x.defSrc !== "sat" && x.defSrc !== "user";
+    const card = plainMeaning(c.def, c.pos, fromDict(c));
+    const siblings = all.filter((x) => x.key !== c.key && askable(x) && x.qids?.some((id) => c.qids?.includes(id)))
+      .map((x) => plainMeaning(x.def, x.pos, fromDict(x))).filter((x) => posOf(x.pos) === posOf(card.pos));
+    // a meaning cut to its first part is shown in full after a miss
+    const full = card.def !== plainMeaning(c.def, c.pos).def || / · |;\s*(?:adj|n|v|adv)\.\s/.test(c.def) ? c.def : null;
+    return { key: c.key, def: card.def, full, options: meaningOptions(card, siblings, pool), picked: null };
   }
 
   const clock = (ms) => { const sec = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; };
@@ -705,29 +748,56 @@ export function createVocab(ctx) {
 
   // ---------------------------------------------------------------- actions & input
 
-  function grade(g) {
+  // The answer moves the card: out of today's queue, or 4 cards back after a miss (a minute later
+  // at the earliest).
+  function record(key, st, missed) {
     const s = S.session;
-    if (!s || !s.revealed || !s.queue.length) return;
-    const key = s.queue.shift();
+    s.queue = s.queue.filter((k) => k !== key);
     const prev = S.vocab.srs[key];
     if (!prev?.last) {
       s.learnedNew++;
       if (!S.vocab.user[key]) daily().newCount++; // own words don't use up the daily allowance
     }
-    const st = schedule(prev, g);
     S.vocab.srs[key] = st;
     if (isMastered(st) && !isMastered(prev)) toast(`«${cards().byKey.get(key)?.term || key}» — выучено: теперь редкие повторы`);
-    // seen again today: after "не помню" four cards on (and a minute later at the earliest),
-    // after "сложно" on a new word at the end, in 10 minutes at the earliest
-    if (g === 1) s.queue = requeue(s.queue, key, 4);
+    if (missed) s.queue = requeue(s.queue, key, 4);
     else if (!st.ivl) s.queue = requeue(s.queue, key, Infinity);
     s.reviewed++;
-    s.revealed = false;
     save();
     ctx.onWordDone?.();
-    renderMain();
-    renderSidebar();
-    ctx.refreshChrome();
+  }
+  const refreshAll = () => { renderMain(); renderSidebar(); ctx.refreshChrome(); };
+
+  // A card without a meaning to ask: «Не помню» (1) or «Помню» (3) after it is opened.
+  function grade(g) {
+    const s = S.session;
+    if (!s || s.ask || !s.revealed || !s.queue.length) return;
+    record(s.queue[0], schedule(S.vocab.srs[s.queue[0]], g), g === 1);
+    s.revealed = false;
+    refreshAll();
+  }
+
+  // i: the meaning picked, -1 for «Не знаю». A right answer goes on by itself.
+  let advance = null;
+  function pick(i) {
+    const a = S.session?.ask;
+    if (!a || a.picked !== null) return;
+    const picked = i < 0 ? "" : a.options[i];
+    if (picked === undefined) return;
+    a.picked = picked;
+    const ok = picked === a.def;
+    record(a.key, answerCard(S.vocab.srs[a.key], ok), !ok);
+    refreshAll();
+    clearTimeout(advance);
+    if (ok) advance = setTimeout(next, 650);
+  }
+
+  function next() {
+    clearTimeout(advance);
+    const s = S.session;
+    if (!s?.ask || s.ask.picked === null) return;
+    s.ask = null;
+    if (S.ui.view === "vocab" && (S.ui.vtab || "study") === "study") renderMain();
   }
 
   function markKnown(key, on) {
@@ -760,10 +830,13 @@ export function createVocab(ctx) {
     "v-perday": (el) => { S.vocab.newPerDay = +el.dataset.n; save(); S.session = null; renderSidebar(); renderMain(); ctx.refreshChrome(); },
     "v-reveal": () => { if (S.session?.queue.length) { S.session.revealed = true; renderMain(); } },
     "v-grade": (el) => grade(+el.dataset.g),
+    "v-pick": (el) => pick(+el.dataset.i),
+    "v-next": () => next(),
     "v-known": () => {
       const s = S.session;
-      if (!s?.queue.length) return;
+      if (!s?.queue.length || s.ask?.picked != null) return;
       const key = s.queue.shift();
+      s.ask = null;
       markKnown(key, true);
       s.revealed = false;
       ctx.onWordDone?.();
@@ -871,11 +944,21 @@ export function createVocab(ctx) {
 
   function onKey(e) {
     if (S.ui.vtab === "test") return sizeTest.onKey(e);
-    if ((S.ui.vtab || "study") !== "study" || !S.session?.queue.length) return false;
+    const s = S.session;
+    if ((S.ui.vtab || "study") !== "study" || !s) return false;
     const k = e.key.toLowerCase();
-    if ((k === " " || k === "enter") && !S.session.revealed) { actions["v-reveal"](); return true; }
-    if (S.session.revealed && "1234".includes(k) && k.length === 1) { grade(+k); return true; }
-    if (k === "k" && (S.session.revealed || !S.session.waitUntil)) { actions["v-known"](); return true; }
+    const a = s.ask;
+    if (a) {
+      if (a.picked !== null) { if (k === "enter") { next(); return true; } return false; }
+      if ("1234".includes(k) && k.length === 1) { pick(+k - 1); return true; }
+      if (k === " ") { pick(-1); return true; }
+      if (k === "k") { actions["v-known"](); return true; }
+      return false;
+    }
+    if (!s.queue.length) return false;
+    if ((k === " " || k === "enter") && !s.revealed) { actions["v-reveal"](); return true; }
+    if (s.revealed && (k === "1" || k === "2")) { grade(k === "1" ? 1 : 3); return true; }
+    if (k === "k" && (s.revealed || !s.waitUntil)) { actions["v-known"](); return true; }
     return false;
   }
 

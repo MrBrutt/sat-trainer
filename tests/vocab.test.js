@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { schedule, previewIntervals, readyIndex, requeue } from "../assets/vocab.js";
+import { schedule, previewIntervals, readyIndex, requeue, answerCard, startOfDay } from "../assets/vocab.js";
 
 const now = new Date(2026, 9, 20, 12).getTime();
 const MIN = 60_000;
@@ -115,4 +115,28 @@ test("a card from before this change counts its earlier reviews", () => {
 
 test("a long interval from before this change still reads as learned", () => {
   eq(statusOf({ due: 0, ivl: 21, ease: 2.5, reps: 5, lapses: 0, last: 1 }, false), "mastered");
+});
+
+test("a new word answered right at first sight was known: back in 4 days", () => {
+  const st = answerCard(null, true, now);
+  eq(st.ivl, 4);
+  eq(st.due, startOfDay(now) + 4 * DAY);
+});
+
+test("not knowing a word never learned costs nothing but a minute", () => {
+  const st = answerCard(null, false, now);
+  eq([st.due, st.ease, st.lapses, st.reps], [now + MIN, 2.5, 0, 0]);
+});
+
+test("a new word missed, then answered right, comes back tomorrow", () => {
+  const missed = answerCard(null, false, now);
+  eq(answerCard(missed, true, now + 5 * MIN).ivl, 1);
+  eq(answerCard(answerCard(missed, false, now + 2 * MIN), false, now + 4 * MIN).ease, 2.5, "still never learned");
+});
+
+test("a word on review: right is «Помню», wrong is «Не помню»", () => {
+  const st = { due: now, ivl: 3, ease: 2.5, reps: 2, lapses: 0, last: now - 3 * DAY, good: 2, goodDay: 0 };
+  eq(answerCard(st, true, now), schedule(st, 3, now));
+  eq(answerCard(st, false, now), schedule(st, 1, now));
+  eq(answerCard(st, false, now).ease < 2.5, true, "forgetting a learned word lowers its ease");
 });

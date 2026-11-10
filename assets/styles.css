@@ -502,6 +502,7 @@ kbd {
 }
 .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
 .grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+.grades.two { grid-template-columns: repeat(2, 1fr); }
 .grade {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px;
   border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; box-shadow: var(--shadow-sm); font-weight: 600; font-size: 14.5px;
@@ -643,6 +644,9 @@ kbd {
 .quiz-opt.dim { opacity: .5; box-shadow: none; }
 .quiz-miss { margin-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .quiz-miss p { margin: 0; }
+.quiz-skip { margin-top: 12px; }
+.quiz-miss .examples { margin: 4px 0; align-self: stretch; }
+.quiz-miss .field { align-self: stretch; margin-top: 0; }
 @media (max-width: 600px) { .prep { padding: 18px 16px; } .prep-head .prep-icon { display: none; } }
 
 /* ---------------------------------------------------------------- daily routine */
