@@ -9,6 +9,7 @@ import { toB64, fromB64 } from "./bytes.js";
 import { createAccount } from "./account.js";
 import { outline, inFocus, domainOf } from "./domains.js";
 import { createThink } from "./think.js";
+import { createMock } from "./mock.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -25,6 +26,8 @@ const KEY = {
   review: "sat-trainer:review:v1",
   activity: "sat-trainer:activity:v1",
   timing: "sat-trainer:timing:v1",
+  mock: "sat-trainer:mock:v1",          // the mock test in progress (this device only)
+  mocks: "sat-trainer:mocks:v1",        // finished mock tests by id
   aiTier: "sat-trainer:ai-tier",
 };
 const PALETTE = ["#3b82f6", "#14b8a6", "#8b5cf6", "#f59e0b", "#ec4899", "#22c55e", "#ef4444", "#0ea5e9", "#a855f7", "#84cc16"];
@@ -228,6 +231,12 @@ const today = createToday({
   wordsStudied: () => vocab.studied(),
   readyCount: () => S.set.questions.filter(isReady).length,
   refreshChrome: () => renderTopbar(),
+  mockCard: () => mock.card(),
+});
+const mock = createMock({
+  S, $, icon, esc, toast, ls, KEY, plural, confirmDialog, stemHtml, runsHtml, passageOf, fillOriginals, saveUi, renderAll, recordFirst,
+  refreshChrome: () => renderTopbar(),
+  openQuestion: (id) => { S.ui.view = "questions"; S.ui.status = "all"; saveUi(); renderTopbar(); go(id); },
 });
 account = createAccount({
   ls, icon, esc, toast,
@@ -237,6 +246,7 @@ account = createAccount({
     flags: { read: () => [...S.flags], write: (v) => { S.flags = new Set(v); saveFlags(); } },
     vocab: { read: () => S.vocab, write: (v) => { S.vocab = Object.assign(VOCAB_DEFAULT(), v); ls.set(KEY.vocab, S.vocab); vocab.accountChanged(); } },
     activity: { read: () => S.activity, write: (v) => { S.activity = Object.assign(ACTIVITY_DEFAULT(), v); ls.set(KEY.activity, S.activity); } },
+    mocks: { read: () => mock.history(), write: (v) => mock.setHistory(v) },
   },
   sets: {
     current: () => (S.set ? {
@@ -797,6 +807,13 @@ function renderAll(scrollTop = false) {
     today.renderMain(scrollTop);
     return;
   }
+  if (S.ui.view === "mock") {
+    vocab.hidePop();
+    $("#sidebar").setAttribute("aria-label", "Пробник");
+    mock.renderSidebar();
+    mock.renderMain(scrollTop);
+    return;
+  }
   if (S.ui.view === "vocab") {
     vocab.hidePop();
     $("#sidebar").setAttribute("aria-label", "Словарь");
@@ -1126,7 +1143,7 @@ function renderQuestion(scrollTop = false) {
 // The last picture drawn: answering or striking out a choice redraws the page, and the picture must not blink.
 let drawn = null;
 
-async function fillOriginals(q) {
+async function fillOriginals(q, shown = () => cur()?.id === q.id) {
   const el = document.querySelector("#main [data-region]");
   if (!el) return;
   const figure = el.dataset.region === "figure";
@@ -1142,7 +1159,7 @@ async function fillOriginals(q) {
     }
     const canvas = figure ? await drawFigure(S.pdfs.get(id), q) : await drawQuestion(S.pdfs.get(id), q, el.clientWidth - 28);
     drawn = { key, canvas };
-    if (cur()?.id !== q.id) return;
+    if (!shown()) return;
     el.replaceChildren(canvas);
   } catch (e) {
     console.warn(e);
@@ -1172,14 +1189,20 @@ function step(d) {
 // Records an answer: a review attempt reschedules the mistake, a first attempt may start a review.
 function record(q, result) {
   result = { ...result, ms: timer.take(timingKey(q)) };
-  vocab.invalidate();
   if (inReview(q)) {
+    vocab.invalidate();
     S.attempt[q.id] = result;
     S.review[q.id] = { ...gradeReview(S.review[q.id], result.ok), lastMs: result.ms };
     saveReview();
     today.log("r", result.ok, result.ms);
     return;
   }
+  recordFirst(q, result);
+}
+
+// A first answer, here or in a mock test: statistics, the day's plan, a mistake to review.
+function recordFirst(q, result) {
+  vocab.invalidate();
   S.progress[q.id] = result;
   saveProgress();
   if (!result.ok) { S.review[q.id] = enqueueReview(S.review[q.id]); saveReview(); }
@@ -1339,6 +1362,7 @@ const ACTIONS = {
   },
   view: (el) => {
     vocab.hideWord();
+    mock.pause();
     S.ui.view = el.dataset.view;
     saveUi();
     document.body.classList.remove("sidebar-open");
@@ -1350,6 +1374,7 @@ const ACTIONS = {
   ...account.actions,
   ...prep.actions,
   ...think.actions,
+  ...mock.actions,
   "today-review": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "review"); },
   "timer-visible": () => { S.ui.showTimer = !S.ui.showTimer; saveUi(); renderAll(); toast(S.ui.showTimer ? "Таймер показан" : "Таймер скрыт — время всё равно считается"); },
   "today-new": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "todo"); },
@@ -1377,6 +1402,10 @@ document.addEventListener("keydown", (e) => {
   if (S.ui.view === "vocab") {
     if (e.key === "Escape") { document.body.classList.remove("sidebar-open"); ai.close(); }
     else if (!inField && vocab.onKey(e)) e.preventDefault();
+    return;
+  }
+  if (S.ui.view === "mock") {
+    if (!inField && mock.onKey(e)) e.preventDefault();
     return;
   }
   if (inField) {

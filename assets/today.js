@@ -311,6 +311,8 @@ export function createToday(ctx) {
         </div>`).join("")}
       </section>
 
+      ${ctx.mockCard ? ctx.mockCard() : ""}
+
       <section class="card today-block">
         <div class="block-head"><h3>Активность</h3><span>Лучшая серия: <b>${Math.max(S.activity.bestStreak || 0, n)}</b> · дней с занятиями: <b>${totalPts}</b></span></div>
         ${heatmapHtml()}

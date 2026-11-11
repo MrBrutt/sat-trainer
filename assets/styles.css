@@ -977,3 +977,30 @@ dialog .row { display: flex; justify-content: flex-end; gap: 8px; }
   .streak-chip { padding: 0 6px; }
   .topbar .icon-btn { width: 32px; }
 }
+
+/* ---------------------------------------------------------------- mock test */
+.choice.picked { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 3px var(--ring); }
+.choice.picked .letter { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.qcell.answered { background: var(--primary-soft); border-color: var(--primary); color: var(--text); }
+.qtimer.warn, .mock-clock.warn { color: var(--warn); }
+.mock-clock { display: flex; align-items: center; gap: 8px; margin: 2px 0 14px; font: 600 28px/1 var(--font-ui); font-variant-numeric: tabular-nums; color: var(--text); }
+.mock-clock .icon { width: 22px; height: 22px; color: var(--muted); }
+.mock-clock.hidden { display: none; }
+.mock-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.mock-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mock-legend .qcell { display: inline-block; width: 14px; height: 14px; min-width: 0; padding: 0; border-radius: 4px; }
+.mock-side-actions { display: flex; flex-direction: column; gap: 8px; }
+.mock-panel { padding: 30px 32px; text-align: center; }
+.mock-panel h2 { margin: 14px 0 8px; letter-spacing: -0.01em; }
+.mock-panel p { color: var(--text-2); max-width: 600px; margin: 8px auto; line-height: 1.55; }
+.mock-panel .btn-lg { margin-top: 12px; }
+.mock-score b { display: block; font: 800 64px/1 var(--font-ui); letter-spacing: -0.03em; color: var(--text); font-variant-numeric: tabular-nums; }
+.mock-score span { display: block; margin-top: 8px; color: var(--muted); font-size: 14px; }
+.mock-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mock-table th { text-align: left; font-weight: 500; font-size: 12px; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.mock-table td { padding: 9px 8px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+.mock-table tr:last-child td { border-bottom: 0; }
+.mock-table tr.has-miss td:first-child { color: var(--text); font-weight: 500; }
+.mock-wrong { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
+.mock-card .task-icon { color: var(--primary); background: var(--primary-soft); }
+.qwrap > .today-block { margin-top: 16px; }

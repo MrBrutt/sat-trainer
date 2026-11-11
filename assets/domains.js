@@ -12,7 +12,7 @@ const OTHER = "Другое";
 const low = (s) => (s || "").trim().toLowerCase();
 
 // A skill's name as DOMAINS writes it. Exports may say "Command of Evidence: Quantitative".
-function skillName(skill) {
+export function skillName(skill) {
   const key = low(skill).startsWith("command of evidence") ? "command of evidence" : low(skill);
   return DOMAINS.flatMap((d) => d.skills).find((s) => low(s) === key) || skill;
 }

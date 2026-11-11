@@ -43,6 +43,8 @@ export const MERGE = {
     bestRun: larger,
     bestStreak: larger,
   }),
+  // finished mock tests by id; one changed on both devices keeps this device's copy
+  mocks: (b, l, r) => mergeMap(b, l, r, mine),
   // no list here yet (the set is still loading) is no opinion, not a deletion
   sources: (b, l, r) => byField(b, l ?? b, r, {
     list: (b, l, r) => mergeMap(b, l, r, mine),
@@ -119,7 +121,8 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   // After the account changed the trainer's data: redraw once, not per section.
   const refresh = () => { clearTimeout(refreshTimer); refreshTimer = setTimeout(changed, 120); };
 
-  const sections = Object.fromEntries(Object.keys(MERGE).filter((n) => n !== "sources").map((name) => [name, {
+  // only the sections this app hands over: a merge rule alone is not data to sync
+  const sections = Object.fromEntries(Object.keys(MERGE).filter((n) => n !== "sources" && data[n]).map((name) => [name, {
     read: () => data[name].read(),
     apply: (v) => { applying = true; try { data[name].write(v); } finally { applying = false; } refresh(); },
     merge: MERGE[name],
