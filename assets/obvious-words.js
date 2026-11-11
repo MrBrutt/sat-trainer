@@ -1,6 +1,7 @@
 // Words that are rare in everyday English but need no learning: numbers, plain forms of common words,
 // compounds that say what they mean, international science words. Chosen by hand from the answer choices
 // of the question bank. A list, not a rule: a rule on word parts would also take "hardship" and "overlook".
+// Names, foreign words of a passage and broken forms are here too: they are no vocabulary to learn.
 export const OBVIOUS = new Set(`
   eleventh twelfth thirteen thirteenth fourteen fourteenth fifteen fifteenth sixteen sixteenth seventeen
   seventeenth eighteen eighteenth nineteen nineteenth twentieth thirtieth fortieth fiftieth sixtieth
@@ -32,4 +33,8 @@ export const OBVIOUS = new Set(`
   enjoyment essay feather fence frog goat imagination insect invent invention lonely measurement mixture
   mosquito mosquitoes northeastern organize pig pleasant pond popularity pork puzzle rocky rubber
   salty saltiness shark shiny shout snake treasure tuna tunnel weakness whale worm
+
+  aristotle plato thailand utah hanoi cherokee navajo guinea cupid
+  meng mengsedih serga ikaah bree choy parachinensi explicacione mimesi mimos poema robota mtorolite fregata thale
+  bufo jorō sōsaku hanga ukiyo styrene ethylene butylene raffinose bufadienolide jasmonic
 `.trim().split(/\s+/));

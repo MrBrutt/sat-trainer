@@ -1956,3 +1956,1071 @@ participation|n.|taking part|Thank you for your participation in the survey.
 hunt|v.|to chase and kill animals for food|Wolves hunt in groups.
 burial|n.|putting a dead body in the ground|The burial took place in the village church.
 hunter|n.|a person or animal that hunts|The hunter waited quietly in the forest.
+abandon|v.|to leave someone or something completely; to stop doing something|They had to abandon the car in the snow.
+abolish|v.|to officially end a law, system, or practice|The country abolished the death penalty.
+aboveground|adj.|on or above the surface of the ground|The plant has small aboveground leaves and long roots.
+absorb|v.|1) to take in a liquid, heat, or light; 2) to learn and understand fully|A sponge absorbs water.
+abstract|adj.|1) based on ideas, not real things; 2) of art: not showing things as they look|Love is an abstract idea.
+abundantly|adv.|in large amounts; very clearly|Fruit grows abundantly on the island.
+abysm|n.|old word for a very deep hole, or a very bad situation|The poet wrote of the dark abysm of time.
+accelerate|v.|to move faster, or to make something happen faster|The car accelerated on the highway.
+acceleration|n.|an increase in speed or rate|The new car has fast acceleration.
+accompany|v.|to go with someone, or to happen at the same time as something|My mother accompanied me to the doctor.
+accrete|v.|to grow by slowly adding layers or pieces|Dust and ice accrete to form small planets.
+accrue|v.|to grow or build slowly over time, like money or benefits|Interest accrues on the money in your bank account.
+accumulate|v.|to slowly gather or increase over time|Snow accumulated on the roof all night.
+accuracy|n.|the quality of being correct and exact|The accuracy of the map surprised us.
+accurately|adv.|correctly and exactly|The test accurately measures your level.
+accustomed|adj.|used to something; familiar with it|She is accustomed to working at night.
+acidic|adj.|containing acid; sour|Lemon juice is very acidic.
+activation|n.|the act of making something start working|Activation of the alarm takes ten seconds.
+adaptation|n.|1) a change that helps a living thing survive; 2) a film or play made from a book|Thick fur is an adaptation to cold weather.
+additive|n.|a substance added to food or another product|This bread has no additives.
+adhere|v.|1) to stick firmly to something; 2) to follow a rule or belief|The paper adheres to the wall without glue.
+adherents|n.|people who support a particular idea, group, or religion|The new party has many adherents.
+admittedly|adv.|used to accept that something is true, even if it is not good for your argument|Admittedly, the plan is expensive.
+adolescence|n.|the time of life when a child becomes an adult|She spent her adolescence in Paris.
+adoption|n.|1) the act of starting to use an idea or method; 2) taking a child into your family|The adoption of new technology was slow.
+advise|v.|to tell someone what you think they should do|The doctor advised me to rest.
+adviser|n.|a person whose job is to give advice|She is an adviser to the president.
+advocacy|n.|public support for a cause or policy|Her advocacy helped children in poor schools.
+aerospace|adj./n.|relating to building and flying aircraft and spacecraft|He works for an aerospace company.
+affix|v./n.|v. to attach or stick something to something else; n. a part added to a word, like "un-" or "-ness"|Affix the stamp to the top corner.
+aggregate|n./adj.|a total made of many parts; formed by adding things together|The aggregate score of the two games was 4 to 3.
+agreeable|adj.|1) pleasant; 2) willing to agree|We spent an agreeable evening with friends.
+airborne|adj.|carried in the air; flying|The plane was airborne in minutes.
+akin|adj.|similar; of the same kind|Her feeling was akin to fear.
+algae|n.|very simple plants that grow in water|Green algae covered the pond.
+alight|adj./v.|adj. burning; v. to land, or to leave a bus or train|The candles were alight on the cake.
+alleviate|v.|to make pain or a problem less severe|The medicine alleviated her headache.
+allocate|v.|to give a share of money, time, or space for a purpose|The school allocated money for new books.
+alloy|n.|a metal made by mixing two or more metals|Bronze is an alloy of copper and tin.
+aloft|adv.|high up in the air|The bird held the fish aloft.
+alphabet|n.|the set of letters used to write a language|The English alphabet has 26 letters.
+alternate|v./adj.|v. to change from one thing to another and back; adj. every second one|The weather alternated between rain and sun.
+alternatively|adv.|used to suggest another choice|We can take the bus; alternatively, we can walk.
+altruistically|adv.|in a way that helps others without wanting anything back|She altruistically gave her time to the hospital.
+ambassadorial|adj.|relating to an ambassador, an official who represents a country abroad|He held an ambassadorial post in Japan.
+amphibian|n.|an animal, like a frog, that lives both in water and on land|A frog is an amphibian.
+analogous|adj.|similar in some way, so that one can be compared to the other|The heart is analogous to a pump.
+analytical|adj.|using careful, logical thinking to examine something|She has a very analytical mind.
+analyzer|n.|a device or person that examines something in detail|The lab uses a gas analyzer.
+anatomical|adj.|relating to the structure of the body|The book has anatomical drawings of the heart.
+anguish|n.|very great pain or sadness|She cried out in anguish.
+angular|adj.|having sharp corners or angles; thin, with bones that show|He had an angular face.
+anklet|n.|a piece of jewelry worn around the ankle|She wore a silver anklet.
+annihilation|n.|complete destruction|The army faced annihilation.
+antennae|n.|plural of antenna: the long, thin parts on an insect's head|The ant touched the food with its antennae.
+anterior|adj.|at or near the front|The anterior part of the brain controls planning.
+anticipate|v.|to expect something and prepare for it|We anticipate a large crowd.
+antinutrient|n.|a substance in food that stops the body from using some nutrients|Some beans contain antinutrients that cooking removes.
+appreciation|n.|1) thanks; 2) understanding of the value of something|We sent flowers to show our appreciation.
+appropriateness|n.|the quality of being right for a situation|They discussed the appropriateness of the joke.
+approximation|n.|a number or idea that is close to the real one but not exact|The figure is only an approximation.
+architect|n.|a person who designs buildings|The architect drew plans for the new school.
+armor|n.|a hard covering that protects a body, a vehicle, or an animal|The knight wore heavy armor.
+arrangement|n.|1) a plan; 2) the way things are placed|We made an arrangement to meet at noon.
+artisan|n.|a skilled worker who makes things by hand|The market sells bread from local artisans.
+aspen|n.|a tree with leaves that shake in the wind|The aspen leaves turned gold in autumn.
+aspiration|n.|a strong hope or goal|Her aspiration is to become a pilot.
+astronaut|n.|a person trained to travel in space|The astronaut walked on the moon.
+astrophysic|n.|astrophysics: the science of the physical nature of stars and planets|She studies astrophysics at university.
+attainable|adj.|possible to achieve|Set goals that are attainable.
+attraction|n.|1) a feeling of liking something; 2) a place people visit for fun|The tower is the city's main attraction.
+auks|n.|black-and-white sea birds of the north that dive for fish|Auks nest on the cliffs above the sea.
+aural|adj.|relating to hearing|The test has an aural part, where you listen to a recording.
+auroral|adj.|relating to the aurora, the colored lights in the night sky near the poles|We watched the auroral lights over Norway.
+authentically|adv.|in a way that is real and true, not false or copied|The dish was cooked authentically.
+authorship|n.|the fact of having written something|The authorship of the poem is unknown.
+awe-inspiring|adj.|so impressive that it fills you with respect and wonder|The view from the mountain was awe-inspiring.
+awestruck|adj.|filled with wonder and respect|The children were awestruck by the giant whale.
+axel|n.|a jump in figure skating with one and a half turns in the air|She landed a perfect axel.
+axis|n.|1) an imaginary line around which something turns; 2) a line on a graph|The earth turns on its axis.
+backdrop|n.|1) the painted cloth behind a stage; 2) the setting or situation behind events|The mountains formed a beautiful backdrop.
+bacterial|adj.|caused by or relating to bacteria|He has a bacterial infection.
+balmy|adj.|of weather: warm and pleasant|It was a balmy summer evening.
+barnacle|n.|a small sea animal with a shell that sticks to rocks and boats|Barnacles covered the bottom of the boat.
+barren|adj.|1) of land: unable to grow plants; 2) empty|The land was barren and dry.
+batch|n.|a group of things made or dealt with at one time|She baked a batch of cookies.
+beadwork|n.|decoration made of small beads joined by thread|The dress was covered in colorful beadwork.
+beam|n./v.|n. 1) a long piece of wood or metal; 2) a line of light; v. to smile widely|A beam of light came through the window.
+beatboxing|n.|making drum sounds with your mouth|His beatboxing sounded like a real drum machine.
+beauteous|adj.|old word for beautiful|The poem praised her beauteous face.
+beginneth|v.|old form of "begins"|"Here beginneth the story," the old book said.
+beneath|prep.|under; below|The cat slept beneath the table.
+benevolently|adv.|in a kind and generous way|The old man smiled benevolently.
+betray|v.|1) to break someone's trust; 2) to show a feeling without meaning to|He betrayed his friend's trust.
+bin|n.|a large container for storing things or for trash|Put the bottles in the recycling bin.
+bind|v.|1) to tie or hold together; 2) to force someone to do something by law|Bind the papers together with a string.
+blade|n.|1) the flat cutting part of a knife; 2) a long, thin leaf of grass|The knife has a sharp blade.
+bleach|v./n.|v. to make lighter in color; n. a chemical that cleans and removes color|The sun bleached the curtains.
+blend|v./n.|v. to mix together; n. a mixture|Blend the fruit with milk.
+blur|v./n.|v. to make or become unclear; n. something you cannot see clearly|Tears blurred her eyes.
+boldly|adv.|in a brave and confident way|She boldly asked the president a question.
+boundary|n.|a line that marks the edge of an area or a limit|The river forms the boundary between the two countries.
+bower|n.|a pleasant, shady place under trees|They rested in a bower of roses.
+boxer|n.|1) a person who fights in the sport of boxing; 2) a breed of dog|The boxer won the fight.
+bracket|n.|1) a group or range, like an age group; 2) a support on a wall|People in the higher income bracket pay more tax.
+brass|n.|a yellow metal made of copper and zinc|The door has a brass handle.
+breeze|n.|a light, gentle wind|A cool breeze came from the sea.
+breezy|adj.|1) with a light wind; 2) relaxed and cheerful|It was a breezy day at the beach.
+bristlemouth|n.|a very small deep-sea fish, one of the most common animals on Earth|The bristlemouth lives in the dark deep ocean.
+brome|n.|a type of wild grass|Brome grass grew along the road.
+brushstroke-free|adj.|showing no marks of a painter's brush|The painting looked smooth and brushstroke-free.
+bump|n./v.|n. 1) a raised area; 2) a light hit; v. to hit lightly|The car hit a bump in the road.
+burrow|n./v.|n. a hole an animal digs to live in; v. to dig such a hole|The rabbit hid in its burrow.
+cache|n.|a hidden store of things, like food or weapons|The squirrel has a cache of nuts.
+cage|n.|a box with bars for keeping animals or birds|The bird sang in its cage.
+calculate|v.|to find an amount by using numbers|Calculate the total cost.
+camest|v.|old form of "came", used with "thou"|"Whence camest thou?" asked the king.
+campfire|n.|a fire made outdoors for cooking or warmth|We sang songs around the campfire.
+cantaloupe|n.|a large round fruit with orange flesh|We had cantaloupe for breakfast.
+carbide|n.|a very hard chemical compound of carbon and a metal|The drill has carbide tips.
+carefree|adj.|without worries|We spent a carefree summer at the lake.
+cart|n.|a small vehicle with wheels, pushed or pulled|She pushed the shopping cart.
+categorizing|v.|putting things into groups by type|She is categorizing the books by subject.
+centralized|adj.|controlled from one central place|The country has a centralized government.
+ceramic|adj./n.|made of clay that has been heated until hard|She bought a ceramic bowl.
+chanter|n.|1) a person who sings religious songs on one note; 2) the part of a musical instrument that plays the tune|The chanter led the song.
+cheer|v./n.|v. to shout in support; n. happiness|The fans cheered when the team scored.
+chimpanzee|n.|an African ape, closely related to humans|The chimpanzee used a stick to catch insects.
+chondrule|n.|a small round grain of rock found in some rocks from space|Scientists studied chondrules to learn about the early solar system.
+chore|n.|a boring job you must do regularly, like cleaning the house|Washing dishes is my least favorite chore.
+chronicle|v./n.|v. to record events in the order they happened; n. such a record|The book chronicles the history of the city.
+chronological|adj.|arranged in the order in which events happened|List the events in chronological order.
+circulation|n.|1) the movement of blood through the body; 2) the number of copies of a newspaper sold|Exercise improves circulation.
+circumgalactic|adj.|around a galaxy|Scientists studied the circumgalactic gas that surrounds our galaxy.
+civilization|n.|a developed society with its own culture and system of government|Ancient Egypt was a great civilization.
+clam|n.|a sea animal with two hard shells|We dug for clams on the beach.
+classically|adv.|1) in a traditional or typical way; 2) in the style of classical art or music|She is a classically trained singer.
+clichéd|adj.|used so often that it is no longer interesting|The film had a clichéd ending.
+clumsy|adj.|moving in an awkward way, often dropping or breaking things|I'm so clumsy; I broke another glass.
+cluster|n./v.|n. a group of similar things close together; v. to form a group|A cluster of houses stood by the river.
+cobblestone|n.|a small round stone used to cover old streets|The old town has cobblestone streets.
+coherence|n.|the quality of being logical and clear, with parts that fit together|The essay lacks coherence.
+cohesive|adj.|united and working well together|The team is very cohesive.
+colder|adj.|more cold|It is colder today than yesterday.
+collaborate|v.|to work together with others|The two schools collaborate on the project.
+collaborative|adj.|done by people working together|It was a collaborative effort.
+collapse|v./n.|v. to fall suddenly; to fail; n. a sudden fall or failure|The old bridge collapsed in the storm.
+collision|n.|a crash between moving things|There was a collision between two cars.
+colonial|adj.|relating to a colony or the time when a country ruled colonies|The city has many colonial buildings.
+colony|n.|1) a land ruled by another country; 2) a group of animals living together|Ants live in large colonies.
+color-saturated|adj.|full of strong, bright colors|The painter loved color-saturated scenes.
+comb|n./v.|n. a tool with teeth for tidying hair; v. 1) to tidy hair; 2) to search carefully|Police combed the area for clues.
+combustion|n.|the process of burning|The engine works by combustion of fuel.
+commercially|adv.|in a way related to buying and selling|The product is not yet sold commercially.
+compassion|n.|a feeling of caring about the pain of others and wanting to help|She showed great compassion for the sick.
+completion|n.|the act of finishing something|The bridge is near completion.
+complication|n.|something that makes a situation harder|There was a complication with our flight.
+compose|v.|1) to write music or a poem; 2) to form something; composed of = made of|Mozart composed his first piece at age five.
+composite|adj./n.|made of different parts or materials|The bike frame is made of a composite material.
+compositional|adj.|relating to how something is made or arranged|The artist made compositional changes to the painting.
+conceal|v.|to hide|He concealed the letter in a book.
+conclusive|adj.|proving something without doubt|There is no conclusive evidence.
+conclusively|adv.|in a way that proves something without doubt|The test conclusively showed he was innocent.
+concurrent|adj.|happening at the same time|He is serving two concurrent jobs.
+condensed|adj.|made shorter or thicker|She read a condensed version of the book.
+conductor|n.|1) a person who leads an orchestra; 2) a material that lets heat or electricity pass through|Copper is a good conductor of electricity.
+cone|n.|1) a shape with a round base and a point; 2) the hard fruit of a pine tree|He bought an ice cream cone.
+confront|v.|to face a problem or a person directly|She confronted her fear of flying.
+consecrate|v.|to make something holy in a religious ceremony|The church was consecrated in 1850.
+consequently|adv.|as a result|He missed the bus and consequently was late.
+conservator|n.|a person who repairs and protects works of art or old objects|The conservator cleaned the old painting.
+considerably|adv.|by a large amount|Prices rose considerably last year.
+consistency|n.|1) the quality of always being the same; 2) how thick a liquid is|The team played with great consistency.
+constellation|n.|a group of stars that forms a pattern in the sky|Orion is a famous constellation.
+container|n.|a box, bottle, or other object for holding things|Keep the food in a plastic container.
+contaminate|v.|to make something dirty or harmful by adding a dangerous substance|Oil contaminated the river.
+contemporaneous|adj.|existing or happening at the same time|The two writers were contemporaneous.
+contemporariness|n.|the quality of being modern or of the present time|The building's contemporariness surprised visitors.
+continuous|adj.|without stopping|We heard a continuous noise all night.
+contraction|n.|1) the act of becoming smaller; 2) a short form of words, like "don't"|The cold caused contraction of the metal.
+contradictory|adj.|saying opposite things; not in agreement|The two reports are contradictory.
+convenient|adj.|easy, useful, or near|The shop is in a convenient location.
+conversely|adv.|in an opposite way|Some people love the city; conversely, others hate it.
+conversion|n.|a change from one form or use to another|The conversion of the old factory into flats took a year.
+coordinate|v.|to organize people or things so they work well together|She coordinates the school's events.
+coral|n.|a hard material formed in the sea by tiny animals|The coral reef is full of fish.
+corn|n.|a tall plant with yellow seeds that people eat|We had corn and beans for dinner.
+correlate|v.|to be connected, so that when one thing changes, the other changes too|Sleep correlates with good health.
+correlation|n.|a connection between two things that change together|There is a correlation between exercise and mood.
+correspondingly|adv.|in a way that matches or follows from something|Prices rose, and wages rose correspondingly.
+corroboration|n.|evidence that supports or confirms a statement|The police needed corroboration of his story.
+cortex|n.|the outer layer of an organ, especially the brain|The brain's cortex controls thinking.
+cosmic|adj.|relating to space and the universe|Cosmic rays come from outer space.
+cosmochemist|n.|a scientist who studies the chemistry of space objects|The cosmochemist studied rocks from Mars.
+costume|n.|clothes worn to look like someone else, or typical clothes of a place or time|She wore a cat costume to the party.
+counterfeit|adj./n.|fake, made to look real in order to cheat|The police found counterfeit money.
+counterpart|n.|a person or thing that has the same role in a different place|The French minister met his German counterpart.
+coupler|n.|a device that joins two things together|The coupler joins the two train cars.
+cownose|adj.|cownose ray = a kind of ray, a flat fish with a head shaped like a cow's nose|A cownose ray swam past the boat.
+craggy|adj.|rough and rocky, with steep parts|We climbed the craggy hills.
+crater|n.|a large round hole in the ground, made by a volcano or a falling rock|The moon is covered in craters.
+creep|v.|to move slowly and quietly|Cats creep toward birds very quietly.
+cress|n.|a small plant with leaves used in salads|Cress grows quickly on a wet cloth.
+crisp|adj.|1) firm and fresh; 2) of air: cold and fresh|The apple was crisp and sweet.
+cross-genre|adj.|mixing two or more types of art, music, or writing|The band plays cross-genre music.
+crude|adj.|1) simple and not well made; 2) rude; crude oil = oil in its natural state|They built a crude shelter from sticks.
+cruel|adj.|causing pain to others on purpose|It is cruel to hurt animals.
+crustacean|n.|a sea animal with a hard shell, like a crab or a shrimp|A lobster is a crustacean.
+cryptocrystalline|adj.|made of crystals too small to see without a microscope|Flint is a cryptocrystalline rock.
+crystalline|adj.|1) made of crystals; 2) very clear|The lake had crystalline water.
+ctenophore|n.|a soft, clear sea animal that moves using rows of tiny hairs|The ctenophore glowed in the dark water.
+cultivate|v.|1) to grow plants; 2) to develop a skill or relationship|Farmers cultivate rice in the valley.
+cultivation|n.|1) growing plants; 2) developing something|The cultivation of tea began in China.
+curate|v.|to choose and organize things for a show or a collection|She curated an exhibition of modern art.
+curve|n./v.|n. a line that bends smoothly; v. to bend|The road curves around the lake.
+cyanobacterium|n.|a tiny living thing in water that makes food from sunlight (plural: cyanobacteria)|A single cyanobacterium is too small to see.
+dainty|adj.|small, delicate, and pretty|She drank from a dainty cup.
+daydreamed|v.|thought about pleasant things while awake, not paying attention|He daydreamed about the summer during class.
+decipher|v.|to understand the meaning of something hard to read or understand|Can you decipher this handwriting?
+decorate|v.|to make something more beautiful by adding things to it|We decorated the room with flowers.
+deem|v.|to consider or judge something in a particular way|The plan was deemed too risky.
+deepest|adj.|most deep|This is the deepest lake in the world.
+deer|n.|a wild animal with long legs; the male often has horns like branches|A deer ran across the road.
+deform|v.|to change the normal shape of something|Heat can deform plastic.
+deformation|n.|a change in the normal shape of something|The deformation of the rock took millions of years.
+delectable|adj.|very pleasant to taste or look at|The cake was delectable.
+deliberate|adj./v.|adj. done on purpose; v. to think about something carefully|It was a deliberate choice, not an accident.
+deliberation|n.|careful thought or discussion before a decision|After long deliberation, the judge made a decision.
+delight|n./v.|n. great pleasure; v. to please greatly|The children shouted with delight.
+delineated|adj./v.|clearly described or marked|The rules are clearly delineated in the guide.
+delve|v.|to search or study something in detail|The book delves into the history of jazz.
+demolish|v.|to destroy a building completely|They demolished the old factory.
+dependence|n.|the state of needing someone or something|The country reduced its dependence on oil.
+dephlogisticated|adj.|old science: "dephlogisticated air" was the early name for oxygen|Priestley called oxygen "dephlogisticated air."
+depiction|n.|a picture or description of something|The film is a realistic depiction of war.
+deploy|v.|to put soldiers, tools, or ideas into use|The city deployed more police for the festival.
+deposit|n./v.|n. 1) money put in a bank; 2) a layer of material left by water or wind; v. to put or leave something somewhere|The river leaves deposits of sand.
+derivative|adj./n.|adj. copied from others, not original; n. something that comes from something else|The film is derivative of older movies.
+desacralized|adj.|no longer treated as holy or sacred|The old church was desacralized and became a museum.
+desegregation|n.|ending the separation of people of different races|The desegregation of schools began in the 1950s.
+designate|v.|to officially choose or name someone or something for a purpose|The park was designated a protected area.
+desirous|adj.|wanting something strongly|He was desirous of fame.
+destructive|adj.|causing great damage|The storm was very destructive.
+deterrent|n.|something that makes people not want to do something|High fines are a deterrent to bad driving.
+deviation|n.|a difference from what is normal or expected|Any deviation from the plan must be approved.
+devote|v.|to give your time or energy to something|She devoted her life to science.
+diameter|n.|a straight line through the center of a circle, from one side to the other|The table is one meter in diameter.
+dietary|adj.|relating to food and what people eat|He has special dietary needs.
+dig|v.|to make a hole in the ground|Dogs like to dig holes in the garden.
+digest|v.|1) to change food in the stomach so the body can use it; 2) to understand new information|It takes hours to digest a big meal.
+digestibility|n.|how easily food can be broken down in the body|Cooking improves the digestibility of beans.
+dine|v.|to eat dinner|We dined at a small restaurant.
+dipole|n.|in physics, a pair of opposite charges or poles close together|A water molecule acts as a dipole.
+disappoint|v.|to make someone sad because something is not as good as they hoped|The film disappointed me.
+discard|v.|to throw something away|Discard the old batteries safely.
+discharge|v./n.|v. 1) to let someone leave, like a hospital; 2) to send out a liquid or gas; n. the act of sending out|The factory discharged waste into the river.
+disco|n.|1) a club for dancing; 2) a style of dance music from the 1970s|My parents danced to disco music.
+discontent|n.|a feeling of being unhappy or not satisfied|There was growing discontent among the workers.
+discourse|n.|1) serious discussion or writing about a subject; 2) a talk|Political discourse has become very angry.
+disorganized|adj.|not well planned or arranged|The meeting was disorganized.
+disparity|n.|a large difference, often unfair|There is a disparity in pay between the two groups.
+disproportionally|adv.|too much or too little compared to something else|The tax hurts poor families disproportionally.
+disproportionate|adj.|too large or too small compared to something else|The punishment was disproportionate to the crime.
+disproportionately|adv.|too much or too little compared to something else|Young people are disproportionately affected.
+disruption|n.|a problem that stops something from continuing normally|The strike caused disruption to train services.
+dissipate|v.|to slowly disappear or spread until it is gone|The fog dissipated by noon.
+dissolve|v.|1) to mix into a liquid and disappear; 2) to end an organization|Sugar dissolves in hot tea.
+distantly|adv.|1) far away; 2) not closely|They are distantly related.
+distinction|n.|1) a clear difference; 2) special honor|There is a distinction between a cold and the flu.
+distinguish|v.|to see or show the difference between things|Can you distinguish the twins?
+distort|v.|to change the shape, sound, or meaning so it is no longer true|The newspaper distorted his words.
+disturbance|n.|something that interrupts or disturbs|The noise caused a disturbance at night.
+ditty|n.|a short, simple song|She sang a little ditty.
+dock|n./v.|n. a place where ships stop to load; v. to arrive at such a place|The ship docked in the morning.
+dockless|adj.|of bikes or scooters: rented without a fixed station|The city has dockless bikes you can leave anywhere.
+dome|n.|a round roof shaped like half a ball|The church has a golden dome.
+domesticated|adj.|of animals: kept by people and used to living with them|Dogs were domesticated long ago.
+doth|v.|old form of "does"|"The lady doth protest too much," says the queen.
+downbeat|adj.|sad or not hopeful|The news was downbeat.
+downward|adj./adv.|moving toward a lower place or level|Prices are moving downward.
+downy|adj.|soft and covered with fine hair or feathers|The chick had downy feathers.
+drawback|n.|a disadvantage or problem|The main drawback of the plan is its cost.
+dressmaking|n.|the work of making women's clothes|She learned dressmaking from her mother.
+drudgery|n.|hard, boring work|The job was pure drudgery.
+duckweed|n.|a tiny plant that floats on ponds|Duckweed covered the pond.
+dull|adj.|1) boring; 2) not bright or sharp|The lecture was dull.
+durability|n.|the ability to last a long time without breaking|These boots are known for their durability.
+dusky|adj.|1) rather dark; 2) of the time just before night|The dusky sky turned purple.
+dyed|v./adj.|colored with dye|She dyed her hair red.
+dynamism|n.|energy and the ability to create new ideas|The city is known for its dynamism.
+eager|adj.|wanting to do something very much|The students were eager to learn.
+ecosystem|n.|all the plants and animals in an area and how they live together|The forest is a rich ecosystem.
+ecotype|n.|a form of a plant or animal that has adapted to a local environment|This ecotype of the plant grows only in dry hills.
+educative|adj.|giving knowledge; teaching something|The trip was fun and educative.
+elevation|n.|1) height above sea level; 2) a raise to a higher position|The village is at an elevation of 2,000 meters.
+embody|v.|to be a clear example of an idea or quality|She embodies the spirit of the team.
+embroidered|adj.|decorated with patterns made with thread|She wore an embroidered dress.
+emit|v.|to send out light, heat, sound, or gas|The machine emits a loud noise.
+empirically|adv.|based on observation and experiment, not on theory|The idea was tested empirically.
+enact|v.|1) to make something a law; 2) to act out a story|The government enacted a new law.
+endoskeleton|n.|a skeleton inside the body, as in humans and fish|Humans have an endoskeleton.
+endurance|n.|the ability to continue doing something hard for a long time|Running a marathon takes endurance.
+endure|v.|1) to suffer something hard with patience; 2) to last|She endured years of pain.
+enjoyable|adj.|giving pleasure|We had an enjoyable trip.
+entirety|n.|the whole of something|He read the book in its entirety.
+entity|n.|something that exists on its own, like a company or an organization|The two companies are separate entities.
+entrapped|adj.|caught in a trap or held so that it cannot escape|The gas was entrapped in the rock.
+ephemeral|adj.|lasting only a very short time|Fame can be ephemeral.
+equator|n.|the imaginary line around the middle of the earth|Brazil lies on the equator.
+erase|v.|to remove completely|She erased the mistake with a rubber.
+ethnobiologist|n.|a scientist who studies how people use plants and animals in their culture|The ethnobiologist studied the plants used by local healers.
+evidentiary|adj.|relating to evidence|The court discussed evidentiary rules.
+evocative|adj.|bringing strong memories, feelings, or images to mind|The song is evocative of my childhood.
+evoke|v.|to bring a memory, feeling, or image to mind|The smell evoked memories of home.
+exalt|v.|to praise highly or raise to a higher rank|The poem exalts the beauty of nature.
+excavated|adj./v.|dug out of the ground, especially by scientists|The excavated pots are 3,000 years old.
+exceptionally|adv.|unusually; very|She is exceptionally talented.
+excess|n./adj.|an amount that is more than needed or allowed|He drinks coffee in excess.
+exclusion|n.|leaving someone or something out|The exclusion of women from voting ended in 1920.
+exerciser|n.|1) a person who exercises; 2) a machine for exercise|The study compared regular exercisers with others.
+exert|v.|to use force, power, or effort|The moon exerts a pull on the oceans.
+exoskeleton|n.|a hard covering on the outside of an animal's body, like an insect's|A beetle has a hard exoskeleton.
+expel|v.|1) to force someone to leave; 2) to push something out|The school expelled the student.
+expend|v.|to use time, energy, or money|Birds expend a lot of energy flying.
+expertly|adv.|with great skill|He expertly fixed the car.
+explicitly|adv.|clearly and directly|The rules explicitly forbid phones.
+exploratory|adj.|done to learn more about something|The doctors did exploratory tests.
+export|v./n.|v. to sell goods to another country; n. something sold to another country|Japan exports cars.
+expose|v.|1) to leave something without protection; 2) to show a hidden truth|Don't expose your skin to the sun too long.
+expulsion|n.|the act of forcing someone to leave a place|His expulsion from school shocked everyone.
+extensively|adv.|widely and in detail|She has traveled extensively in Asia.
+exterior|n./adj.|the outside of something|The exterior of the house is painted white.
+extract|v./n.|v. to remove something from a place; n. a short part taken from a book or film|The dentist extracted my tooth.
+extraction|n.|the act of taking something out|Oil extraction damages the land.
+extrapolating|v.|guessing about the future or unknown facts by using known facts|By extrapolating from current trends, they predicted the next year.
+extricated|v.|freed from a difficult place or situation|Firefighters extricated the driver from the car.
+facilitate|v.|to make something easier|Good lighting facilitates reading.
+fade|v.|to slowly become weaker, lighter, or quieter|The colors faded in the sun.
+familiarity|n.|good knowledge of something because you have seen or used it often|Her familiarity with the city helped us.
+famously|adv.|in a way that is well known|The city is famously rainy.
+fanlike|adj.|shaped like an open fan|The bird has a fanlike tail.
+faraway|adj.|distant; far away|She dreamed of faraway places.
+fertilizer|n.|a substance added to soil to help plants grow|Farmers use fertilizer on their fields.
+fiber|n.|1) a thin thread; 2) parts of plant food that help the stomach work well|Beans are high in fiber.
+fiery|adj.|1) like fire; 2) full of strong feeling|He gave a fiery speech.
+figuratively|adv.|not in the exact meaning of the words; as an image|"Drowning in work" is said figuratively.
+finite|adj.|having an end or a limit|Oil is a finite resource.
+firsthand|adj./adv.|from your own experience, not from others|She saw the damage firsthand.
+fittingly|adv.|in a way that is right for the situation|The winner, fittingly, was the hardest worker.
+fixative|n.|a liquid used to keep colors or tissue from changing|The artist sprayed fixative on the drawing.
+flesh|n.|the soft part of the body or of a fruit|The fruit has sweet orange flesh.
+flexibility|n.|1) the ability to bend easily; 2) the ability to change easily|Yoga improves flexibility.
+flint|n.|a hard gray stone that makes sparks|Early people made tools from flint.
+flourish|v.|to grow well or be very successful|The plants flourished in the sun.
+floweret|n.|a small flower|The plant has tiny white flowerets.
+fluctuations|n.|frequent changes up and down|Prices show large fluctuations.
+flung|v.|threw with force (past of fling)|She flung her coat on the bed.
+fluorescence|n.|light given off by something when other light or energy hits it|The rock showed bright fluorescence under the lamp.
+foil|n./v.|n. very thin metal sheet; v. to stop a plan from succeeding|The police foiled the robbery.
+foliage|n.|the leaves of a plant or tree|The autumn foliage was red and gold.
+forewing|n.|one of the two front wings of an insect|The butterfly's forewing has a black spot.
+forger|n.|a person who makes illegal copies of money, papers, or art|The forger copied famous paintings.
+fork-tailed|adj.|having a tail split into two parts|The fork-tailed bird flew over the sea.
+forked-tailed|adj.|having a tail split into two points|A forked-tailed fish swam past.
+fortifie|v.|fortifies: makes something stronger or protects it|Milk is often fortified with vitamin D.
+foundational|adj.|forming the base for something else|Reading is a foundational skill.
+fracture|n./v.|n. a break or crack, especially in a bone; v. to break|She has a fracture in her arm.
+fragile|adj.|easily broken or damaged|Be careful, the glass is fragile.
+fragmentation|n.|the process of breaking into small separate parts|Roads cause the fragmentation of forests.
+freeze|v.|1) to turn to ice because of cold; 2) to stop moving suddenly|Water freezes at zero degrees.
+frigatebird|n.|a large black sea bird with long wings and a forked tail|A frigatebird flew high above the ship.
+fringe|n./adj.|n. the outer edge; adj. not part of the main group|They live on the fringe of the city.
+frustrated|adj.|annoyed because you cannot do what you want|She was frustrated by the slow internet.
+fudge|n./v.|n. a soft sweet; v. to avoid giving a clear answer|The minister fudged the question.
+fully-fledged|adj.|completely developed or trained|She is now a fully-fledged doctor.
+furthermore|adv.|in addition; also|The hotel is cheap; furthermore, it is near the beach.
+fuse|v.|to join or combine, often by heat|The two metals fused together.
+galactic|adj.|relating to a galaxy|The galactic center is full of stars.
+gaseous|adj.|in the form of gas|Water vapor is water in a gaseous state.
+gather|v.|1) to come or bring together; 2) to collect|A crowd gathered in the square.
+gaze|v./n.|v. to look at something for a long time; n. a long look|She gazed at the stars.
+gelatinous|adj.|thick and soft, like jelly|The jellyfish has a gelatinous body.
+genera|n.|plural of genus: groups of closely related species|Scientists compared two genera of frogs.
+generalism|n.|having broad skills or habits rather than special ones|In nature, generalism helps animals survive change.
+generalist|n.|an animal or person that can live or work in many different ways|Raccoons are generalists that eat almost anything.
+genre|n.|a type of art, music, film, or writing|Science fiction is my favorite genre.
+gentle|adj.|kind, calm, and soft|The doctor has a gentle voice.
+genus|n.|a group of closely related species|The lion belongs to the genus Panthera.
+geographer|n.|a scientist who studies places, land, and people|The geographer made a map of the river.
+geologist|n.|a scientist who studies rocks and the earth|The geologist found gold in the rocks.
+geometric|adj.|made of simple shapes like lines, circles, and squares|The rug has a geometric pattern.
+geometry|n.|the part of mathematics about shapes, lines, and angles|We learned geometry at school.
+geophysicist|n.|a scientist who studies the physical forces of the earth|The geophysicist studied earthquakes.
+gesture|n./v.|n. a movement of the hand or head to show meaning; v. to make such a movement|He made a gesture for us to sit.
+gigantic|adj.|extremely large|The ship was gigantic.
+gigantism|n.|very large size, much bigger than normal|Island gigantism makes some animals grow very large.
+gleaming|adj.|shining brightly|He drove a gleaming new car.
+glow|v./n.|v. to shine with a soft light; n. a soft light|The lamp glowed in the dark.
+goddess|n.|a female god|Athena was the Greek goddess of wisdom.
+govern|v.|to officially control a country or group|The party governed for ten years.
+gram|n.|a small unit of weight|A paper clip weighs about one gram.
+grasp|v./n.|v. 1) to hold firmly; 2) to understand; n. understanding|She grasped the idea quickly.
+greasy|adj.|covered with oil or fat|The pan was greasy.
+greenhouse|n.|a glass building where plants are grown|Tomatoes grow in the greenhouse all year.
+grid|n.|a pattern of crossing lines that forms squares|The city streets form a grid.
+grid-cell|n.|a brain cell that helps an animal know where it is in space|Grid-cell activity helps rats find their way.
+grind|v.|to crush something into small pieces or powder|Grind the coffee beans.
+groan|v./n.|v. to make a low sound of pain or of being unhappy; n. such a sound|He groaned when he saw the bill.
+grocery|n.|a shop that sells food; groceries = food bought there|I need to buy groceries.
+grove|n.|a small group of trees|They walked through an orange grove.
+grumbling|n./adj.|complaining in a low, unhappy voice|There was grumbling about the new rules.
+habit|n.|something you do often and without thinking|Biting your nails is a bad habit.
+hadst|v.|old form of "had", used with "thou"|"Thou hadst a friend," said the old man.
+hatch|v.|1) of a young bird: to leave its egg; 2) to plan something secretly|The chicks hatched this morning.
+heal|v.|to become healthy again, or to make someone healthy|The wound healed quickly.
+healer|n.|a person who treats illness, often with traditional methods|The village healer used plants as medicine.
+heap|n./v.|n. a messy pile; v. to put into a pile|There was a heap of clothes on the floor.
+heartbreak|n.|great sadness, often after losing someone you love|She went through heartbreak after the divorce.
+heartfelt|adj.|deeply and sincerely felt|Please accept my heartfelt thanks.
+heat-absorbing|adj.|taking in heat|Dark colors are heat-absorbing.
+hemisphere|n.|half of the earth, or half of the brain|Australia is in the southern hemisphere.
+herbivorous|adj.|eating only plants|Cows are herbivorous.
+herbivory|n.|the eating of plants by animals|Herbivory by deer damaged the young trees.
+herd|n./v.|n. a large group of animals; v. to move animals as a group|A herd of cows crossed the road.
+heroic|adj.|very brave|The firefighter made a heroic rescue.
+herpetologist|n.|a scientist who studies snakes, lizards, and frogs|The herpetologist found a new kind of frog.
+high-elevation|adj.|located high above sea level|High-elevation forests are colder.
+hinge|n./v.|n. a metal joint on which a door swings; v. hinge on = to depend on|The result hinges on the weather.
+hobby|n.|an activity you do for fun in your free time|My hobby is photography.
+hometown|n.|the town where you were born or grew up|He returned to his hometown.
+honorable|adj.|honest and deserving respect|He is an honorable man.
+horizontal|adj.|flat and level, going from side to side|Draw a horizontal line.
+hottest|adj.|most hot|July is the hottest month.
+hued|adj.|having a particular color|The sky was rose-hued at sunset.
+hurry|v./n.|v. to move or do something quickly; n. a need to be quick|Hurry, the train is leaving!
+hybrid|n./adj.|a mix of two different things, kinds, or species|A mule is a hybrid of a horse and a donkey.
+hypothetical|adj.|imagined, not real; used to discuss what might happen|Let's consider a hypothetical situation.
+icon|n.|1) a famous person or thing that represents an idea; 2) a small picture on a screen|Marilyn Monroe is a film icon.
+iconic|adj.|very famous and seen as a symbol of something|The Eiffel Tower is an iconic building.
+ignorance|n.|lack of knowledge|His mistake came from ignorance, not bad intent.
+illusion|n.|1) a false idea; 2) something that looks real but is not|The magician created an illusion.
+imagery|n.|words or pictures that create images in the mind|The poem is full of natural imagery.
+imaginary|adj.|existing only in the mind|As a child, she had an imaginary friend.
+imitation|n.|a copy of something|The bag is an imitation, not real leather.
+immense|adj.|extremely large|The project needs an immense amount of money.
+immersive|adj.|making you feel you are completely inside an experience|The game is very immersive.
+immigrant|n.|a person who comes to live in a new country|My grandfather was an immigrant from Italy.
+immigrated|v.|came to live in a new country|Her family immigrated to Canada in 1990.
+immobile|adj.|not moving or not able to move|The deer stood immobile.
+impersonation|n.|copying the way another person speaks or acts|He did a funny impersonation of the teacher.
+impossibility|n.|something that cannot happen|Traveling faster than light is an impossibility.
+impulse|n.|a sudden wish to do something|She bought the dress on impulse.
+inclusion|n.|the act of including someone or something|The school supports the inclusion of all children.
+inconsequential|adj.|not important|The mistake was inconsequential.
+incorrectly|adv.|in a wrong way|He spelled my name incorrectly.
+indelible|adj.|impossible to remove or forget|The trip left an indelible memory.
+indentured|adj.|bound to work for someone for a fixed time, often to pay a debt|Many indentured workers came to the island.
+independently|adv.|without help from others; separately|She works independently.
+indicator|n.|a sign that shows the state of something|Fever is an indicator of infection.
+indigenous|adj.|living in a place from the earliest times; native|Indigenous people lived here for thousands of years.
+indirect|adj.|not going straight to the point or place|He gave an indirect answer.
+indirectly|adv.|not in a direct way|The new law indirectly raised prices.
+indistinct|adj.|not clear; hard to see or hear|We heard indistinct voices.
+induce|v.|to cause something to happen|The medicine can induce sleep.
+ineffective|adj.|not producing the result you want|The new rule was ineffective.
+inexplicably|adv.|in a way that cannot be explained|The lights inexplicably went out.
+inferior|adj.|not as good as something else|The copy is inferior to the original.
+infested|adj.|full of insects, rats, or other pests|The old house was infested with mice.
+infesting|v.|living in large numbers in a place and causing harm|Insects were infesting the crops.
+inflow|n.|the movement of something into a place|An inflow of money helped the town.
+informal|adj.|relaxed and friendly, not official|It was an informal meeting.
+ingredient|n.|one of the foods used to make a dish|Flour is the main ingredient of bread.
+inhabit|v.|to live in a place|Many birds inhabit the island.
+inheritance|n.|money, property, or features you receive from your parents or relatives|She received a large inheritance.
+inhibitor|n.|a substance that slows down or stops a process|The drug is an enzyme inhibitor.
+insight|n.|a clear, deep understanding of something|The book gives insight into her life.
+insightful|adj.|showing deep understanding|She made an insightful comment.
+insulation|n.|material used to keep heat, cold, or sound from passing through|The house has good insulation.
+intend|v.|to plan to do something|I intend to study medicine.
+intensify|v.|to become or make stronger|The storm intensified overnight.
+intentionally|adv.|on purpose|He intentionally ignored the message.
+interbreeding|n.|breeding between different groups or species|Interbreeding between the two groups happened long ago.
+interference|n.|1) getting involved where you are not wanted; 2) noise that spoils a signal|There was interference on the radio.
+interlocked|adj.|firmly joined by fitting into each other|The pieces of the puzzle were interlocked.
+interlocking|adj.|fitting together firmly|The toy has interlocking bricks.
+intermediate|adj.|in the middle; between two levels|She is in the intermediate class.
+interpret|v.|1) to explain the meaning of something; 2) to translate spoken words|How do you interpret the poem?
+interrupt|v.|to stop someone while they are speaking or doing something|Please don't interrupt me.
+interstellar|adj.|between the stars|The film is about interstellar travel.
+intertidal|adj.|of the area of a beach covered by the sea at high tide and open at low tide|Crabs live in the intertidal zone.
+interval|n.|a period of time between two events|The buses come at ten-minute intervals.
+interweaving|n./v.|mixing or joining together closely|The story is an interweaving of two lives.
+inversely|adv.|in an opposite way: as one thing rises, the other falls|Price and demand are inversely related.
+inversion|n.|a change to the opposite order or position|In this sentence there is an inversion of subject and verb.
+ionosphere|n.|a high layer of the earth's atmosphere|Radio waves bounce off the ionosphere.
+iridescent|adj.|showing changing rainbow colors in different light|The beetle has iridescent wings.
+irritate|v.|1) to annoy; 2) to make skin or eyes sore|The smoke irritated my eyes.
+iteration|n.|one version of something that is repeated and improved|The latest iteration of the app is faster.
+itinerary|n.|a plan of a trip, with places and times|Our itinerary includes Rome and Paris.
+jewelry|n.|rings, necklaces, and other objects worn for decoration|She keeps her jewelry in a small box.
+jingle|n./v.|n. 1) a light ringing sound; 2) a short song used in advertising; v. to make a light ringing sound|The keys jingled in his pocket.
+journalism|n.|the work of writing news for newspapers, websites, radio, or television|She studied journalism at college.
+joyously|adv.|in a very happy way|The children sang joyously.
+keeper|n.|a person who looks after something, like animals in a zoo|The zoo keeper fed the lions.
+kiln|n.|a very hot oven for baking pots and bricks|The pots were baked in a kiln.
+kleptoparasitism|n.|stealing food that another animal has caught|Gulls are known for kleptoparasitism: they steal fish from other birds.
+krill|n.|very small sea animals like shrimp, eaten by whales|Blue whales eat tons of krill.
+labyrinthine|adj.|very complicated, like a maze|The old city has labyrinthine streets.
+lactic|adj.|relating to milk; lactic acid = an acid made in muscles during hard exercise|Lactic acid builds up in your legs when you run.
+lander|n.|a spacecraft built to land on a planet or moon|The lander touched down on Mars.
+landform|n.|a natural feature of the earth's surface, like a hill or valley|A canyon is a dramatic landform.
+languish|v.|to stay in a bad or weak situation for a long time|The project languished for years without money.
+lastly|adv.|finally, as the last point|Lastly, I want to thank my family.
+lawn|n.|an area of short grass around a house or in a park|He cuts the lawn every Sunday.
+layout|n.|the way the parts of something are arranged|I like the layout of the new kitchen.
+legislature|n.|the group of people who make laws for a country or state|The state legislature passed a new law.
+lend|v.|to give something for a short time, expecting to get it back|Can you lend me your pen?
+lightning|n.|a bright flash of light in the sky during a storm|Lightning hit the tall tree.
+likelier|adj.|more likely|Rain is likelier in the afternoon.
+likewise|adv.|1) in the same way; 2) also|She worked hard, and her brother did likewise.
+lineage|n.|the line of ancestors that a person or species comes from|The family can trace its lineage back to the 1600s.
+lineup|n.|a list of the people or acts taking part in an event|The festival has a great lineup this year.
+linguistic|adj.|relating to language|Children have amazing linguistic abilities.
+lion|n.|a large wild cat from Africa; the male has long hair around its head|The lion slept under a tree.
+lithosphere|n.|the hard outer layer of the earth, made of rock|The lithosphere is broken into large plates.
+lithospheric|adj.|relating to the lithosphere, the earth's hard outer layer|Earthquakes happen where lithospheric plates meet.
+lobby|n./v.|n. 1) the entrance hall of a building; 2) a group that tries to influence politicians; v. to try to influence politicians|We met in the hotel lobby.
+locate|v.|1) to find the exact place of something; 2) to be located = to be in a place|I can't locate my keys.
+locomotion|n.|the ability to move from place to place|Snakes use an unusual form of locomotion.
+lofty|adj.|1) very high; 2) noble or ambitious|She has lofty goals.
+lordly|adj.|proud, like a lord; grand|The lordly castle stood on the hill.
+low-elevation|adj.|located not far above sea level|Low-elevation towns face more floods.
+low-visibility|adj.|in conditions where it is hard to see, like fog|Pilots train for low-visibility landings.
+macaque|n.|a kind of monkey from Asia and North Africa|A macaque stole my sandwich in the park.
+machinery|n.|machines, or the parts of a machine|The factory bought new machinery.
+magma|n.|hot liquid rock under the earth's surface|Magma rises up through the volcano.
+magnificen|n.|magnificence: great beauty and size that impresses people|The magnificence of the palace amazed us.
+magnificent|adj.|very beautiful and impressive|We saw a magnificent sunset.
+magnitude|n.|1) great size or importance; 2) the size of an earthquake or a star's brightness|The magnitude of the problem is clear.
+mainland|n.|the main part of a country, not its islands|We took a boat back to the mainland.
+majesty|n.|1) great beauty and power; 2) a title for a king or queen|We admired the majesty of the mountains.
+malapportionment|n.|unfair division of voters into areas, so some votes count more than others|Malapportionment gave rural areas more power.
+malleable|adj.|1) easily shaped; 2) easily influenced|Gold is a malleable metal.
+manifesto|n.|a public statement of a group's aims and beliefs|The party published its manifesto.
+manipulate|v.|1) to control someone unfairly; 2) to handle something with skill|He manipulated his friends to get money.
+mantle-derived|adj.|coming from the earth's mantle, the hot layer below the crust|These are mantle-derived rocks.
+mapping|n.|the making of maps; a careful description of how parts relate|The mapping of the ocean floor is still incomplete.
+mariner|n.|a sailor|The old mariner told stories of the sea.
+marsquake|n.|an earthquake on Mars|The lander recorded a large marsquake.
+mathematician|n.|an expert in mathematics|Ada Lovelace was a gifted mathematician.
+mathematics|n.|the science of numbers, shapes, and quantities|She loves mathematics.
+mayst|v.|old form of "may", used with "thou"|"Thou mayst go," said the king.
+mechanic|n.|a person who repairs engines and cars|The mechanic fixed my car.
+melancholy|n./adj.|a deep, quiet sadness; sad|The song has a melancholy tune.
+mellowness|n.|the quality of being soft, warm, and relaxed|I love the mellowness of autumn light.
+memorable|adj.|worth remembering; easy to remember|It was a memorable trip.
+mercantilism|n.|an old economic idea that a country gets rich by selling more to other countries than it buys|Mercantilism shaped European trade in the 1600s.
+merrily|adv.|happily and cheerfully|The children played merrily.
+metaphor|n.|a way of describing something by calling it something else, like "time is money"|"Life is a journey" is a metaphor.
+meter|n.|1) a unit of length; 2) a device that measures; 3) the rhythm of a poem|The room is five meters long.
+microbes|n.|very small living things, like bacteria|Microbes live in soil and water.
+microbial|adj.|relating to microbes, very small living things|Microbial life may exist on Mars.
+microcrystalline|adj.|made of very small crystals|Some quartz is microcrystalline, with crystals too small to see.
+microliter|n.|a tiny amount of liquid, much less than a drop|The test needs only a microliter of blood.
+micromole|n.|a very small amount of a chemical substance, used in science|The sample held a few micromoles of sugar.
+microorganisms|n.|very small living things that can be seen only with a microscope|Microorganisms help break food down in the gut.
+microscope|n.|a tool that makes very small things look larger|We looked at cells under a microscope.
+mightily|adv.|very much; with great strength|She struggled mightily to finish the race.
+migratory|adj.|moving from one place to another with the seasons|Geese are migratory birds.
+milligram|n.|a very small unit of weight: 1,000 milligrams make a gram|The pill contains 500 milligrams of medicine.
+milligrams|n.|very small units of weight: 1,000 milligrams make a gram|Take 200 milligrams twice a day.
+millimeter-thick|adj.|one millimeter thick: very thin|A millimeter-thick layer of ice covered the window.
+millisecond|n.|a very short time: 1,000 milliseconds make a second|The race was won by a millisecond.
+mindful|adj.|aware of something and careful about it|Be mindful of other people's feelings.
+mint|n./v.|n. 1) a plant with a fresh taste; 2) a place where coins are made; v. to make coins|She drank mint tea.
+mischaracterized|v.|described in a wrong or unfair way|The article mischaracterized her views.
+misinterpreted|v.|understood in the wrong way|He misinterpreted my silence as anger.
+mistaken|adj.|wrong in what you think|I was mistaken about the time.
+moan|v./n.|v. 1) to make a low sound of pain; 2) to complain; n. such a sound|He moaned about the weather.
+modernist|adj./n.|relating to modernism, an art and writing style of the early 1900s that broke with tradition|She loves modernist architecture.
+moisture|n.|a small amount of water in the air or on a surface|The plants need moisture.
+mole|n.|1) a small animal that lives underground; 2) a small dark spot on the skin|A mole dug tunnels in the garden.
+monopsony|n.|a market with only one buyer, like one big employer in a town|The factory had a monopsony on local workers.
+monument|n.|a building or statue built to remember a person or event|They built a monument to the soldiers.
+muckraker|n.|a journalist who looks for and reports bad or corrupt acts|The muckraker exposed the company's lies.
+multicellular|adj.|made of many cells|Humans are multicellular organisms.
+multicolored|adj.|having many colors|She wore a multicolored scarf.
+multidisciplinary|adj.|combining several fields of study|It was a multidisciplinary research team.
+multifaceted|adj.|having many different parts or sides|She is a multifaceted artist.
+multinational|adj./n.|working in many countries|He works for a multinational company.
+multitask|v.|to do several things at the same time|I can't multitask while I study.
+multitasking|n.|doing several things at the same time|Multitasking makes mistakes more likely.
+municipality|n.|a city or town with its own local government|Each municipality collects its own taxes.
+muscovite|n.|a light-colored mineral that splits into thin, shiny sheets|Muscovite shines in the rock.
+music-preference|adj.|relating to which music a person likes|The study used a music-preference survey.
+mythological|adj.|relating to myths|The dragon is a mythological creature.
+nanogram|n.|a tiny unit of weight: a billion nanograms make a gram|The test can find a single nanogram of the drug.
+natural-habitat|n.|the place where an animal or plant normally lives in nature|The zoo tries to copy the animals' natural-habitat conditions.
+naval|adj.|relating to a navy, the ships of a country's army|It was a famous naval battle.
+navigation|n.|finding the way from one place to another|Birds use the sun for navigation.
+navigation-related|adj.|connected with finding the way|The brain has navigation-related cells.
+near-gale|n.|a strong wind, just below the strength of a gale|A near-gale blew across the bay.
+nebulae|n.|plural of nebula: clouds of gas and dust in space|Stars are born inside nebulae.
+nectar|n.|a sweet liquid in flowers, collected by bees|Bees drink nectar from flowers.
+nest|n./v.|n. a home a bird builds for its eggs; v. to build or live in a nest|The birds built a nest in the tree.
+nest-like|adj.|shaped like a bird's nest|The fish makes a nest-like pile of stones.
+neural|adj.|relating to nerves or the brain|Learning creates new neural connections.
+neural-network|n.|a computer system that works in a way similar to the brain|The neural-network model learned to recognize faces.
+neuroscientist|n.|a scientist who studies the brain and nerves|The neuroscientist studied memory in mice.
+neutral|adj.|1) not supporting either side; 2) of color: not strong, like gray|Switzerland stayed neutral in the war.
+nighttime|n.|the time when it is dark|Owls hunt at nighttime.
+nissologist|n.|a scientist who studies islands|The nissologist compared life on different islands.
+non-indigenous|adj.|not native to a place; brought from somewhere else|Non-indigenous plants can harm local wildlife.
+nonacting|adj.|not working as an actor; not acting|The film used nonacting local people.
+nonchanging|adj.|staying the same|The desert seemed like a nonchanging world.
+nondescript|adj.|plain and not interesting|He lives in a nondescript gray building.
+nonfermented|adj.|not changed by bacteria or yeast|Nonfermented soy foods include tofu.
+nongravitational|adj.|not caused by gravity|The comet's path showed nongravitational forces.
+nonmaterial|adj.|not physical; not made of matter|Love is a nonmaterial thing.
+nonmigratory|adj.|staying in one place all year; not moving with the seasons|Most nonmigratory birds stay near home in winter.
+nonrecyclable|adj.|not able to be recycled|This plastic is nonrecyclable.
+nonspeech|adj.|not relating to speech|The study used nonspeech sounds like beeps.
+notwithstanding|prep./adv.|in spite of|Notwithstanding the rain, we went for a walk.
+nourishment|n.|food needed for life and growth|Plants get nourishment from the soil.
+nudge|v./n.|v. to push gently, or to gently encourage; n. a gentle push|She nudged me to stop talking.
+nutrient-rich|adj.|containing many substances needed for growth|The soil is nutrient-rich.
+nutritionally|adv.|in terms of nutrition, the food the body needs|The meal is nutritionally balanced.
+nutritious|adj.|containing much of what the body needs to be healthy|Fruit is nutritious.
+obligation|n.|something you must do because of a law, promise, or duty|I have an obligation to help my parents.
+observable|adj.|able to be seen or noticed|There was no observable change.
+observational|adj.|based on watching and noticing, not on experiments|It was an observational study.
+obstacle|n.|something that blocks your way or makes progress hard|Fear is the biggest obstacle.
+obstruction|n.|something that blocks a way or a process|There was an obstruction on the road.
+ocellated|adj.|having round spots that look like eyes|The ocellated turkey has bright eye-like spots.
+odor|n.|a smell, often unpleasant|The fridge had a strange odor.
+offbeat|adj.|unusual and a little strange|He has an offbeat sense of humor.
+offshore|adj./adv.|in the sea, away from the coast|They built an offshore wind farm.
+offspring|n.|the young of a person, animal, or plant|The bird feeds its offspring.
+oldest|adj.|most old|This is the oldest tree in the park.
+onomatopoetic|adj.|of words that sound like what they mean, like "buzz" or "boom"|"Splash" is an onomatopoetic word.
+onset|n.|the beginning of something, often something bad|The onset of winter was early.
+oppressive|adj.|1) cruel and unfair; 2) of heat: very uncomfortable|The heat was oppressive.
+orcas|n.|large black-and-white whales that hunt in groups|Orcas hunted seals near the ice.
+orchestra|n.|a large group of musicians who play together|The orchestra played Mozart.
+orderly|adj.|neat and well organized|The students left in an orderly line.
+organizational|adj.|relating to organizing or to an organization|She has strong organizational skills.
+ornate|adj.|having a lot of decoration|The church has an ornate ceiling.
+outgassing|n.|the release of gas from inside a rock, planet, or material|Outgassing from volcanoes formed the early atmosphere.
+outlier|n.|a person or thing very different from the rest of a group|One result was an outlier.
+overblown|adj.|made to seem more important or bigger than it is|The fears were overblown.
+overexploit|v.|to use a resource too much, so that it is damaged|Fishermen overexploit the sea.
+overrepresent|v.|to give too large a share to one group|The survey may overrepresent young people.
+overstocked|adj.|having more goods than needed|The shop is overstocked with winter coats.
+overthrow|v./n.|v. to remove a ruler or government by force; n. such a removal|The army overthrew the king.
+oxidation|n.|a chemical reaction with oxygen, like rust forming on iron|Oxidation turns a cut apple brown.
+oxygenation|n.|adding oxygen to something|Plants help the oxygenation of water.
+oyster|n.|a sea animal with a rough shell; some make pearls|She found a pearl in an oyster.
+paleontology|n.|the science of fossils and ancient life|He studied paleontology to learn about dinosaurs.
+parasite|n.|a living thing that lives on or in another and takes food from it|Fleas are parasites.
+parlour|n.|old-fashioned room for receiving guests (British spelling of parlor)|They drank tea in the parlour.
+parsec|n.|a unit for measuring distances in space, about 3.26 light years|The star is ten parsecs away.
+partial|adj.|1) not complete; 2) partial to = liking something|The project was a partial success.
+particle|n.|a very small piece of something|Dust particles floated in the light.
+patina|n.|a thin layer on old metal or wood that comes with age|The old bronze statue has a green patina.
+pause|v./n.|v. to stop for a short time; n. a short stop|She paused before answering.
+peacefulness|n.|the quality of being calm and quiet|We enjoyed the peacefulness of the lake.
+pedal|n./v.|n. a part you push with your foot; v. to push pedals|She pedaled her bike up the hill.
+pedigree|n.|the line of parents and ancestors of an animal or person|The dog has a long pedigree.
+penchant|n.|a liking for something|She has a penchant for spicy food.
+pending|adj./prep.|waiting to be decided|The case is still pending.
+peninsula|n.|land that is almost surrounded by water|Italy is a peninsula.
+perfection|n.|the state of being perfect|The cake was cooked to perfection.
+performative|adj.|done mainly to be seen by others|His anger seemed performative.
+performer|n.|a person who acts, sings, or dances for an audience|The performer bowed to the crowd.
+perishable|adj.|of food: likely to go bad quickly|Keep perishable food in the fridge.
+permit|v./n.|v. to allow; n. an official paper that allows something|You need a permit to park here.
+perovskite|n.|a kind of crystal material used in new solar cells|Perovskite solar panels may be cheaper.
+persevere|v.|to keep trying even when it is hard|She persevered and finally passed.
+petal|n.|one of the colored parts of a flower|The rose lost its petals.
+phenomena|n.|plural of phenomenon: facts or events that can be observed|Rainbows are natural phenomena.
+phlogiston|n.|an old, wrong scientific idea of a substance released in burning|Scientists once believed in phlogiston.
+pile|n./v.|n. a number of things on top of each other; v. to put things in a pile|There is a pile of books on my desk.
+pilgrim|n.|a person who travels to a holy place|Pilgrims walked to the old church.
+pivotal|adj.|very important; central|It was a pivotal moment in history.
+plausibly|adv.|in a way that seems reasonable or likely|He could plausibly have been there.
+plume|n.|1) a large feather; 2) a long cloud of smoke or gas|A plume of smoke rose from the fire.
+plural|n./adj.|the form of a word for more than one, like "cats"|"Mice" is the plural of "mouse."
+podium|n.|a small raised stand for a speaker or winners|The winner stood on the podium.
+poet|n.|a person who writes poems|Pushkin is Russia's best-known poet.
+polaron|n.|in physics, an electron moving together with the small change it causes in a crystal|Scientists observed a polaron in the new material.
+pole|n.|1) a long thin stick; 2) the most northern or southern point of the earth|The flag hangs on a tall pole.
+pollen|n.|a fine powder made by flowers that helps plants reproduce|Bees carry pollen from flower to flower.
+pollutants|n.|substances that make air, water, or soil dirty and harmful|Cars release pollutants into the air.
+pollution|n.|harmful substances in the air, water, or soil|Air pollution is a problem in big cities.
+polymer-derived|adj.|made from a polymer, a substance of long chains of molecules|They tested polymer-derived ceramics.
+polyurethane|n.|a type of plastic used in foam, paint, and many products|The sofa is filled with polyurethane foam.
+populated|adj.|having people living there|It is a densely populated city.
+portable|adj.|easy to carry|I bought a portable speaker.
+portrayal|n.|the way someone or something is shown in art, film, or writing|His portrayal of the king won an award.
+posited|v.|suggested as a fact or basis for an argument|The scientist posited a new theory.
+positing|v.|suggesting something as a fact or basis for an argument|The book starts by positing a simple idea.
+postage|n.|the cost of sending a letter or package|How much is the postage for this letter?
+postexperiment|adj.|after an experiment|The participants filled in a postexperiment survey.
+potatoes|n.|plural of potato, a vegetable that grows underground|We had potatoes with dinner.
+pottery|n.|pots and dishes made of baked clay|She makes pottery in her free time.
+precise|adj.|exact and accurate|Give me the precise time.
+precisely|adv.|exactly|The train left precisely at noon.
+preeminent|adj.|the most important or best known|She is a preeminent scientist.
+preferentially|adv.|in a way that favors one thing over others|The plant preferentially grows in shade.
+prefix|n.|letters added to the start of a word, like "un-" in "unhappy"|"Re-" is a common prefix.
+prefrontal|adj.|of the front part of the brain, which controls planning and decisions|The prefrontal cortex helps us plan.
+prejudice|n.|an unfair opinion formed without knowledge, often about a group|She faced prejudice at work.
+preoccupation|n.|a state of thinking about one thing all the time|His preoccupation with money worried his wife.
+preservation|n.|keeping something safe from damage or change|The preservation of old buildings is important.
+preservative|n.|a substance added to food to keep it fresh longer|This bread has no preservatives.
+preteen|n./adj.|a child aged about 10 to 12|The book is for preteens.
+prevalent|adj.|common; existing widely|The disease is prevalent in hot countries.
+primrose-tufts|n.|small groups of primroses, pale yellow spring flowers|Primrose-tufts grew by the old wall.
+printer|n.|1) a machine that prints; 2) a person or company that prints books|The printer is out of paper.
+probable|adj.|likely to be true or to happen|Rain is probable this afternoon.
+proclaim|v.|to announce officially or proudly|The king proclaimed a holiday.
+proffer|v.|to offer something|She proffered her hand.
+progressively|adv.|steadily, step by step|The pain got progressively worse.
+prolong|v.|to make something last longer|The medicine may prolong his life.
+promptly|adv.|1) quickly; 2) exactly at the right time|She answered promptly.
+pronoun|n.|a word used instead of a noun, like "he", "it", or "they"|"She" is a pronoun.
+proportion|n.|1) a part of a whole; 2) the relation of size between parts|A large proportion of students passed.
+proposition|n.|1) an idea or statement; 2) a suggested plan|It is a risky proposition.
+proximity|n.|the state of being near|The house is in close proximity to the school.
+pseudonym|n.|a false name used by a writer|Mark Twain is a pseudonym.
+publisher|n.|a company or person that prints and sells books or magazines|She sent her novel to a publisher.
+purity|n.|the state of being clean and without anything added|The water's purity is tested daily.
+purported|adj.|claimed to be true, but not proven|The purported cure did not work.
+pursuit|n.|1) the act of trying to get something; 2) an activity|The pursuit of happiness is a human right.
+putatively|adv.|in a way that is generally believed but not proven|The painting is putatively by Rembrandt.
+quad|n.|1) a square area with buildings around it, at a college; 2) a strong muscle at the front of the leg|Students sat on the grass in the quad.
+quadruped|n.|an animal with four legs|A horse is a quadruped.
+quake|n./v.|n. an earthquake; v. to shake|The quake damaged many houses.
+quantitative|adj.|relating to amounts and numbers|The study used quantitative data.
+quantity|n.|an amount or number|They bought a large quantity of rice.
+quasiparticle|n.|in physics, a pattern in a material that moves and behaves like a particle|The electrons formed a quasiparticle.
+questionnaire|n.|a list of questions used to collect information|Please fill in the questionnaire.
+radiant|adj.|1) bright and shining; 2) very happy|She gave a radiant smile.
+radius|n.|a straight line from the center of a circle to its edge|The circle has a radius of five centimeters.
+rage|n./v.|n. very strong anger; v. to continue with great force|He shouted in rage.
+rainforest|n.|a thick forest in a hot area with a lot of rain|The Amazon is the largest rainforest.
+randomly|adv.|by chance, without a plan or pattern|The winners were chosen randomly.
+react|v.|to act or change because of something that happens|How did she react to the news?
+reasonably|adv.|1) fairly; 2) in a sensible way|The hotel was reasonably cheap.
+reclined|v.|rested in a relaxed position with the back lowered|She reclined on the sofa.
+recognizable|adj.|easy to know or identify|His voice is instantly recognizable.
+recollection|n.|a memory|I have no recollection of that day.
+recolonize|v.|of plants or animals: to move back into an area where they once lived|Wolves began to recolonize the forest.
+recommendation|n.|advice about what to do or what to choose|My teacher wrote me a recommendation.
+reconcile|v.|1) to make two people friends again; 2) to make two ideas agree|They reconciled after years of anger.
+recyclable|adj.|able to be recycled|This bottle is recyclable.
+recycle|v.|to treat used things so they can be used again|We recycle paper and glass.
+reflection|n.|1) an image in a mirror or water; 2) careful thought|She saw her reflection in the lake.
+reflective|adj.|1) sending back light; 2) thinking deeply|The jacket has reflective strips.
+refrigeration|n.|keeping food cold to keep it fresh|Milk needs refrigeration.
+refusal|n.|the act of saying no|His refusal to help surprised me.
+regulate|v.|1) to control with rules; 2) to keep something at a certain level|The government regulates banks.
+reignite|v.|to start a fire, feeling, or argument again|The news reignited the debate.
+reindeer|n.|a deer with large horns that lives in cold northern areas|Reindeer pull Santa's sled in the story.
+relativity|n.|Einstein's theory about space, time, and motion|Einstein developed the theory of relativity.
+relieve|v.|to make pain or worry less|The pill relieved my headache.
+remarkably|adv.|unusually; in a surprising way|She looks remarkably young.
+remember'st|v.|old form of "remember", used with "thou"|"Remember'st thou the day we met?" she asked.
+remembrance|n.|the act of remembering someone, often someone who died|They held a day of remembrance.
+reminder|n.|something that helps you remember|I set a reminder on my phone.
+render|v.|1) to cause to become; 2) to give or provide|The news rendered him speechless.
+repel|v.|1) to push away; 2) to make someone feel disgust|This spray repels insects.
+repellent|n./adj.|a substance that keeps insects away; very unpleasant|Use insect repellent in the forest.
+repetitive|adj.|repeated many times in a boring way|The work is repetitive.
+replicate|v.|to copy or repeat exactly|Other scientists could not replicate the results.
+representational|adj.|of art: showing things as they really look|She prefers representational painting.
+repudiation|n.|refusal to accept or support something|The speech was a repudiation of violence.
+reside|v.|to live in a place|She resides in London.
+resilience|n.|the ability to recover quickly from problems|The town showed great resilience after the flood.
+resolve|v./n.|v. 1) to solve; 2) to decide firmly; n. strong determination|They resolved the problem quickly.
+resource-intensive|adj.|needing a lot of resources, such as money, energy, or water|Growing rice is resource-intensive.
+resumption|n.|starting again after a pause|The resumption of classes is on Monday.
+retentive|adj.|able to keep or hold, especially in memory|She has a retentive memory.
+revelation|n.|a surprising fact that becomes known|The news was a revelation to us.
+reverence|n.|deep respect|They spoke of the old teacher with reverence.
+revise|v.|to change something to improve or correct it|She revised her essay.
+revolutionized|v.|changed something completely|The internet revolutionized communication.
+revolutionizing|v.|changing something completely|New drugs are revolutionizing medicine.
+rib|n.|one of the curved bones of the chest|He broke a rib in the fall.
+rider|n.|a person who rides a horse, bike, or vehicle|The rider fell off her horse.
+ridicule|v./n.|v. to laugh at someone in a cruel way; n. cruel laughter|They ridiculed his idea.
+ripple|n./v.|n. a small wave; v. to move in small waves|The stone made ripples in the pond.
+ritual|n.|a set of actions always done in the same way, often in a ceremony|Morning coffee is my daily ritual.
+roar|v./n.|v. to make a loud deep sound; n. such a sound|The lion roared.
+robust|adj.|strong and healthy; hard to break|The economy is robust.
+robustness|n.|the quality of being strong and hard to break|The test showed the robustness of the bridge.
+rotate|v.|to turn around a center|The earth rotates once a day.
+rotation|n.|1) turning around a center; 2) taking turns|The rotation of the earth causes day and night.
+rotor|n.|a part of a machine that turns, like the blades of a helicopter|The helicopter's rotor started to turn.
+rudder|n.|a flat part at the back of a boat or plane used for steering|The captain turned the rudder.
+rumble|v./n.|v. to make a long, low sound; n. such a sound|Thunder rumbled in the distance.
+runestone|n.|a stone with old Scandinavian writing cut into it|The runestone is a thousand years old.
+runic|adj.|written in runes, the letters of old northern European languages|The stone has runic writing.
+sacred|adj.|holy; connected with God or religion|The river is sacred to local people.
+sage|n./adj.|n. 1) a very wise person; 2) a plant used in cooking; adj. wise|The old sage gave good advice.
+satire|n.|humor that shows the faults of people or society|The show is a satire of politics.
+satirical|adj.|using humor to criticize people or society|He writes satirical stories.
+saturated|adj.|1) completely wet; 2) full, unable to take more; 3) of color: strong|The ground was saturated after the rain.
+sauropod|n.|a huge plant-eating dinosaur with a long neck and tail|The sauropod was longer than a bus.
+scramble|v.|1) to move or climb quickly and with effort; 2) to mix up|We scrambled up the rocks.
+scrap|n./v.|n. a small piece; v. to get rid of something|She wrote the number on a scrap of paper.
+scrupulously|adv.|very carefully and honestly|The kitchen was scrupulously clean.
+seabird|n.|a bird that lives near the sea|Seabirds nested on the cliffs.
+seafaring|adj.|traveling by sea; living by sailing|The Vikings were a seafaring people.
+seagrass|n.|plants like grass that grow under the sea|Turtles feed on seagrass.
+seaman|n.|a sailor|The seaman had sailed around the world.
+securely|adv.|firmly and safely|Lock the door securely.
+sediment|n.|sand, mud, and stones that settle at the bottom of water|The river carries sediment to the sea.
+sedimentary|adj.|of rock: made from layers of sand and mud pressed together|Sandstone is a sedimentary rock.
+seest|v.|old form of "see", used with "thou"|"What seest thou?" asked the king.
+seismic|adj.|relating to earthquakes|Scientists record seismic activity.
+self-governance|n.|the right of a group to rule itself|The region won self-governance.
+self-initiated|adj.|started by yourself, without being told|It was a self-initiated project.
+semiabstract|adj.|of art: partly realistic and partly abstract|She paints semiabstract landscapes.
+sender|n.|a person who sends a letter or message|The sender forgot to sign the letter.
+sensor|n.|a device that notices light, heat, movement, or other changes|The door has a motion sensor.
+sensory|adj.|relating to the senses: sight, hearing, smell, taste, and touch|The museum offers a sensory experience.
+sessile|adj.|of animals: fixed in one place, not able to move|Corals are sessile animals.
+shaggy|adj.|having long, thick hair that is not neat|The dog has a shaggy coat.
+shallow|adj.|1) not deep; 2) not serious or thoughtful|The children played in the shallow water.
+shallow-water|adj.|living in or relating to water that is not deep|Shallow-water fish need warm temperatures.
+shepherd|n.|a person who looks after sheep|The shepherd led his sheep down the hill.
+shimmer|v./n.|v. to shine with a soft, moving light; n. such a light|The lake shimmered in the moonlight.
+shipwreck|n.|1) a ship destroyed at sea; 2) the destruction of a ship|Divers explored the old shipwreck.
+shock-absorbing|adj.|reducing the force of a hit or bump|The shoes have shock-absorbing soles.
+shone|v.|past of shine: gave bright light|The sun shone all day.
+shuffle|v.|1) to walk slowly without lifting your feet; 2) to mix cards|He shuffled the cards.
+sigh|v./n.|v. to breathe out loudly when sad, tired, or relieved; n. such a breath|She sighed with relief.
+signaler|n.|a person or animal that sends a signal|In the study, each bird acted as a signaler or a receiver.
+signatories|n.|people or countries that have signed an agreement|There were 50 signatories to the treaty.
+signification|n.|meaning; what something means|The signification of the symbol is unclear.
+silicate|n.|a common kind of mineral made of silicon and oxygen|Most rocks are made of silicates.
+simulation|n.|a model of a real situation, often on a computer|Pilots train using a flight simulation.
+simultaneous|adj.|happening at the same time|There were two simultaneous explosions.
+simultaneously|adv.|at the same time|They spoke simultaneously.
+sistrum|n.|an ancient Egyptian musical instrument that makes a noise when shaken|The priest shook a sistrum during the ceremony.
+skater|n.|a person who skates|The skater spun on the ice.
+skeleton|n.|the bones of a body|The museum has a whale skeleton.
+skyscraper|n.|a very tall building|New York is famous for its skyscrapers.
+slab|n.|a thick, flat piece of stone, wood, or another material|The floor is made of stone slabs.
+slot|n.|1) a narrow opening; 2) a time or place in a schedule|Put a coin in the slot.
+smooth-hound|n.|a small shark of shallow coastal waters|A smooth-hound swam near the shore.
+snatch|v.|to take something quickly and suddenly|A thief snatched her bag.
+snowpack|n.|the snow that collects on the ground in winter, often in mountains|The snowpack melts in spring and fills the rivers.
+sociability|n.|the quality of liking to be with other people|Dogs are known for their sociability.
+socialization|n.|the process of learning how to behave in a group or society|Play is important for the socialization of children.
+socio-political|adj.|relating to both society and politics|The book looks at socio-political change.
+soluble|adj.|able to dissolve in a liquid|Sugar is soluble in water.
+songwriting|n.|the work of writing songs|She is famous for her songwriting.
+sophistication|n.|1) knowledge and experience of the world; 2) the quality of being complex and advanced|The design shows great sophistication.
+sordid|adj.|dirty, or morally bad|The film tells a sordid story of crime.
+southwestern|adj.|in or from the southwest|Arizona is in the southwestern United States.
+sovereign|adj./n.|adj. independent, ruling itself; n. a king or queen|It is a sovereign nation.
+sovereignty|n.|the power of a country to rule itself|The country fought for its sovereignty.
+spacesuit|n.|a special suit that astronauts wear in space|The astronaut put on her spacesuit.
+spacetime|n.|in physics, space and time joined as one thing|Gravity bends spacetime.
+spatial|adj.|relating to space and where things are|Pilots need good spatial skills.
+spatiality|n.|the quality of having to do with space and position|The artist plays with spatiality in her work.
+spatially|adv.|in terms of space and position|The birds are spatially spread across the island.
+spectroscopy|n.|the study of light split into colors to learn what things are made of|Spectroscopy shows what stars are made of.
+spice|n.|a substance from plants, like pepper, used to add flavor to food|Cinnamon is my favorite spice.
+spider|n.|a small creature with eight legs that makes webs|A spider made a web in the corner.
+spike|n./v.|n. 1) a sharp point; 2) a sudden rise; v. to rise suddenly|There was a spike in prices.
+spill|v./n.|v. to let liquid flow from a container by accident; n. an amount that spills|I spilled coffee on my shirt.
+spine|n.|1) the line of bones down the back; 2) a sharp point on a plant or animal|He hurt his spine.
+spiral|n./v.|n. a curve that winds around a center; v. to move in a spiral|The stairs go up in a spiral.
+splash|v./n.|v. to make water fly in drops; n. the sound or act of splashing|The children splashed in the pool.
+sponsor|n./v.|n. a person or company that pays for an event; v. to pay for an event|The bank sponsored the race.
+spray|v./n.|v. to send out liquid in small drops; n. small drops of liquid|She sprayed water on the plants.
+sprout|v./n.|v. to start to grow; n. a new shoot of a plant|Seeds sprout in spring.
+spruce|n.|a tall tree with needle-like leaves that stays green all year|A tall spruce stood by the house.
+stagnant|adj.|1) of water: not moving and dirty; 2) not developing|The economy was stagnant.
+staircase|n.|a set of stairs inside a building|A wide staircase led to the second floor.
+stanza|n.|a group of lines in a poem|The poem has four stanzas.
+stare|v./n.|v. to look at something for a long time; n. a long look|Don't stare at people.
+stationary|adj.|not moving|The car was stationary at the light.
+staunch|adj.|very loyal and firm in support|He is a staunch supporter of the team.
+stiff|adj.|1) hard to bend or move; 2) not relaxed|My legs are stiff after the run.
+stiffer|adj.|harder to bend; more stiff|The new shoes are stiffer than the old ones.
+stifle|v.|1) to stop something from happening or growing; 2) to make it hard to breathe|Strict rules stifle creativity.
+stitch|n./v.|n. a loop of thread in sewing; v. to sew|She stitched the button back on.
+straightway|adv.|old word for "immediately"|He went straightway to the king.
+streak|n.|1) a long thin line of color; 2) a series of wins or events|There is a streak of red in the sky.
+stressful|adj.|causing worry and pressure|Exams can be stressful.
+stressor|n.|something that causes stress|Noise is a common stressor.
+strict|adj.|demanding that rules are obeyed|My father was very strict.
+stripe|n.|a long narrow line of color|The flag has red and white stripes.
+stroll|v./n.|v. to walk slowly and calmly; n. such a walk|We strolled along the beach.
+sturdy|adj.|strong and not easily broken|This table is very sturdy.
+subatomic|adj.|smaller than an atom|Electrons are subatomic particles.
+subduction|n.|in geology, the movement of one plate of the earth's crust under another|Subduction can cause earthquakes.
+subduction-like|adj.|similar to subduction, where one plate of crust moves under another|Scientists saw subduction-like movement on Venus.
+subsistence|n.|having just enough food or money to stay alive|They lived by subsistence farming.
+subspecy|n.|subspecies: a group within a species with its own features|The Siberian tiger is a subspecies of tiger.
+substantially|adv.|by a large amount|Prices rose substantially.
+subtle|adj.|small and not easy to notice|There is a subtle difference between the colors.
+subtype|n.|a smaller group within a larger type|This flu is a new subtype.
+suburban|adj.|relating to the areas outside a city where people live|They live in a quiet suburban street.
+suffragist|n.|a person who fought for the right of women to vote|The suffragist marched in Washington.
+summon|v.|1) to order someone to come; 2) to gather courage or strength|The teacher summoned the student.
+superfluorescence|n.|a strong burst of light given off by many atoms at the same moment|The team observed superfluorescence in the crystal.
+superfluorescent|adj.|giving off light in a strong burst from many atoms at once|They made a superfluorescent material.
+supporter|n.|a person who supports a team, idea, or person|She is a strong supporter of the plan.
+supportive|adj.|giving help and encouragement|My parents are very supportive.
+suppress|v.|1) to stop something by force; 2) to hide a feeling|He suppressed a laugh.
+surprisingly|adv.|in a way that is unexpected|The test was surprisingly easy.
+susceptible|adj.|easily affected or harmed by something|Children are susceptible to colds.
+suspicion|n.|a feeling that something is wrong or that someone is guilty|The police had a suspicion about him.
+sustain|v.|1) to keep something going; 2) to suffer an injury or loss|Water sustains life.
+sustainably|adv.|in a way that can continue without harming the environment|The fish are caught sustainably.
+swatch|n.|a small sample piece of cloth or paint|She looked at swatches of blue cloth.
+swath|n.|a wide strip or area|The storm destroyed a wide swath of forest.
+swept|v.|past of sweep: cleaned with a brush; moved quickly over an area|She swept the floor.
+swirl|v./n.|v. to move around in circles; n. a circular movement|Leaves swirled in the wind.
+symbolize|v.|to be a symbol of something|The dove symbolizes peace.
+symmetry|n.|the quality of having two halves that match|The building has perfect symmetry.
+sympathy|n.|a feeling of sadness for someone else's problems|We sent our sympathy to the family.
+synchronize|v.|to make things happen at the same time|Let's synchronize our watches.
+synchronized|adj.|happening at exactly the same time|The swimmers made synchronized movements.
+tadpole|n.|a young frog that lives in water and has a tail|The tadpole turned into a frog.
+tailor-made|adj.|made specially for a particular person or purpose|The course is tailor-made for beginners.
+tame|adj./v.|adj. not wild, used to people; v. to make an animal tame|The deer in the park are quite tame.
+tannin|n.|a bitter substance in tea, wine, and some plants|Strong tea is full of tannin.
+tectonic|adj.|relating to the large plates of the earth's crust and their movement|Earthquakes happen where tectonic plates meet.
+telescope|n.|a tool that makes distant things look closer|We looked at the moon through a telescope.
+televise|v.|to show on television|The match will be televised.
+tender|adj.|1) gentle and kind; 2) of food: soft; 3) painful to touch|The meat was tender.
+tense|adj./n.|adj. nervous and not relaxed; n. a verb form that shows time|The room was tense before the results.
+tentacles|n.|long, soft arms of animals like an octopus|The octopus has eight tentacles.
+terrace|n.|1) a flat area outside a house; 2) flat steps cut into a hill for farming|They grow rice on terraces.
+terrain|n.|land of a certain type|The terrain was rocky and steep.
+texture|n.|the way something feels when you touch it|The cloth has a soft texture.
+theatrical|adj.|1) relating to the theater; 2) too dramatic|She gave a theatrical sigh.
+then-dominant|adj.|most powerful or common at that time|They challenged the then-dominant theory.
+theoretical|adj.|based on ideas and theory, not practice|The danger is only theoretical.
+theorized|v.|suggested an explanation as a theory|Scientists theorized that the planet had water.
+thermal|adj.|relating to heat|Wool has good thermal properties.
+thermomechanical|adj.|relating to both heat and physical force|The metal went through thermomechanical tests.
+thermoplastic|n./adj.|a plastic that becomes soft when heated and hard when cooled|Many toys are made of thermoplastic.
+thou|pron.|old word for "you" (one person)|"Thou art my friend," he said.
+thrill|n./v.|n. a strong feeling of excitement; v. to make someone very excited|Riding the roller coaster was a thrill.
+thrive|v.|to grow well; to be very successful|Plants thrive in sunlight.
+thundercloud|n.|a large dark cloud that brings thunder and lightning|A thundercloud covered the sky.
+thusly|adv.|in this way; thus|He answered thusly: "No."
+tide-water|n.|water that rises and falls with the tide|Tide-water flooded the low fields.
+tilework|n.|decoration made of tiles|The palace has beautiful blue tilework.
+titular|adj.|1) having a title but no real power; 2) of the character a work is named after|Hamlet is the titular character of the play.
+toad|n.|an animal like a frog, with dry, rough skin|A toad sat on the garden path.
+tolerance|n.|1) accepting views or behavior different from yours; 2) the ability to bear something|We must show tolerance to others.
+tomato|n.|a soft red fruit eaten as a vegetable|She added a tomato to the salad.
+tomatoes|n.|plural of tomato|We grow tomatoes in the garden.
+topmost|adj.|highest|The book is on the topmost shelf.
+topographic|adj.|relating to the shape and height of land|A topographic map shows hills and valleys.
+torsion|n.|the twisting of something|Torsion can break a metal bar.
+torsional|adj.|relating to twisting|The bridge was tested for torsional strength.
+toxin|n.|a poisonous substance made by a living thing|Some mushrooms contain toxins.
+tract|n.|1) a large area of land; 2) a system of organs, like the digestive tract|They bought a large tract of forest.
+trader|n.|a person who buys and sells goods|The trader sold spices at the market.
+tragedy|n.|1) a very sad event; 2) a serious play with a sad ending|The accident was a tragedy.
+tramp|v.|to walk with heavy steps for a long time|We tramped through the snow.
+trampled|v.|stepped on heavily and damaged|The cows trampled the flowers.
+trans-neptunian|adj.|beyond the planet Neptune|Pluto is a trans-Neptunian object.
+transcribe|v.|to write down spoken words or copy writing|She transcribed the interview.
+transformation|n.|a complete change|The city went through a transformation.
+transitory|adj.|lasting only a short time|Their happiness was transitory.
+transmit|v.|1) to send a signal; 2) to pass a disease to others|The radio transmits music all day.
+tribal|adj.|relating to a tribe|They kept their tribal traditions.
+trigger|v./n.|v. to cause something to start; n. a cause; the part of a gun that you pull|The noise triggered the alarm.
+trillion|n.|a million million (1,000,000,000,000)|The country's debt is over a trillion dollars.
+triumphal|adj.|celebrating a victory|They marched through a triumphal arch.
+trope|n.|a common idea or image used often in stories|The lost princess is a popular trope.
+trove|n.|a valuable collection|The attic was a trove of old letters.
+trypsin|n.|a substance in the body that helps digest proteins in food|Trypsin helps us digest meat.
+turbine|n.|a machine with blades turned by wind, water, or steam to make power|Wind turbines stood on the hill.
+turbulence|n.|1) strong, uneven movement of air or water; 2) disorder|The plane shook in the turbulence.
+turmeric|n.|a yellow spice used in cooking|Turmeric gives the curry its color.
+turtle|n.|an animal with a hard shell that lives in water or on land|A sea turtle swam past us.
+twist|v./n.|v. to turn or bend; n. 1) a turn; 2) an unexpected change in a story|The film has a surprising twist.
+ugliness|n.|the quality of being ugly|The book shows the ugliness of war.
+ultramarathon|n.|a running race longer than a marathon|She ran a 100-kilometer ultramarathon.
+ultraviolet|adj./n.|of light that people cannot see, which can burn the skin|Sunscreen protects against ultraviolet light.
+unaccounted-for|adj.|not explained or found|Two people are still unaccounted-for.
+unanimity|n.|complete agreement among everyone|The vote showed unanimity.
+unaware|adj.|not knowing about something|She was unaware of the problem.
+uncharacteristic|adj.|not typical of someone|His anger was uncharacteristic.
+undefinable|adj.|impossible to describe exactly|There was an undefinable sadness in her voice.
+undeliverable|adj.|not able to be delivered|The letter was returned as undeliverable.
+underlying|adj.|1) real but not obvious; 2) lying under something|We need to find the underlying cause.
+underrepresentation|n.|having too few people of a group in a place, compared to their number|There is an underrepresentation of women in science.
+underrepresented|adj.|having too few members in a group or place|Women are underrepresented in politics.
+understimulated|adj.|not getting enough activity or interest|Bored, understimulated dogs chew furniture.
+understimulation|n.|a lack of activity or interest|Understimulation can make children restless.
+underwent|v.|past of undergo: experienced something, often hard|She underwent surgery last week.
+undoubtedly|adv.|certainly; without doubt|She is undoubtedly the best player.
+unearthed|v.|dug up from the ground; found something hidden|Workers unearthed an old coin.
+unfettered|adj.|free, not limited|They had unfettered access to the files.
+ungainliness|n.|the quality of moving in an awkward way|The baby giraffe's ungainliness made us smile.
+uniaxial|adj.|in one direction only; having one axis|The crystal was tested under uniaxial pressure.
+uninterrupted|adj.|continuing without a break|I need an hour of uninterrupted work.
+uniquely|adv.|in a way that is special and unlike anything else|She is uniquely qualified for the job.
+unjustly|adv.|unfairly|He was unjustly punished.
+unmodified|adj.|not changed|The car is in its unmodified form.
+unpaid-for|adj.|not yet paid for|There were unpaid-for items in his bag.
+unpleasant|adj.|not nice or enjoyable|The medicine has an unpleasant taste.
+unpleasant-tasting|adj.|having a bad taste|The plant makes unpleasant-tasting chemicals.
+unpretentiousness|n.|the quality of being simple and modest|We liked the hotel for its unpretentiousness.
+unrealistic|adj.|not sensible; not likely to happen|The plan is unrealistic.
+unremarkable|adj.|ordinary; not special|It was an unremarkable day.
+unsuitable|adj.|not right for a purpose or situation|The film is unsuitable for children.
+untamed|adj.|wild; not controlled by people|They explored the untamed forest.
+unusable|adj.|not able to be used|The road was unusable after the flood.
+upward|adj./adv.|moving toward a higher place or level|Prices are moving upward.
+vegetable|n.|a plant or part of a plant eaten as food, like carrots|Eat more vegetables.
+velocity|n.|speed in a particular direction|The bullet left the gun at high velocity.
+venerable|adj.|respected because of age, wisdom, or history|The venerable professor retired at 80.
+venue|n.|a place where an event happens|The venue for the concert is a park.
+verify|v.|to check that something is true|Please verify your email address.
+verse|n.|1) writing in the form of poetry; 2) a group of lines in a song or poem|The poem is written in verse.
+vertical|adj.|going straight up and down|Draw a vertical line.
+viable|adj.|able to work or succeed|Is the plan viable?
+vigor|n.|strength and energy|He worked with great vigor.
+vigorous|adj.|strong and full of energy|Do vigorous exercise three times a week.
+vigorously|adv.|with strength and energy|She shook her head vigorously.
+villain|n.|a bad character in a story|The villain tried to steal the money.
+virtue|n.|a good quality, like honesty or kindness|Patience is a virtue.
+vista|n.|a beautiful wide view|The hill offers a lovely vista of the sea.
+visualize|v.|to form a picture of something in your mind|Try to visualize your goal.
+volcano|n.|a mountain that can send out hot liquid rock, ash, and gas|The volcano erupted last year.
+volcanoes|n.|plural of volcano|Iceland has many volcanoes.
+vortice|n.|vortices: masses of air or water that spin very fast|The wind formed vortices over the lake.
+voyage|n.|a long journey, usually by sea or in space|The voyage across the ocean took weeks.
+wade|v.|to walk through water|We waded across the river.
+warehouse|n.|a large building for storing goods|The goods are kept in a warehouse.
+warn|v.|to tell someone about a danger|The sign warns drivers of ice.
+warrant|n./v.|n. an official paper that allows the police to do something; v. to make something necessary|The police had a warrant to search the house.
+wary|adj.|careful because of possible danger|Be wary of strangers.
+watermilfoil|n.|a water plant with soft, thin leaves under the surface|Watermilfoil can fill a lake quickly.
+wavy|adj.|having curves like waves|She has wavy hair.
+wayward|adj.|hard to control; doing what you want|The teacher dealt with a wayward student.
+weave|v.|to make cloth by crossing threads over and under each other|She weaves baskets from grass.
+whereby|conj.|by which; through which|They made a deal whereby each side paid half.
+whitefly|n.|a tiny white flying insect that damages plants|Whitefly attacked the tomato plants.
+whitefly-free|adj.|having no whiteflies|The greenhouse stayed whitefly-free.
+whitefly-infested|adj.|full of whiteflies|They studied whitefly-infested plants.
+width|n.|how wide something is|Measure the width of the window.
+willingness|n.|the quality of being ready to do something|She showed a willingness to learn.
+willow|n.|a tree with long, thin branches that often grows near water|A willow hung over the river.
+wilt|v.|of plants: to become weak and bend down from lack of water|The flowers wilted in the heat.
+withstand|v.|to stay strong against force or pressure|The house can withstand strong winds.
+wolves|n.|plural of wolf, a wild animal like a large dog|Wolves hunt in packs.
+wood-carvers|n.|people who make objects or art by cutting wood|Local wood-carvers made the doors.
+wormhole|n.|in physics, a possible tunnel connecting distant parts of space and time|In the film, astronauts travel through a wormhole.
+wrap|v.|to cover something by folding paper or cloth around it|She wrapped the gift.
+wreathe|v.|to surround or cover something|Fog wreathed the mountains.
+y'all|pron.|you all (informal, used in the southern United States)|"Are y'all coming to dinner?" she asked.
+yellow-tinted|adj.|having a slight yellow color|He wore yellow-tinted glasses.
+yellowish|adj.|slightly yellow|The old paper was yellowish.
+zoologist|n.|a scientist who studies animals|The zoologist studied lions in Africa.
