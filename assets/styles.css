@@ -1004,3 +1004,11 @@ dialog .row { display: flex; justify-content: flex-end; gap: 8px; }
 .mock-wrong { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
 .mock-card .task-icon { color: var(--primary); background: var(--primary-soft); }
 .qwrap > .today-block { margin-top: 16px; }
+.mock-table.weak td small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.mock-table.weak td:last-child { text-align: right; }
+.mock-table .rush-n { color: var(--warn); font-weight: 600; }
+.weak-few { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+.exam-plan p { margin: 2px 0 12px; color: var(--text-2); line-height: 1.55; }
+.exam-dates { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--muted); }
+.exam-dates label { display: inline-flex; align-items: center; gap: 8px; }
+.exam-dates input { height: 32px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: 13px var(--font-ui); }

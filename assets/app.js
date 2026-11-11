@@ -1378,6 +1378,7 @@ const ACTIONS = {
   "today-review": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "review"); },
   "timer-visible": () => { S.ui.showTimer = !S.ui.showTimer; saveUi(); renderAll(); toast(S.ui.showTimer ? "Таймер показан" : "Таймер скрыт — время всё равно считается"); },
   "today-new": () => { S.ui.view = "questions"; S.ui.domain = "all"; S.ui.skill = "all"; setFilter("status", "todo"); },
+  "today-skill": (el) => { S.ui.view = "questions"; S.ui.domain = el.dataset.domain; S.ui.skill = el.dataset.skill; setFilter("status", "todo"); },
   "today-words": () => { S.ui.view = "vocab"; S.ui.vtab = "study"; S.session = null; saveUi(); renderAll(true); },
   "open-sidebar": () => document.body.classList.add("sidebar-open"),
   "close-sidebar": () => document.body.classList.remove("sidebar-open"),
@@ -1435,6 +1436,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("input", (e) => { if (S.set && !think.onInput(e)) vocab.onInput(e); });
+document.addEventListener("change", (e) => { if (S.set && S.ui.view === "today") today.onChange(e); });
 document.addEventListener("submit", (e) => { if (S.set) vocab.onSubmit(e); });
 
 // a PDF dropped anywhere is added to the questions already here

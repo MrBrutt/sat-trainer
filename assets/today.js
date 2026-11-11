@@ -1,6 +1,7 @@
 // Daily routine: spaced review of mistakes, the "Today" plan, streaks, activity calendar and achievements.
 import { startOfDay } from "./vocab.js";
-import { fmtTime, paceFor, rushStats } from "./timer.js";
+import { fmtTime, paceFor, rushStats, rushed } from "./timer.js";
+import { skillName, domainOf } from "./domains.js";
 import { stepStats } from "./think.js";
 
 const DAY = 86400000;
@@ -41,6 +42,38 @@ export const isDue = (r, now = Date.now()) => !!r && !r.done && r.due <= now;
 export const reviewAttempt = (r, attempt, now = Date.now()) => (attempt && !isDue(r, now) ? attempt : null);
 
 // The score of first answers, the one that says how the exam would go; mistakes put right later are counted apart.
+// Days as "YYYY-MM-DD". The last study day is `until` (a departure) or the day before the exam; the
+// questions not answered yet are spread over the study days left, today included.
+const dayNo = (k) => { const [y, m, d] = k.split("-").map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
+const dayOf = (n) => new Date(n * 864e5).toISOString().slice(0, 10);
+export function examPlan(todayKey, exam, until, unanswered) {
+  const last = until && dayNo(until) < dayNo(exam) ? until : dayOf(dayNo(exam) - 1);
+  const toExam = dayNo(exam) - dayNo(todayKey);
+  const studyDays = Math.max(0, dayNo(last) - dayNo(todayKey) + 1);
+  return { toExam, studyDays, perDay: studyDays ? Math.ceil(unanswered / studyDays) : unanswered, last };
+}
+
+// Where points are lost: each question type with its first-try accuracy, rushed mistakes and the
+// questions not answered yet. The worst first; a type with fewer than `min` answers goes last.
+export function weakSpots(questions, progress, min = 3) {
+  const rows = new Map();
+  for (const q of questions) {
+    const skill = skillName(q.skill);
+    const r = rows.get(skill) || { skill, domain: domainOf(q), answered: 0, right: 0, pct: 0, rushed: 0, left: 0 };
+    const p = progress[q.id];
+    if (!p) r.left++;
+    else {
+      r.answered++;
+      if (p.ok) r.right++;
+      if (rushed(q, p)) r.rushed++;
+    }
+    rows.set(skill, r);
+  }
+  const list = [...rows.values()].filter((r) => r.answered > 0);
+  for (const r of list) r.pct = Math.round((r.right / r.answered) * 100);
+  return list.sort((a, b) => (b.answered >= min) - (a.answered >= min) || a.pct - b.pct || b.answered - a.answered);
+}
+
 export function firstTryScore(questions, progress, review) {
   const given = questions.filter((q) => progress[q.id]);
   const right = given.filter((q) => progress[q.id].ok).length;
@@ -48,7 +81,7 @@ export function firstTryScore(questions, progress, review) {
   return { answered: given.length, right, fixed, pct: given.length ? Math.round((right / given.length) * 100) : 0 };
 }
 
-export const ACTIVITY_DEFAULT = () => ({ days: {}, goalNew: 10, run: 0, bestRun: 0, bestStreak: 0, unlocked: [], remind: "19:00" });
+export const ACTIVITY_DEFAULT = () => ({ days: {}, goalNew: 10, run: 0, bestRun: 0, bestStreak: 0, unlocked: [], remind: "19:00", exam: "2026-12-05", until: "" });
 
 // ---------------------------------------------------------------- the module
 
@@ -272,6 +305,59 @@ export function createToday(ctx) {
       <div class="hm-grid" style="grid-template-columns:repeat(${weeks},var(--hm))">${cells.join("")}</div></div>`;
   }
 
+  // «До SAT»: days left, and the questions not answered yet spread over the study days.
+  const longDate = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }); };
+  function examHtml() {
+    const exam = S.activity.exam || ACTIVITY_DEFAULT().exam;
+    const left = S.set.questions.filter((q) => !S.progress[q.id]).length;
+    const p = examPlan(today(), exam, S.activity.until, left);
+    if (p.toExam < 0) return "";
+    const goal = S.activity.goalNew;
+    const plan = !left ? "Все вопросы набора решены — остаются повторы, карточки и пробники."
+      : p.studyDays ? `Нерешённых вопросов <b>${left}</b>: чтобы решить все до ${longDate(p.last)} включительно, нужно по <b>${p.perDay}</b> в день${goal >= p.perDay ? " — ваша цель это покрывает" : `, а цель сейчас ${goal}`}. Пробник берёт до 54 из них.`
+      : "Дни занятий по плану закончились.";
+    return `<section class="card today-block exam-plan">
+      <div class="block-head"><h3>${p.toExam ? `До SAT ${p.toExam} ${plural(p.toExam, "день", "дня", "дней")}` : "SAT сегодня"}</h3><span>${longDate(exam)}</span></div>
+      <p>${plan}</p>
+      <div class="exam-dates">
+        <label>Экзамен <input type="date" id="exam-date" value="${esc(exam)}"></label>
+        <label>Заниматься до <input type="date" id="study-until" value="${esc(p.last)}" title="Например, день вылета"></label>
+        ${left && p.studyDays && goal < p.perDay ? `<button class="btn btn-primary btn-sm" data-action="today-goal" data-n="${p.perDay}">Цель: ${p.perDay} в день</button>` : ""}
+      </div>
+    </section>`;
+  }
+
+  function onChange(e) {
+    const id = e.target?.id;
+    if (id !== "exam-date" && id !== "study-until") return false;
+    if (!e.target.value) return true;
+    if (id === "exam-date") S.activity.exam = e.target.value;
+    else S.activity.until = e.target.value;
+    save();
+    renderMain();
+    return true;
+  }
+
+  // «Где теряю баллы»: types of question by first-try accuracy, the worst first.
+  function weakHtml() {
+    const rows = weakSpots(S.set.questions, S.progress);
+    if (!rows.length) return "";
+    const ranked = rows.filter((r) => r.answered >= 3);
+    const few = rows.filter((r) => r.answered < 3);
+    const row = (r) => `<tr class="${r.answered >= 3 && r.pct < 70 ? "has-miss" : ""}">
+        <td>${esc(r.skill)}<small>${esc(r.domain)}</small></td>
+        <td><b>${r.pct}%</b> <span class="muted">${r.right} из ${r.answered}</span></td>
+        <td>${r.rushed ? `<span class="rush-n">${r.rushed}</span>` : "—"}</td>
+        <td>${r.left ? `<button class="btn btn-outline btn-sm" data-action="today-skill" data-skill="${esc(r.skill)}" data-domain="${esc(r.domain)}" title="Нерешённых: ${r.left}">Решать · ${r.left}</button>` : `<span class="muted">всё решено</span>`}</td>
+      </tr>`;
+    return `<section class="card today-block">
+      <div class="block-head"><h3>Где теряю баллы</h3><span>верно с первого раза · спешка — ошибка быстрее 60% нормы</span></div>
+      <table class="mock-table weak"><thead><tr><th>Тип вопроса</th><th>С первого раза</th><th>В спешке</th><th></th></tr></thead>
+        <tbody>${ranked.map(row).join("")}</tbody></table>
+      ${few.length ? `<p class="weak-few">Мало ответов, чтобы судить: ${few.map((r) => esc(r.skill)).join(", ")}.</p>` : ""}
+    </section>`;
+  }
+
   function renderMain(scrollTop = false) {
     const main = $("#main");
     if (!main) return;
@@ -299,6 +385,8 @@ export function createToday(ctx) {
         <div class="day-ring" style="--p:${doneCount / 3}" aria-label="Выполнено ${doneCount} из 3"><span><b>${doneCount}</b>/3</span></div>
       </section>
 
+      ${examHtml()}
+
       <section class="task-list">${ts.map((t) => `
         <div class="card task ${t.done ? "done" : ""}">
           <div class="task-icon">${icon(t.done ? "check" : t.icon)}</div>
@@ -312,6 +400,8 @@ export function createToday(ctx) {
       </section>
 
       ${ctx.mockCard ? ctx.mockCard() : ""}
+
+      ${weakHtml()}
 
       <section class="card today-block">
         <div class="block-head"><h3>Активность</h3><span>Лучшая серия: <b>${Math.max(S.activity.bestStreak || 0, n)}</b> · дней с занятиями: <b>${totalPts}</b></span></div>
@@ -441,6 +531,7 @@ export function createToday(ctx) {
   }
 
   return {
+    onChange,
     log, check, tasks, streak, isClosed, renderMain, renderSidebar, actions, merge,
     remaining: () => (S.set ? tasks().filter((t) => !t.done).length : 0),
   };
