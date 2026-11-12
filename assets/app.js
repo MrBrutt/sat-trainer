@@ -61,11 +61,14 @@ function stepAside() {
   document.body.append(el);
 }
 const oneTab = createOneTab({ onTakenOver: stepAside });
+addEventListener("storage", (e) => oneTab.onStorage(e));
+addEventListener("focus", () => oneTab.check());
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") oneTab.check(); });
 
 const ls = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) {
-    if (oneTab.passive()) return;   // a window that stepped aside must not overwrite the working one
+    if (!oneTab.check()) return;   // a window that is not the working one must not overwrite it
     try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ }
     if (SYNCED[k]) account?.notify(SYNCED[k]);
   },
@@ -257,6 +260,7 @@ const mock = createMock({
 });
 account = createAccount({
   ls, icon, esc, toast,
+  active: () => oneTab.check(),
   data: {
     progress: { read: () => S.progress, write: (v) => { S.progress = v; saveProgress(); } },
     review: { read: () => S.review, write: (v) => { S.review = v; saveReview(); } },
@@ -1402,6 +1406,7 @@ const ACTIONS = {
 };
 
 document.addEventListener("click", (e) => {
+  if (!oneTab.check()) return;
   const el = e.target.closest("[data-action]");
   if (!e.target.closest(".menu-wrap")) toggleMenu(false);
   // without questions only the start page's own buttons work: signing in brings the questions
@@ -1411,7 +1416,7 @@ document.addEventListener("click", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
-  if (oneTab.passive() || !S.set || !$("#main") || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!oneTab.check() || !S.set || !$("#main") || e.metaKey || e.ctrlKey || e.altKey) return;
   const inField = e.target instanceof Element && !!e.target.closest("input, textarea, select, dialog");
   if (S.ui.view === "today") {
     if (e.key === "Escape") { document.body.classList.remove("sidebar-open"); ai.close(); document.querySelector(".celebrate")?.remove(); }

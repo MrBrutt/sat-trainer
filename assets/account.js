@@ -92,7 +92,7 @@ function signInError(e) {
 // data: { [section]: { read(), write(value) } } — the trainer's own copy of each section.
 // sets: { current() → {list, numbers} | null, have() → {ids, numbers}, stored(id), store(id, bytes), install(list, numbers) }
 //   — the questions on this device, the PDFs behind them, and building them from PDFs.
-export function createAccount({ ls, icon, esc, toast, data, sets, changed, openCloud = () => import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)), retryMs = [15_000, 30_000, 60_000, 120_000] }) {
+export function createAccount({ ls, icon, esc, toast, data, sets, changed, openCloud = () => import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)), retryMs = [15_000, 30_000, 60_000, 120_000], active = () => true }) {
   const enabled = () => !!firebaseConfig && !window.claude;   // asked each time: claude.ai may set window.claude after load
   let cloudP = null;
   let cloud = null;
@@ -242,14 +242,14 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     if (!r || r.uid !== u.uid) { r = { uid: u.uid, base: {} }; uploaded.clear(); }   // another account starts from nothing agreed
     ls.set(RECORD, { ...r, on: true, email: u.email || "" });
     const adapter = cloud.adapter(u.uid);
-    sync = createSync({ adapter, sections, base, onStatus: (s) => setState("data", s), onError: (name, e) => failed(name, e) });
+    sync = createSync({ adapter, sections, base, active, onStatus: (s) => setState("data", s), onError: (name, e) => failed(name, e) });
     setState("data", "saving");
     try {
       await sync.start();
       changed();
       // questions: this device's PDFs go up first, then the list that names them
       if (await sendSources()) {
-        sourcesSync = createSync({ adapter, sections: sourcesSection, base, onStatus: (s) => setState("sources", s), onError: (name, e) => failed(name, e) });
+        sourcesSync = createSync({ adapter, sections: sourcesSection, base, active, onStatus: (s) => setState("sources", s), onError: (name, e) => failed(name, e) });
         await sourcesSync.start();
         await ensureSources();
         started = true;        // otherwise the next "online" starts over and uploads again

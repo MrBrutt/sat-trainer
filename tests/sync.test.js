@@ -241,3 +241,24 @@ test("an account that lost a section gets this device's copy back", async () => 
   eq(a.progress, { q1: { c: "A", t: 1 } }, "device");
   eq(acc.store.progress, { q1: { c: "A", t: 1 } }, "account");
 });
+
+test("a window that is not the working one merges and sends nothing", async () => {
+  const acc = fakeAccount();
+  const kept = new Map();
+  let working = true;
+  const dev = { progress: { q1: { c: "A", t: 1 } } };
+  const sync = createSync({
+    adapter: acc.adapter(),
+    sections: { progress: { read: () => dev.progress, apply: (v) => { dev.progress = v; }, merge: (b, l, r) => mergeMap(b, l, r, newer((x) => x.t)) } },
+    base: { get: (n) => clone(kept.get(n)), set: (n, v) => kept.set(n, clone(v)) },
+    active: () => working, delay: 0,
+  });
+  await sync.start();
+  await settle();
+  eq(acc.store.progress, { q1: { c: "A", t: 1 } }, "the working window sends");
+  working = false;
+  dev.progress = {};                       // a stale copy in a window that is no longer the working one
+  sync.notify("progress");
+  await settle();
+  eq(acc.store.progress, { q1: { c: "A", t: 1 } }, "its stale copy does not reach the account");
+});

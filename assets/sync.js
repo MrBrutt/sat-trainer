@@ -12,7 +12,8 @@ import { same } from "./merge.js";
 // on its own copies, so the account's copy it remembers never changes behind its back.
 const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 
-export function createSync({ adapter, sections, base, onStatus = () => {}, onError = () => {}, delay = 1500 }) {
+// active(): false in a window of the trainer that is not the working one; it then merges and sends nothing.
+export function createSync({ adapter, sections, base, onStatus = () => {}, onError = () => {}, active = () => true, delay = 1500 }) {
   const remote = {};          // the account's value as last seen, per section
   const heard = {};           // how many values the account has sent, per section
   const loaded = new Set();   // sections whose account copy has arrived: nothing is merged before that
@@ -26,7 +27,7 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, onErr
   const report = () => onStatus(!adapter.online() ? "offline" : pending ? "saving" : broken.size ? "error" : "saved");
 
   async function reconcile(name) {
-    if (stopped || !loaded.has(name)) return;
+    if (stopped || !loaded.has(name) || !active()) return;
     const s = sections[name];
     const local = copy(s.read());
     // Nothing in the account is not a request to delete: it means "no change since we last agreed"
