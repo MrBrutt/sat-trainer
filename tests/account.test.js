@@ -174,3 +174,20 @@ test("a PDF upload that failed is tried again when the connection is back", asyn
   eq(Object.keys(store.sources?.list || {}), ["s1"], "listed");
   await cloud.signOut();
 });
+
+test("a device signed in before the sync record moved stays signed in, and agrees on nothing old", async () => {
+  let opened = 0;
+  const cloud = cloudWith({ get: async () => undefined, set: async () => {} });
+  const stored = new Map([["sat-trainer:sync:v1", JSON.stringify({ uid: "u1", email: "", on: true, base: { progress: { q9: { t: 1 } } } })]]);
+  const account = createAccount({
+    ls: { get: (k, d) => (stored.has(k) ? JSON.parse(stored.get(k)) : d), set: (k, v) => stored.set(k, JSON.stringify(v)), del: (k) => stored.delete(k) },
+    icon: () => "", esc: (s) => s, toast: () => {},
+    data: { progress: { read: () => ({}), write: () => {} } },
+    sets: { current: () => null, have: () => ({ ids: [], covered: [], numbers: {} }), stored: async () => null, store: async () => {}, install: async () => {} },
+    changed: () => {},
+    openCloud: async () => { opened++; return cloud; },
+  });
+  await account.init();
+  const now = JSON.parse(stored.get("sat-trainer:sync:v2") || "null");
+  eq([opened, now?.uid, now?.on, now?.base], [1, "u1", true, {}]);
+});

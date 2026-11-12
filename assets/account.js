@@ -5,7 +5,10 @@ import { createSync } from "./sync.js";
 import { mergeMap, mergeSet, mergeValue, newer, same } from "./merge.js";
 import { firebaseConfig } from "./cloud-config.js";
 
-const RECORD = "sat-trainer:sync:v1";   // { uid, email, on, base: { section: last agreed value } }
+const RECORD = "sat-trainer:sync:v2";   // { uid, email, on, base: { section: last agreed value } }
+// v1 was shared with windows of the trainer that were not updated yet; their stale copies merged against
+// it and sent old data. v2 starts with nothing agreed: the first merge is a union, newest record wins.
+const OLD_RECORD = "sat-trainer:sync:v1";
 const SOURCES = "sat-trainer:sources:v1";   // the PDFs this device should have: { list: {id: {fileName, importedAt}}, numbers: {qid: n} }
 
 // Days of activity: numbers take the larger, marks stay set.
@@ -27,11 +30,11 @@ function byField(b, l, r, rules) {
 }
 
 export const MERGE = {
-  progress: (b, l, r) => mergeMap(b, l, r, newer((x) => x.t)),
-  review: (b, l, r) => mergeMap(b, l, r, newer((x) => x.last || x.added)),
+  progress: (b, l, r) => mergeMap(b, l, r, newer((x) => x.t), (x) => x.t),
+  review: (b, l, r) => mergeMap(b, l, r, newer((x) => x.last || x.added), (x) => x.last || x.added),
   flags: mergeSet,
   vocab: (b, l, r) => byField(b, l, r, {
-    srs: (b, l, r) => mergeMap(b, l, r, newer((x) => x.last)),
+    srs: (b, l, r) => mergeMap(b, l, r, newer((x) => x.last), (x) => x.last),
     user: (b, l, r) => mergeMap(b, l, r, mine),
     edits: (b, l, r) => mergeMap(b, l, r, mine),
     known: mergeSet,
@@ -108,7 +111,16 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   let lastError = null;       // { part, why }: shown on the chip, so a failure says what failed
   let suspended = false;      // another window of the trainer works now: this one syncs nothing
 
-  const record = () => ls.get(RECORD, null);
+  // A device signed in under v1 stays signed in; what it had agreed with the account is not carried over.
+  function record() {
+    const r = ls.get(RECORD, null);
+    if (r) return r;
+    const old = ls.get(OLD_RECORD, null);
+    if (!old?.uid) return null;
+    const moved = { uid: old.uid, email: old.email || "", on: !!old.on, base: {} };
+    ls.set(RECORD, moved);
+    return moved;
+  }
   const load = () => (cloudP ||= openCloud().then((c) => (cloud = c)))
     .catch((e) => { cloudP = null; throw e; });
 
@@ -316,6 +328,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     stopAll();
     try { await cloud?.signOut(); } catch { /* not signed in */ }
     ls.del(RECORD);
+    ls.del(OLD_RECORD);
     ls.del(SOURCES);
   }
 

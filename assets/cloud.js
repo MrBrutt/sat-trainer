@@ -1,7 +1,10 @@
 // The student's account: Google sign-in and their data in Firestore (Firebase, Google's free tier).
 // Everything lives under users/{uid}/, and the project's rules let a person read and write only
 // their own folder. Firebase is loaded from Google's CDN only when someone signs in.
-//   users/{uid}/state/{section}        { json, at }  — one document per section of data
+//   users/{uid}/sync/{section}         { json, at }  — one document per section of data
+//   users/{uid}/state/{section}        the same, before 2026-11-12: read once if sync/ has no copy yet.
+//                                      Windows of the trainer not updated since still write there, and
+//                                      nothing reads it after that, so their stale copies do no harm.
 //   users/{uid}/pdfs/{id}              { n, size }   — a PDF, written after all its chunks
 //   users/{uid}/pdfs/{id}/chunks/{i}   { data }      — up to 900 KB of it (a document holds 1 MiB)
 const SDK = "https://www.gstatic.com/firebasejs/12.6.0";
@@ -26,11 +29,13 @@ export async function loadCloud(config) {
       // From the server only: a cached reply can say "no such document" just because the cache is
       // empty. Offline this throws, and syncing starts when the connection is back.
       async get(name) {
-        const snap = await F.getDocFromServer(ref(uid, "state", name));
-        return snap.exists() ? JSON.parse(snap.data().json) : undefined;
+        const snap = await F.getDocFromServer(ref(uid, "sync", name));
+        if (snap.exists()) return JSON.parse(snap.data().json);
+        const old = await F.getDocFromServer(ref(uid, "state", name));
+        return old.exists() ? JSON.parse(old.data().json) : undefined;
       },
-      set: (name, value) => F.setDoc(ref(uid, "state", name), { json: JSON.stringify(value), at: F.serverTimestamp() }),
-      watch: (name, cb) => F.onSnapshot(ref(uid, "state", name), (snap) => {
+      set: (name, value) => F.setDoc(ref(uid, "sync", name), { json: JSON.stringify(value), at: F.serverTimestamp() }),
+      watch: (name, cb) => F.onSnapshot(ref(uid, "sync", name), (snap) => {
         // our own write is not news, and a reply from the cache is not the account's word
         if (snap.metadata.hasPendingWrites || snap.metadata.fromCache || !snap.exists()) return;
         cb(JSON.parse(snap.data().json));

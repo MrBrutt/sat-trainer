@@ -22,19 +22,22 @@ export function mergeSet(b, l, r) {
 }
 
 // Records by key (answers by question, cards by word). `resolve(l, r)` settles a key both sides changed.
-export function mergeMap(b, l, r, resolve) {
+// `time(record)`, for records that carry one: a record never goes back in time. A stale copy elsewhere
+// (an old window, a device that slept) can send the account an older version of a record this device
+// has moved on from; that is not a change made there, and the newer record stays.
+export function mergeMap(b, l, r, resolve, time = null) {
   b ||= {}; l ||= {}; r ||= {};
   const out = {};
   for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
-    const v = mergeItem(b[k], l[k], r[k], resolve);
+    const v = mergeItem(b[k], l[k], r[k], resolve, time);
     if (v !== undefined) out[k] = v;
   }
   return out;
 }
 
-function mergeItem(b, l, r, resolve) {
+function mergeItem(b, l, r, resolve, time) {
   if (same(l, r) || same(r, b)) return l;
-  if (same(l, b)) return r;
+  if (same(l, b)) return time && l !== undefined && r !== undefined && (time(r) || 0) < (time(l) || 0) ? l : r;
   if (l === undefined) return r;      // deleted on one side, changed on the other: keep the change
   if (r === undefined) return l;
   return resolve(l, r);

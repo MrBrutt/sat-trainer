@@ -47,3 +47,18 @@ test("mergeValue: the unchanged side takes the other; both changed — local", (
   eq(mergeValue("middle", "basic", "advanced"), "basic");
   eq(mergeValue(undefined, undefined, 20), 20);
 });
+
+// A stale copy elsewhere (an old window, a device that slept) can send the account an older version
+// of a record this device has changed since. The account's copy then differs from what was agreed
+// while this device's does not, which would read as "changed in the account" and win.
+test("a timestamped record never goes back in time", () => {
+  const b = { q1: { step: 2, t: 5 } };
+  const l = { q1: { step: 2, t: 5 } };
+  const r = { q1: { step: 1, t: 3 } };
+  eq(mergeMap(b, l, r, byT, (x) => x.t), { q1: { step: 2, t: 5 } });
+});
+
+test("a newer record from the account still comes in", () => {
+  const b = { q1: { step: 1, t: 3 } };
+  eq(mergeMap(b, b, { q1: { step: 2, t: 6 } }, byT, (x) => x.t), { q1: { step: 2, t: 6 } });
+});
