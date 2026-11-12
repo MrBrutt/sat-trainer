@@ -10,6 +10,7 @@ import { createAccount } from "./account.js";
 import { outline, inFocus, domainOf } from "./domains.js";
 import { createThink } from "./think.js";
 import { createMock } from "./mock.js";
+import { createOneTab } from "./one-tab.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -46,9 +47,25 @@ const DIFF_RU = { easy: "Лёгкие", medium: "Средние", hard: "Сло�
 const SYNCED = { [KEY.progress]: "progress", [KEY.review]: "review", [KEY.flags]: "flags", [KEY.vocab]: "vocab", [KEY.activity]: "activity", [KEY.mocks]: "mocks" };
 let account = null;
 
+// Only the newest window of the trainer saves and syncs; an older one steps aside (see one-tab.js).
+function stepAside() {
+  account?.suspend();
+  const el = document.createElement("div");
+  el.className = "elsewhere";
+  el.innerHTML = `<div class="card elsewhere-card" role="alertdialog" aria-labelledby="elsewhere-title">
+      <h2 id="elsewhere-title">Тренажёр открыт в другом окне</h2>
+      <p>Сохраняет только одно окно — открытое последним, иначе окна перезаписывают ответы друг друга. Здесь сейчас ничего не сохраняется.</p>
+      <button class="btn btn-primary btn-lg" type="button">Работать здесь</button>
+    </div>`;
+  el.querySelector("button").addEventListener("click", () => location.reload());
+  document.body.append(el);
+}
+const oneTab = createOneTab({ onTakenOver: stepAside });
+
 const ls = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) {
+    if (oneTab.passive()) return;   // a window that stepped aside must not overwrite the working one
     try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ }
     if (SYNCED[k]) account?.notify(SYNCED[k]);
   },
@@ -1394,7 +1411,7 @@ document.addEventListener("click", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
-  if (!S.set || !$("#main") || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (oneTab.passive() || !S.set || !$("#main") || e.metaKey || e.ctrlKey || e.altKey) return;
   const inField = e.target instanceof Element && !!e.target.closest("input, textarea, select, dialog");
   if (S.ui.view === "today") {
     if (e.key === "Escape") { document.body.classList.remove("sidebar-open"); ai.close(); document.querySelector(".celebrate")?.remove(); }

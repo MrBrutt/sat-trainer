@@ -106,6 +106,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   let retryTimer = null;
   let retries = 0;
   let lastError = null;       // { part, why }: shown on the chip, so a failure says what failed
+  let suspended = false;      // another window of the trainer works now: this one syncs nothing
 
   const record = () => ls.get(RECORD, null);
   const load = () => (cloudP ||= openCloud().then((c) => (cloud = c)))
@@ -136,7 +137,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   function retry() {
     clearTimeout(retryTimer);
     retryTimer = null;
-    if (!user || beginning) return;
+    if (!user || beginning || suspended) return;
     if (!started) { begin(user); return; }
     if (states.pdf === "error") sendSources().then((ok) => { if (ok) sourcesSync?.notify("sources"); });
     if (states.data === "error") sync?.retry();
@@ -233,7 +234,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   }
 
   let beginning = null;
-  const begin = (u) => (beginning ||= startFor(u).finally(() => { beginning = null; }));
+  const begin = (u) => (suspended ? Promise.resolve() : (beginning ||= startFor(u).finally(() => { beginning = null; })));
 
   async function startFor(u) {
     stopAll();
@@ -318,7 +319,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     ls.del(SOURCES);
   }
 
-  addEventListener("online", () => { if (user && !started && !beginning) begin(user); else { sync?.status(); sourcesSync?.status(); } });
+  addEventListener("online", () => { if (suspended) return; if (user && !started && !beginning) begin(user); else { sync?.status(); sourcesSync?.status(); } });
   addEventListener("offline", () => { sync?.status(); sourcesSync?.status(); });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") { sync?.flush(); sourcesSync?.flush(); }
@@ -354,6 +355,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
 
   return {
     enabled, init, prefetch, forget, chip, menuHtml, landingHtml, setsChanged,
+    suspend: () => { suspended = true; stopAll(); },
     notify: (section) => { if (!applying) sync?.notify(section); },
     signedIn: () => !!user,
     actions: { "sign-in": signIn, "sign-out": signOut, "sync-retry": () => { retries = 0; retry(); } },
