@@ -92,7 +92,7 @@ function signInError(e) {
 // data: { [section]: { read(), write(value) } } — the trainer's own copy of each section.
 // sets: { current() → {list, numbers} | null, have() → {ids, numbers}, stored(id), store(id, bytes), install(list, numbers) }
 //   — the questions on this device, the PDFs behind them, and building them from PDFs.
-export function createAccount({ ls, icon, esc, toast, data, sets, changed, openCloud = () => import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)) }) {
+export function createAccount({ ls, icon, esc, toast, data, sets, changed, openCloud = () => import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)), retryMs = [15_000, 30_000, 60_000, 120_000] }) {
   const enabled = () => !!firebaseConfig && !window.claude;   // asked each time: claude.ai may set window.claude after load
   let cloudP = null;
   let cloud = null;
@@ -103,6 +103,9 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   let state = "off";
   let applying = false;
   let refreshTimer = null;
+  let retryTimer = null;
+  let retries = 0;
+  let lastError = null;       // { part, why }: shown on the chip, so a failure says what failed
 
   const record = () => ls.get(RECORD, null);
   const load = () => (cloudP ||= openCloud().then((c) => (cloud = c)))
@@ -113,10 +116,32 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   function setState(part, s) {
     if (s) states[part] = s; else delete states[part];
     state = ["offline", "error", "saving", "saved"].find((x) => Object.values(states).includes(x)) || (user ? "saved" : "off");
+    if (state === "saved") { retries = 0; lastError = null; }
     const el = document.getElementById("sync-chip");
     if (el) el.outerHTML = chip();
   }
   const clearStates = () => { for (const k of Object.keys(states)) delete states[k]; setState("none", null); };
+
+  // «Попробую ещё раз» is kept: a failure that is not a lost connection (the browser still says
+  // online, so no "online" event comes) is tried again after a growing pause, and at once when the
+  // student comes back to the tab. Data stays on the device meanwhile.
+  function failed(part, e) {
+    lastError = { part, why: e?.code || e?.message || String(e) };
+    scheduleRetry();
+  }
+  function scheduleRetry() {
+    if (!user || retryTimer) return;
+    retryTimer = setTimeout(retry, retryMs[Math.min(retries++, retryMs.length - 1)]);
+  }
+  function retry() {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+    if (!user || beginning) return;
+    if (!started) { begin(user); return; }
+    if (states.pdf === "error") sendSources().then((ok) => { if (ok) sourcesSync?.notify("sources"); });
+    if (states.data === "error") sync?.retry();
+    if (states.sources === "error") sourcesSync?.retry();
+  }
 
   // After the account changed the trainer's data: redraw once, not per section.
   const refresh = () => { clearTimeout(refreshTimer); refreshTimer = setTimeout(changed, 120); };
@@ -178,7 +203,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   async function sendSources() {
     setState("pdf", "saving");
     try { await uploadMissing(); setState("pdf", null); }
-    catch (e) { console.warn("pdf upload", e); setState("pdf", navigator.onLine ? "error" : "offline"); return false; }
+    catch (e) { console.warn("pdf upload", e); setState("pdf", navigator.onLine ? "error" : "offline"); failed("PDF", e); return false; }
     return true;
   }
 
@@ -198,6 +223,8 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   };
 
   function stopAll() {
+    clearTimeout(retryTimer);
+    retryTimer = null;
     sync?.stop();
     sourcesSync?.stop();
     sync = sourcesSync = null;
@@ -214,14 +241,14 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     if (!r || r.uid !== u.uid) { r = { uid: u.uid, base: {} }; uploaded.clear(); }   // another account starts from nothing agreed
     ls.set(RECORD, { ...r, on: true, email: u.email || "" });
     const adapter = cloud.adapter(u.uid);
-    sync = createSync({ adapter, sections, base, onStatus: (s) => setState("data", s) });
+    sync = createSync({ adapter, sections, base, onStatus: (s) => setState("data", s), onError: (name, e) => failed(name, e) });
     setState("data", "saving");
     try {
       await sync.start();
       changed();
       // questions: this device's PDFs go up first, then the list that names them
       if (await sendSources()) {
-        sourcesSync = createSync({ adapter, sections: sourcesSection, base, onStatus: (s) => setState("sources", s) });
+        sourcesSync = createSync({ adapter, sections: sourcesSection, base, onStatus: (s) => setState("sources", s), onError: (name, e) => failed(name, e) });
         await sourcesSync.start();
         await ensureSources();
         started = true;        // otherwise the next "online" starts over and uploads again
@@ -229,6 +256,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     } catch (e) {
       console.warn("sync start", e);
       setState("data", navigator.onLine ? "error" : "offline");
+      failed("старт", e);
     }
     changed();
   }
@@ -292,19 +320,25 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
 
   addEventListener("online", () => { if (user && !started && !beginning) begin(user); else { sync?.status(); sourcesSync?.status(); } });
   addEventListener("offline", () => { sync?.status(); sourcesSync?.status(); });
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { sync?.flush(); sourcesSync?.flush(); } });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") { sync?.flush(); sourcesSync?.flush(); }
+    else if (user && (state === "error" || state === "offline")) retry();
+  });
 
   // ---------------------------------------------------------------- screens
 
   function chip() {
     if (!enabled() || !user || !STATUS[state]) return `<span id="sync-chip" hidden></span>`;
     const [ic, text] = STATUS[state];
-    return `<span id="sync-chip" class="sync-chip ${state}" title="${esc(`${text} · ${user.email || ""}`)}" role="status">${icon(ic, "icon-sm")}<span class="label">${state === "saved" ? "В аккаунте" : esc(text.split(" — ")[0])}</span></span>`;
+    const why = state === "error" && lastError ? ` · ${lastError.part}: ${lastError.why}` : "";
+    return `<span id="sync-chip" class="sync-chip ${state}" title="${esc(`${text}${why} · ${user.email || ""}`)}" role="status">${icon(ic, "icon-sm")}<span class="label">${state === "saved" ? "В аккаунте" : esc(text.split(" — ")[0])}</span></span>`;
   }
 
   function menuHtml() {
     if (!enabled()) return "";
     if (user) return `<div class="menu-note">${icon("cloudCheck", "icon-sm")} ${esc(user.email || "Аккаунт Google")}</div>
+      ${state === "error" ? `<div class="menu-note sync-why">${icon("cloudOff", "icon-sm")} Не сохранилось${lastError ? `: ${esc(lastError.part)} — ${esc(lastError.why)}` : ""}</div>
+      <button role="menuitem" data-action="sync-retry">${icon("rotate")} Сохранить ещё раз</button>` : ""}
       <button role="menuitem" data-action="sign-out">${icon("x")} Выйти из аккаунта</button><hr>`;
     return `<button role="menuitem" data-action="sign-in">${icon("cloud")} Войти через Google — прогресс на всех устройствах</button><hr>`;
   }
@@ -322,6 +356,6 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     enabled, init, prefetch, forget, chip, menuHtml, landingHtml, setsChanged,
     notify: (section) => { if (!applying) sync?.notify(section); },
     signedIn: () => !!user,
-    actions: { "sign-in": signIn, "sign-out": signOut },
+    actions: { "sign-in": signIn, "sign-out": signOut, "sync-retry": () => { retries = 0; retry(); } },
   };
 }

@@ -12,7 +12,7 @@ import { same } from "./merge.js";
 // on its own copies, so the account's copy it remembers never changes behind its back.
 const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 
-export function createSync({ adapter, sections, base, onStatus = () => {}, delay = 1500 }) {
+export function createSync({ adapter, sections, base, onStatus = () => {}, onError = () => {}, delay = 1500 }) {
   const remote = {};          // the account's value as last seen, per section
   const heard = {};           // how many values the account has sent, per section
   const loaded = new Set();   // sections whose account copy has arrived: nothing is merged before that
@@ -20,10 +20,10 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
   const timers = {};
   const unsubs = [];
   let pending = 0;
-  let failed = false;
+  const broken = new Set();   // sections whose last write failed: one that works does not hide another that does not
   let stopped = false;
 
-  const report = () => onStatus(!adapter.online() ? "offline" : pending ? "saving" : failed ? "error" : "saved");
+  const report = () => onStatus(!adapter.online() ? "offline" : pending ? "saving" : broken.size ? "error" : "saved");
 
   async function reconcile(name) {
     if (stopped || !loaded.has(name)) return;
@@ -34,7 +34,11 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
     const known = remote[name] === undefined ? base.get(name) : remote[name];
     const merged = s.merge(copy(base.get(name)), local, copy(known));
     if (!same(merged, local)) s.apply(copy(merged));
-    if (same(merged, remote[name])) { base.set(name, copy(merged)); return; }
+    if (same(merged, remote[name])) {
+      base.set(name, copy(merged));
+      if (broken.delete(name)) report();   // the account already has it: nothing left to send
+      return;
+    }
     pending++;
     report();
     const before = heard[name] || 0;
@@ -44,10 +48,11 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
       base.set(name, copy(merged));
       // a newer value the account sent meanwhile stays; its own reconcile is already queued
       if ((heard[name] || 0) === before) remote[name] = copy(merged);
-      failed = false;
+      broken.delete(name);
     } catch (e) {
       console.warn("sync", name, e);
-      failed = true;
+      broken.add(name);
+      onError(name, e);
     } finally {
       pending--;
       report();
@@ -91,5 +96,8 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, delay
     unsubs.splice(0).forEach((u) => u());
   }
 
-  return { start, notify, flush, stop, status: report };
+  // After a failed write: send every section again (a merge that changes nothing writes nothing).
+  function retry() { for (const name of loaded) run(name); }
+
+  return { start, notify, flush, stop, retry, status: report };
 }

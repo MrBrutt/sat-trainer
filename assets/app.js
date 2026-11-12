@@ -43,7 +43,7 @@ const DIFF_RU = { easy: "Лёгкие", medium: "Средние", hard: "Сло�
 // ---------------------------------------------------------------- storage
 
 // Sections of data that also live in the student's account: saving one here tells the account.
-const SYNCED = { [KEY.progress]: "progress", [KEY.review]: "review", [KEY.flags]: "flags", [KEY.vocab]: "vocab", [KEY.activity]: "activity" };
+const SYNCED = { [KEY.progress]: "progress", [KEY.review]: "review", [KEY.flags]: "flags", [KEY.vocab]: "vocab", [KEY.activity]: "activity", [KEY.mocks]: "mocks" };
 let account = null;
 
 const ls = {

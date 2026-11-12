@@ -94,7 +94,7 @@ test("a device that has not read its questions yet does not drop the list of PDF
 
 import { createAccount } from "../assets/account.js";
 
-function accountWith(cloud) {
+function accountWith(cloud, more = {}) {
   const stored = new Map();
   const box = (v) => ({ read: () => v, write: (x) => { v = x; } });
   return createAccount({
@@ -108,8 +108,49 @@ function accountWith(cloud) {
     },
     changed: () => {},
     openCloud: async () => cloud,
+    ...more,
   });
 }
+
+const tick = (ms = 5) => new Promise((r) => setTimeout(r, ms));
+function cloudWith({ get, set }) {
+  let tell = null;
+  return {
+    onUser: (cb) => { tell = cb; },
+    signIn: async () => { const user = { uid: "u1", email: "" }; await tell(user); return { user }; },
+    signOut: async () => tell(null),
+    adapter: () => ({ get, set, watch: () => () => {}, online: () => true }),
+    hasPdf: async () => true, putPdf: async () => {}, getPdf: async () => null,
+  };
+}
+
+test("a start that failed while online is tried again, with no change of connection", async () => {
+  const store = {};
+  let fails = 1;
+  const cloud = cloudWith({
+    get: async (n) => { if (fails > 0) { fails--; throw new Error("Failed to get document because the client is offline."); } return store[n]; },
+    set: async (n, v) => { store[n] = v; },
+  });
+  const account = accountWith(cloud, { retryMs: [5] });
+  await account.actions["sign-in"]();
+  for (let i = 0; i < 40 && store.progress === undefined; i++) await tick();
+  eq(store.progress, {}, "synced after the retry");
+  await cloud.signOut();
+});
+
+test("the sync chip names the part that failed and the reason", async () => {
+  const cloud = cloudWith({
+    get: async () => undefined,
+    set: async (n) => { if (n === "flags") { const e = new Error("Missing or insufficient permissions."); e.code = "permission-denied"; throw e; } },
+  });
+  const account = accountWith(cloud, { retryMs: [60_000] });
+  await account.actions["sign-in"]();
+  for (let i = 0; i < 20 && !/error/.test(account.chip()); i++) await tick();
+  const chip = account.chip();
+  eq([/flags/.test(chip), /permission-denied/.test(chip)], [true, true]);
+  await cloud.signOut();
+});
+
 
 test("a PDF upload that failed is tried again when the connection is back", async () => {
   const store = {};
