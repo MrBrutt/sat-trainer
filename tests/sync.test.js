@@ -262,3 +262,61 @@ test("a window that is not the working one merges and sends nothing", async () =
   await settle();
   eq(acc.store.progress, { q1: { c: "A", t: 1 } }, "its stale copy does not reach the account");
 });
+
+// ---------------------------------------------------------------- phone and computer
+// Each device has its own record of what it last agreed with the account; the merge rules are the app's.
+
+function phoneOrMac(account, data) {
+  const dev = { data: { progress: {}, review: {}, ...data }, kept: new Map() };
+  const section = (name) => ({ read: () => dev.data[name], apply: (v) => { dev.data[name] = v; }, merge: MERGE[name] });
+  dev.sync = createSync({
+    adapter: account.adapter(),
+    sections: { progress: section("progress"), review: section("review") },
+    base: { get: (n) => clone(dev.kept.get(n)), set: (n, v) => dev.kept.set(n, clone(v)) },
+    delay: 0,
+  });
+  dev.answer = (name, key, value) => { dev.data[name] = { ...dev.data[name], [key]: value }; dev.sync.notify(name); };
+  return dev;
+}
+
+test("a phone that slept while the computer worked loses nothing and sends nothing old when it wakes", async () => {
+  const acc = fakeAccount();
+  const mac = phoneOrMac(acc, { progress: { q1: { c: "A", ok: true, t: 1 } } });
+  const phone = phoneOrMac(acc);
+  await mac.sync.start(); await phone.sync.start(); await settle();
+  phone.sync.stop();                                            // in the pocket, asleep
+  mac.answer("progress", "q2", { c: "B", ok: false, t: 10 });
+  mac.answer("review", "q2", { step: 0, due: 20, last: 10 });
+  await settle();
+  phone.answer("progress", "q3", { c: "C", ok: true, t: 11 });  // answered on the phone with no connection
+  await phone.sync.start(); await settle();                     // wakes up
+  const all = { q1: { c: "A", ok: true, t: 1 }, q2: { c: "B", ok: false, t: 10 }, q3: { c: "C", ok: true, t: 11 } };
+  eq([acc.store.progress, mac.data.progress, phone.data.progress], [all, all, all]);
+  eq(phone.data.review, { q2: { step: 0, due: 20, last: 10 } });
+});
+
+test("a review done on both devices keeps the later one, whichever wakes last", async () => {
+  const acc = fakeAccount();
+  const old = { q5: { step: 1, due: 0, last: 1 } };
+  const mac = phoneOrMac(acc, { review: clone(old) });
+  const phone = phoneOrMac(acc, { review: clone(old) });
+  await mac.sync.start(); await phone.sync.start(); await settle();
+  phone.sync.stop();
+  phone.answer("review", "q5", { step: 2, due: 9, last: 5 });   // done on the phone, offline, at 5
+  mac.answer("review", "q5", { step: 2, due: 9, last: 7 });     // and again on the computer at 7
+  await settle();
+  await phone.sync.start(); await settle();
+  eq([acc.store.review.q5.last, mac.data.review.q5.last, phone.data.review.q5.last], [7, 7, 7]);
+});
+
+test("a phone still holding an old review cannot take the computer's newer one back", async () => {
+  const acc = fakeAccount();
+  const mac = phoneOrMac(acc, { review: { q5: { step: 1, due: 0, last: 1 } } });
+  const phone = phoneOrMac(acc, { review: { q5: { step: 1, due: 0, last: 1 } } });
+  await mac.sync.start(); await phone.sync.start(); await settle();
+  mac.answer("review", "q5", { step: 2, due: 9, last: 7 });
+  await settle();
+  phone.answer("review", "q5", { step: 1, due: 0, last: 1 });   // a stale copy sent again
+  await settle();
+  eq([acc.store.review.q5.step, mac.data.review.q5.step], [2, 2]);
+});
