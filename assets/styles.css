@@ -249,6 +249,11 @@ kbd {
 .sync-chip.saving svg { animation: sync-pulse 1.2s ease-in-out infinite; }
 @keyframes sync-pulse { 50% { opacity: .35; } }
 @media (max-width: 760px) { .sync-chip .label { display: none; } }
+/* the sign-in on this device dropped: the chip turns into a button, and a strip says it across the page */
+button.sync-chip { background: none; border: 1px solid currentColor; border-radius: 999px; padding: 3px 8px; font: inherit; font-size: 12px; cursor: pointer; }
+.account-strip { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--bad-soft); border-bottom: 1px solid var(--bad-border); font-size: 14px; }
+.account-strip > svg { color: var(--bad); flex: none; }
+.account-strip > span { flex: 1; }
 
 /* ---------------------------------------------------------------- layout */
 .layout { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: calc(100vh - var(--topbar-h)); }

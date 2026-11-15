@@ -248,3 +248,56 @@ test("the menu shows the answers here and in both places of the account", async 
   eq(typeof account.actions["sync-reload"], "function", "a way to read the account again by hand");
   await cloud.signOut();
 });
+
+// The phone's sign-in dropped by itself and the page went on quietly without the account for days.
+// A device that was signed in and is no longer, without the student signing out, says so.
+function droppable() {
+  let tell = null;
+  return {
+    drop: () => tell(null),
+    cloud: {
+      onUser: (cb) => { tell = cb; },
+      signIn: async () => { const user = { uid: "u1", email: "me@x" }; await tell(user); return { user }; },
+      signOut: async () => tell(null),
+      adapter: () => ({ get: async () => undefined, set: async () => {}, watch: () => () => {}, online: () => true }),
+      hasPdf: async () => true, putPdf: async () => {}, getPdf: async () => null,
+    },
+  };
+}
+
+test("a sign-in that dropped by itself is shown, with a way to sign in again", async () => {
+  const d = droppable();
+  const account = accountWith(d.cloud);
+  await account.actions["sign-in"]();
+  d.drop();                                      // Google's session on this device is gone
+  await tick();
+  eq([/Не в аккаунте/.test(account.chip()), /data-action="sign-in"/.test(account.chip())], [true, true]);
+  eq([/сбросился/.test(account.menuHtml()), /me@x/.test(account.menuHtml())], [true, true]);
+  eq(/data-action="sign-in"/.test(account.strip()), true, "a strip across the page, seen on a phone too");
+});
+
+test("after a reload the dropped sign-in is still shown, not forgotten", async () => {
+  const stored = new Map([["sat-trainer:sync:v2", JSON.stringify({ uid: "u1", email: "me@x", on: true, base: {} })]]);
+  const d = droppable();
+  const account = createAccount({
+    ls: { get: (k, def) => (stored.has(k) ? JSON.parse(stored.get(k)) : def), set: (k, v) => stored.set(k, JSON.stringify(v)), del: (k) => stored.delete(k) },
+    icon: () => "", esc: (s) => s, toast: () => {},
+    data: { progress: { read: () => ({}), write: () => {} } },
+    sets: { current: () => null, have: () => ({ ids: [], covered: [], numbers: {} }), stored: async () => null, store: async () => {}, install: async () => {} },
+    changed: () => {},
+    openCloud: async () => d.cloud,
+  });
+  await account.init();
+  d.drop();                                      // Firebase reports: nobody signed in here
+  await tick();
+  eq(/Не в аккаунте/.test(account.chip()), true);
+});
+
+test("signing out on purpose stays quiet", async () => {
+  const d = droppable();
+  const account = accountWith(d.cloud);
+  await account.actions["sign-in"]();
+  await account.actions["sign-out"]();
+  await tick();
+  eq([/Не в аккаунте/.test(account.chip()), /сбросился/.test(account.menuHtml()), account.strip()], [false, false, ""]);
+});

@@ -812,6 +812,7 @@ function ensureCurrent() {
 function showTrainer() {
   app.innerHTML = `
     <header class="topbar" id="topbar"></header>
+    <div id="account-strip"></div>
     <div class="layout">
       <aside class="sidebar" id="sidebar" aria-label="Список вопросов"></aside>
       <main class="main" id="main"></main>
@@ -866,6 +867,8 @@ function renderAll(scrollTop = false) {
 }
 
 function renderTopbar() {
+  const strip = $("#account-strip");
+  if (strip) strip.innerHTML = account.strip();
   const qs = S.set.questions;
   const { answered, right, fixed, pct: acc } = firstTryScore(qs, S.progress, S.review);
   const scoreNote = answered

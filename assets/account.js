@@ -122,6 +122,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   let suspended = false;      // another window of the trainer works now: this one syncs nothing
   let startedAt = 0;          // the last full read of the account
   let adapter = null;         // the account's copies, as last read: for the check line in the menu
+  let authKnown = false;      // Firebase has said who is signed in here (until then nothing is shown)
 
   // A device signed in under v1 stays signed in; what it had agreed with the account is not carried over.
   function record() {
@@ -287,16 +288,20 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     changed();
   }
 
+  // Nobody signed in, while the student did not sign out (Google's session on the device expired or
+  // was cleared): the device stays marked as signed in, so it keeps asking to sign in again instead of
+  // going on quietly without the account. Only "Выйти из аккаунта" turns that off.
   async function onUser(u) {
-    if ((u?.uid || null) === (user?.uid || null)) return;
+    const first = !authKnown;
+    authKnown = true;
+    if ((u?.uid || null) === (user?.uid || null)) { if (first) changed(); return; }
     user = u;
     if (u) return begin(u);
     stopAll();
-    const r = record();
-    if (r) ls.set(RECORD, { ...r, on: false });
     clearStates();
     changed();
   }
+  const lost = () => enabled() && authKnown && !user && !!record()?.on;
 
   async function connect() {
     await load();
@@ -332,6 +337,8 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   async function signOut() {
     sync?.flush();
     sourcesSync?.flush();
+    const r = record();
+    if (r) ls.set(RECORD, { ...r, on: false });
     await cloud?.signOut();
     toast("Вы вышли из аккаунта. Прогресс на этом устройстве остался");
   }
@@ -357,6 +364,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   // ---------------------------------------------------------------- screens
 
   function chip() {
+    if (lost()) return `<button id="sync-chip" class="sync-chip error" data-action="sign-in" title="Вход в аккаунт на этом устройстве сбросился: прогресс отсюда не сохраняется. Нажмите, чтобы войти снова">${icon("cloudOff", "icon-sm")}<span class="label">Не в аккаунте</span></button>`;
     if (!enabled() || !user || !STATUS[state]) return `<span id="sync-chip" hidden></span>`;
     const [ic, text] = STATUS[state];
     const why = state === "error" && lastError ? ` · ${lastError.part}: ${lastError.why}` : "";
@@ -385,7 +393,18 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
       <div class="menu-note">${icon("list", "icon-sm")} ${esc(checkLine())}</div>
       <button role="menuitem" data-action="sync-reload">${icon("rotate")} Перечитать аккаунт</button>
       <button role="menuitem" data-action="sign-out">${icon("x")} Выйти из аккаунта</button><hr>`;
+    if (lost()) {
+      const email = record()?.email;
+      return `<div class="menu-note sync-why">${icon("cloudOff", "icon-sm")} Вход в аккаунт на этом устройстве сбросился: прогресс отсюда не сохраняется и не приходит с других устройств. Войдите снова${email ? ` тем же аккаунтом: ${esc(email)}` : ""}.</div>
+      <button role="menuitem" data-action="sign-in">${icon("cloud")} Войти через Google</button><hr>`;
+    }
     return `<button role="menuitem" data-action="sign-in">${icon("cloud")} Войти через Google — прогресс на всех устройствах</button><hr>`;
+  }
+
+  // Across the page under the top bar: on a phone the chip has room only for its icon.
+  function strip() {
+    if (!lost()) return "";
+    return `<div class="account-strip" role="alert">${icon("cloudOff", "icon-sm")}<span>Вход в аккаунт на этом устройстве сбросился — прогресс не сохраняется.</span><button class="btn btn-primary btn-sm" data-action="sign-in">Войти</button></div>`;
   }
 
   function landingHtml() {
@@ -398,7 +417,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   }
 
   return {
-    enabled, init, prefetch, forget, chip, menuHtml, landingHtml, setsChanged,
+    enabled, init, prefetch, forget, chip, strip, menuHtml, landingHtml, setsChanged,
     suspend: () => { suspended = true; stopAll(); },
     notify: (section) => { if (!applying) sync?.notify(section); },
     signedIn: () => !!user,
