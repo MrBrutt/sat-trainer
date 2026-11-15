@@ -62,3 +62,27 @@ test("a newer record from the account still comes in", () => {
   const b = { q1: { step: 1, t: 3 } };
   eq(mergeMap(b, b, { q1: { step: 2, t: 6 } }, byT, (x) => x.t), { q1: { step: 2, t: 6 } });
 });
+
+// ---------------------------------------------------------------- answers, reviews, cards
+// A record missing from the other copy is never a deletion: a stale or partial copy (a device that
+// slept, an old window) cannot wipe anything. A deletion is written down with its time instead.
+import { mergeRecords, GONE } from "../assets/merge.js";
+const t = (x) => x.t;
+
+test("an answer missing from the account's copy is kept, not deleted", () => {
+  const both = { q1: { c: "A", t: 1 }, q2: { c: "B", t: 2 } };
+  eq(mergeRecords(both, both, { q1: { c: "A", t: 1 } }, t), both);
+});
+
+test("a deletion written down removes the record on every side", () => {
+  eq(mergeRecords({}, { q1: { c: "A", t: 5 } }, { [GONE]: { q1: 9 } }, t), { [GONE]: { q1: 9 } });
+});
+
+test("an answer given after its deletion stays", () => {
+  eq(mergeRecords({}, { q1: { c: "B", t: 12 }, [GONE]: { q1: 9 } }, { q1: { c: "A", t: 5 } }, t), { q1: { c: "B", t: 12 }, [GONE]: { q1: 9 } });
+});
+
+test("the newer of two versions wins, on either side", () => {
+  eq(mergeRecords({}, { q1: { c: "A", t: 5 } }, { q1: { c: "B", t: 7 } }, t), { q1: { c: "B", t: 7 } });
+  eq(mergeRecords({}, { q1: { c: "A", t: 9 } }, { q1: { c: "B", t: 7 } }, t), { q1: { c: "A", t: 9 } });
+});

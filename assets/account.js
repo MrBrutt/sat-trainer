@@ -2,7 +2,7 @@
 // every device they sign in on shows the same. The device copy stays the working copy (see sync.js).
 // Off inside claude.ai (the page cannot reach Google there) and while no Firebase project is set.
 import { createSync } from "./sync.js";
-import { mergeMap, mergeSet, mergeValue, newer, same } from "./merge.js";
+import { mergeMap, mergeSet, mergeValue, mergeRecords, newer, same } from "./merge.js";
 import { firebaseConfig } from "./cloud-config.js";
 
 const RECORD = "sat-trainer:sync:v2";   // { uid, email, on, base: { section: last agreed value } }
@@ -30,11 +30,12 @@ function byField(b, l, r, rules) {
 }
 
 export const MERGE = {
-  progress: (b, l, r) => mergeMap(b, l, r, newer((x) => x.t), (x) => x.t),
-  review: (b, l, r) => mergeMap(b, l, r, newer((x) => x.last || x.added), (x) => x.last || x.added),
+  // answers and reviews: joined, the newer record wins, deletions only as written down (see mergeRecords)
+  progress: (b, l, r) => mergeRecords(b, l, r, (x) => x.t),
+  review: (b, l, r) => mergeRecords(b, l, r, (x) => x.last || x.added),
   flags: mergeSet,
   vocab: (b, l, r) => byField(b, l, r, {
-    srs: (b, l, r) => mergeMap(b, l, r, newer((x) => x.last), (x) => x.last),
+    srs: (b, l, r) => mergeRecords(b, l, r, (x) => x.last),
     user: (b, l, r) => mergeMap(b, l, r, mine),
     edits: (b, l, r) => mergeMap(b, l, r, mine),
     known: mergeSet,

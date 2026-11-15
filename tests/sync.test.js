@@ -353,3 +353,16 @@ test("a computer that missed the phone's answers while asleep does not write ove
   eq(mac.data.progress, all, "the computer gets them");
   eq(acc.store.review, { q2: { step: 0, due: 20, last: 10 } }, "and the review of the mistake");
 });
+
+test("a phone that still has answers the account lost puts them back", async () => {
+  const acc = fakeAccount();
+  const phone = phoneOrMac(acc, { progress: { q1: { c: "A", ok: true, t: 1 } } });
+  await phone.sync.start(); await settle();
+  phone.answer("progress", "q2", { c: "B", ok: false, t: 10 });
+  await settle();
+  phone.sync.stop();
+  acc.store.progress = { q1: { c: "A", ok: true, t: 1 } };          // written over by a device that missed q2
+  await phone.sync.start(); await settle();
+  const all = { q1: { c: "A", ok: true, t: 1 }, q2: { c: "B", ok: false, t: 10 } };
+  eq([phone.data.progress, acc.store.progress], [all, all]);
+});

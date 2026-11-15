@@ -45,3 +45,31 @@ function mergeItem(b, l, r, resolve, time) {
 
 // The record with the later timestamp wins; this device's on a tie.
 export const newer = (time) => (l, r) => ((time(r) || 0) > (time(l) || 0) ? r : l);
+
+// Answers, reviews, cards: records with a time. A record missing from one copy is never a deletion
+// (that copy may be stale or partial: a device that slept, a window not updated); both copies are
+// joined and the newer version of a record wins. A deletion ("Решить заново", a reset) is written
+// down under GONE with its time, and removes the records made before it, on every device.
+export const GONE = "~gone";
+export function mergeRecords(b, l, r, time) {
+  l ||= {}; r ||= {};
+  const gone = { ...(l[GONE] || {}) };
+  for (const [k, at] of Object.entries(r[GONE] || {})) gone[k] = Math.max(gone[k] || 0, at);
+  const out = {};
+  for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
+    if (k === GONE) continue;
+    const mine = l[k], theirs = r[k];
+    const v = mine === undefined ? theirs : theirs === undefined ? mine : (time(theirs) || 0) > (time(mine) || 0) ? theirs : mine;
+    if (gone[k] && gone[k] >= (time(v) || 0)) continue;
+    out[k] = v;
+  }
+  if (Object.keys(gone).length) out[GONE] = gone;
+  return out;
+}
+
+// The app keeps its records without GONE; the account's copy carries it.
+export const withGone = (records, gone) => (gone && Object.keys(gone).length ? { ...records, [GONE]: gone } : records);
+export function splitGone(value) {
+  const { [GONE]: gone = {}, ...records } = value || {};
+  return [records, gone];
+}

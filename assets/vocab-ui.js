@@ -803,10 +803,11 @@ export function createVocab(ctx) {
       refreshList();
     },
     "v-toggle-known": (el) => { const c = cards().find((x) => x.key === el.dataset.key); markKnown(el.dataset.key, !c?.known); refreshList(); renderSidebar(); ctx.refreshChrome(); },
-    "v-reset-card": (el) => { delete S.vocab.srs[el.dataset.key]; save(); S.session = null; refreshList(); renderSidebar(); ctx.refreshChrome(); },
+    "v-reset-card": (el) => { ctx.forgetRecord?.("srs", el.dataset.key); delete S.vocab.srs[el.dataset.key]; save(); S.session = null; refreshList(); renderSidebar(); ctx.refreshChrome(); },
     "v-delete": async (el) => {
       const key = el.dataset.key;
       if (!(await ctx.confirmDialog("Удалить слово?", "Слово и его история повторений будут удалены из словаря.", "Удалить", true))) return;
+      ctx.forgetRecord?.("srs", key);
       delete S.vocab.user[key]; delete S.vocab.srs[key]; delete S.vocab.edits[key];
       markKnown(key, false);
       openRow = null;

@@ -11,6 +11,7 @@ import { outline, inFocus, domainOf } from "./domains.js";
 import { createThink } from "./think.js";
 import { createMock } from "./mock.js";
 import { createOneTab } from "./one-tab.js";
+import { GONE, withGone, splitGone } from "./merge.js";
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -29,6 +30,7 @@ const KEY = {
   timing: "sat-trainer:timing:v1",
   mock: "sat-trainer:mock:v1",          // the mock test in progress (this device only)
   mocks: "sat-trainer:mocks:v1",        // finished mock tests by id
+  gone: "sat-trainer:gone:v1",          // deletions written down: { progress, review, srs: { id: time } }
   aiTier: "sat-trainer:ai-tier",
 };
 const PALETTE = ["#3b82f6", "#14b8a6", "#8b5cf6", "#f59e0b", "#ec4899", "#22c55e", "#ef4444", "#0ea5e9", "#a855f7", "#84cc16"];
@@ -63,6 +65,9 @@ function stepAside() {
 const oneTab = createOneTab({ onTakenOver: stepAside });
 addEventListener("storage", (e) => oneTab.onStorage(e));
 addEventListener("focus", () => oneTab.check());
+// A page left open for days runs old code: when it comes back to the screen it picks up a new version
+// (the data is saved as it changes, so a reload loses nothing).
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") freshen(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") oneTab.check(); });
 
 const ls = {
@@ -113,7 +118,19 @@ const S = {
   explainOpen: {},
   anim: null,
   pdfs: new Map(),                             // opened PDFs by source, for the original view
+  gone: Object.assign({ progress: {}, review: {}, srs: {} }, ls.get(KEY.gone, {})),
 };
+// A copy synced by the version of 2026-11-15 before this one could put the account's GONE list among
+// the records: it belongs with the deletions.
+for (const [name, records] of [["progress", S.progress], ["review", S.review], ["srs", S.vocab.srs]]) {
+  if (records?.[GONE]) { Object.assign(S.gone[name], records[GONE]); delete records[GONE]; }
+}
+// "Решить заново", a reset, a card started over: written down, so the account and other devices drop
+// the record too. A record merely missing from another copy is never taken as deleted.
+function forgetRecord(kind, id) {
+  S.gone[kind][id] = Date.now();
+  ls.set(KEY.gone, S.gone);
+}
 const saveProgress = () => ls.set(KEY.progress, S.progress);
 const saveFlags = () => ls.set(KEY.flags, [...S.flags]);
 const saveReview = () => ls.set(KEY.review, S.review);
@@ -207,7 +224,7 @@ const isDark = () => {
 
 let ai = null;
 const vocab = createVocab({
-  S, $, icon, esc, toast, ls, KEY, plural, confirmDialog,
+  S, $, icon, esc, toast, ls, KEY, plural, confirmDialog, forgetRecord,
   saveUi: () => saveUi(),
   current: () => cur(),
   openQuestion: (id) => { S.ui.view = "questions"; saveUi(); renderTopbar(); go(id); },
@@ -262,10 +279,10 @@ account = createAccount({
   ls, icon, esc, toast,
   active: () => oneTab.check(),
   data: {
-    progress: { read: () => S.progress, write: (v) => { S.progress = v; saveProgress(); } },
-    review: { read: () => S.review, write: (v) => { S.review = v; saveReview(); } },
+    progress: { read: () => withGone(S.progress, S.gone.progress), write: (v) => { const [rec, gone] = splitGone(v); S.progress = rec; S.gone.progress = gone; ls.set(KEY.gone, S.gone); saveProgress(); } },
+    review: { read: () => withGone(S.review, S.gone.review), write: (v) => { const [rec, gone] = splitGone(v); S.review = rec; S.gone.review = gone; ls.set(KEY.gone, S.gone); saveReview(); } },
     flags: { read: () => [...S.flags], write: (v) => { S.flags = new Set(v); saveFlags(); } },
-    vocab: { read: () => S.vocab, write: (v) => { S.vocab = Object.assign(VOCAB_DEFAULT(), v); ls.set(KEY.vocab, S.vocab); vocab.accountChanged(); } },
+    vocab: { read: () => ({ ...S.vocab, srs: withGone(S.vocab.srs, S.gone.srs) }), write: (v) => { const [srs, gone] = splitGone(v?.srs); S.vocab = Object.assign(VOCAB_DEFAULT(), v, { srs }); S.gone.srs = gone; ls.set(KEY.gone, S.gone); ls.set(KEY.vocab, S.vocab); vocab.accountChanged(); } },
     activity: { read: () => S.activity, write: (v) => { S.activity = Object.assign(ACTIVITY_DEFAULT(), v); ls.set(KEY.activity, S.activity); } },
     mocks: { read: () => mock.history(), write: (v) => mock.setHistory(v) },
   },
@@ -810,7 +827,8 @@ function showTrainer() {
   let added = false;
   for (const q of S.set.questions) {
     const p = S.progress[q.id];
-    if (p && !p.ok && !S.review[q.id]) { S.review[q.id] = enqueueReview(null, Date.now(), true); added = true; }
+    // dated by the answer, not by now: a newer review of it from another device must win over this stand-in
+    if (p && !p.ok && !S.review[q.id]) { S.review[q.id] = enqueueReview(null, p.t || Date.now(), true); added = true; }
   }
   if (added) saveReview();
   if (S.ui.lastDay !== dayKey()) { S.ui.view = "today"; S.ui.lastDay = dayKey(); saveUi(); }
@@ -1253,6 +1271,7 @@ function checkSpr() {
 function retry() {
   const q = cur();
   if (!q || inReview(q)) return;
+  forgetRecord("progress", q.id);
   delete S.progress[q.id];
   delete S.struck[q.id];
   think.reset(q.id);
@@ -1361,6 +1380,10 @@ const ACTIONS = {
   "reset-progress": async () => {
     toggleMenu(false);
     if (!(await confirmDialog("Сбросить прогресс?", "Все ответы и статистика по вопросам будут удалены. Вопросы и словарь останутся.", "Сбросить", true))) return;
+    const now = Date.now();
+    for (const id of Object.keys(S.progress)) S.gone.progress[id] = now;
+    for (const id of Object.keys(S.review)) S.gone.review[id] = now;
+    ls.set(KEY.gone, S.gone);
     S.progress = {};
     S.struck = {};
     S.review = {};
