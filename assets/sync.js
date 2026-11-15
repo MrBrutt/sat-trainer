@@ -44,11 +44,29 @@ export function createSync({ adapter, sections, base, onStatus = () => {}, onErr
     report();
     const before = heard[name] || 0;
     try {
-      await adapter.set(name, copy(merged));
+      let sent = merged;
+      if (adapter.update) {
+        // Read and write the account's copy in one step (a transaction). A device that missed another
+        // one's change (it slept, its connection dropped) merges that change in instead of writing a
+        // whole section over it.
+        const res = await adapter.update(name, (latest) => {
+          const m = s.merge(copy(base.get(name)), copy(merged), copy(latest === undefined ? base.get(name) : latest));
+          return same(m, latest) ? undefined : m;
+        });
+        sent = res.value === undefined ? copy(res.remote) : res.value;
+        if (!same(sent, merged)) {
+          // the change it had missed comes in here too, with any edit made here meanwhile kept
+          const current = copy(s.read());
+          const next = same(current, merged) ? sent : s.merge(copy(merged), current, copy(sent));
+          if (!same(next, current)) s.apply(copy(next));
+        }
+      } else {
+        await adapter.set(name, copy(merged));
+      }
       // the base moves only once the account has the value: a write lost offline is sent again next time
-      base.set(name, copy(merged));
+      base.set(name, copy(sent));
       // a newer value the account sent meanwhile stays; its own reconcile is already queued
-      if ((heard[name] || 0) === before) remote[name] = copy(merged);
+      if ((heard[name] || 0) === before) remote[name] = copy(sent);
       broken.delete(name);
     } catch (e) {
       console.warn("sync", name, e);

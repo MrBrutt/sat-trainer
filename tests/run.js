@@ -18,7 +18,9 @@ export async function run(files) {
     try { await import(f); } catch (e) { fail++; lines.push(`FAIL ${f}: ${e.message}`); }
   }
   for (const t of tests) {
-    try { await t.fn(); pass++; lines.push(`ok   ${t.name}`); }
+    // a test that never finishes fails on its own instead of hiding every result after it
+    const limit = new Promise((_, no) => setTimeout(() => no(new Error("timed out after 5 s")), 5000));
+    try { await Promise.race([t.fn(), limit]); pass++; lines.push(`ok   ${t.name}`); }
     catch (e) { fail++; lines.push(`FAIL ${t.name}: ${e.message}`); }
   }
   const summary = `${fail ? "FAIL" : "PASS"} ${pass}/${pass + fail}`;

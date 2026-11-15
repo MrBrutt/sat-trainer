@@ -35,6 +35,20 @@ export async function loadCloud(config) {
         return old.exists() ? JSON.parse(old.data().json) : undefined;
       },
       set: (name, value) => F.setDoc(ref(uid, "sync", name), { json: JSON.stringify(value), at: F.serverTimestamp() }),
+      // Read the account's copy and write the merged one in one transaction: a change another device made
+      // while this one was not listening is merged in, not written over. fn may run again on a conflict.
+      update: (name, fn) => F.runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref(uid, "sync", name));
+        let latest;
+        if (snap.exists()) latest = JSON.parse(snap.data().json);
+        else {
+          const old = await tx.get(ref(uid, "state", name));
+          latest = old.exists() ? JSON.parse(old.data().json) : undefined;
+        }
+        const value = fn(latest === undefined ? undefined : JSON.parse(JSON.stringify(latest)));
+        if (value !== undefined) tx.set(ref(uid, "sync", name), { json: JSON.stringify(value), at: F.serverTimestamp() });
+        return { remote: latest, value };
+      }),
       watch: (name, cb) => F.onSnapshot(ref(uid, "sync", name), (snap) => {
         // our own write is not news, and a reply from the cache is not the account's word
         if (snap.metadata.hasPendingWrites || snap.metadata.fromCache || !snap.exists()) return;

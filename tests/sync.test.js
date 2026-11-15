@@ -15,17 +15,33 @@ function fakeAccount() {
     store, hold: false,
     // what a dead connection delivers: a section that looks empty
     emit(name, value) { for (const w of watchers) if (w.name === name) w.cb(value); },
-    adapter({ ack = () => Promise.resolve(), wait = () => Promise.resolve() } = {}) {
+    // deaf: the device's listener is dead (it slept, the connection dropped) and hears nothing
+    adapter({ ack = () => Promise.resolve(), wait = () => Promise.resolve(), deaf = false } = {}) {
       const me = {};
+      const write = (name, v) => {
+        store[name] = clone(v);
+        for (const w of watchers) if (w.name === name && w.from !== me) setTimeout(() => w.cb(clone(v)));
+      };
       return {
         get: async (name) => { await wait(); return clone(store[name]); },
         set: (name, v) => {
           if (account.hold) return new Promise(() => {});
-          store[name] = clone(v);
-          for (const w of watchers) if (w.name === name && w.from !== me) setTimeout(() => w.cb(clone(v)));
+          write(name, v);
           return ack();
         },
-        watch: (name, cb) => { const w = { name, cb, from: me }; watchers.push(w); return () => watchers.splice(watchers.indexOf(w), 1); },
+        // read and write in one step, as a Firestore transaction does
+        update: async (name, fn) => {
+          if (account.hold) return new Promise(() => {});
+          const remote = clone(store[name]);
+          const value = fn(clone(remote));
+          if (value !== undefined) write(name, value);
+          await ack();
+          return { remote, value: clone(value) };
+        },
+        watch: (name, cb) => {
+          if (deaf) return () => {};
+          const w = { name, cb, from: me }; watchers.push(w); return () => watchers.splice(watchers.indexOf(w), 1);
+        },
         online: () => true,
       };
     },
@@ -266,11 +282,11 @@ test("a window that is not the working one merges and sends nothing", async () =
 // ---------------------------------------------------------------- phone and computer
 // Each device has its own record of what it last agreed with the account; the merge rules are the app's.
 
-function phoneOrMac(account, data) {
+function phoneOrMac(account, data, adapterOptions) {
   const dev = { data: { progress: {}, review: {}, ...data }, kept: new Map() };
   const section = (name) => ({ read: () => dev.data[name], apply: (v) => { dev.data[name] = v; }, merge: MERGE[name] });
   dev.sync = createSync({
-    adapter: account.adapter(),
+    adapter: account.adapter(adapterOptions),
     sections: { progress: section("progress"), review: section("review") },
     base: { get: (n) => clone(dev.kept.get(n)), set: (n, v) => dev.kept.set(n, clone(v)) },
     delay: 0,
@@ -319,4 +335,21 @@ test("a phone still holding an old review cannot take the computer's newer one b
   phone.answer("review", "q5", { step: 1, due: 0, last: 1 });   // a stale copy sent again
   await settle();
   eq([acc.store.review.q5.step, mac.data.review.q5.step], [2, 2]);
+});
+
+test("a computer that missed the phone's answers while asleep does not write over them", async () => {
+  const acc = fakeAccount();
+  const mac = phoneOrMac(acc, { progress: { q1: { c: "A", ok: true, t: 1 } } }, { deaf: true });
+  const phone = phoneOrMac(acc);
+  await mac.sync.start(); await phone.sync.start(); await settle();
+  phone.answer("progress", "q2", { c: "B", ok: false, t: 10 });   // mistakes made on the phone
+  phone.answer("review", "q2", { step: 0, due: 20, last: 10 });
+  await settle();
+  mac.answer("progress", "q3", { c: "C", ok: true, t: 12 });      // the computer, just woken, saves something
+  await settle();
+  const all = { q1: { c: "A", ok: true, t: 1 }, q2: { c: "B", ok: false, t: 10 }, q3: { c: "C", ok: true, t: 12 } };
+  eq(acc.store.progress, all, "account");
+  eq(phone.data.progress, all, "the phone keeps its answers");
+  eq(mac.data.progress, all, "the computer gets them");
+  eq(acc.store.review, { q2: { step: 0, due: 20, last: 10 } }, "and the review of the mistake");
 });
