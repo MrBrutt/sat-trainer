@@ -2,7 +2,7 @@
 // every device they sign in on shows the same. The device copy stays the working copy (see sync.js).
 // Off inside claude.ai (the page cannot reach Google there) and while no Firebase project is set.
 import { createSync } from "./sync.js";
-import { mergeMap, mergeSet, mergeValue, mergeRecords, newer, same } from "./merge.js";
+import { mergeMap, mergeSet, mergeValue, mergeRecords, newer, same, GONE } from "./merge.js";
 import { firebaseConfig } from "./cloud-config.js";
 
 const RECORD = "sat-trainer:sync:v2";   // { uid, email, on, base: { section: last agreed value } }
@@ -121,6 +121,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   let lastError = null;       // { part, why }: shown on the chip, so a failure says what failed
   let suspended = false;      // another window of the trainer works now: this one syncs nothing
   let startedAt = 0;          // the last full read of the account
+  let adapter = null;         // the account's copies, as last read: for the check line in the menu
 
   // A device signed in under v1 stays signed in; what it had agreed with the account is not carried over.
   function record() {
@@ -265,7 +266,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     let r = record();
     if (!r || r.uid !== u.uid) { r = { uid: u.uid, base: {} }; uploaded.clear(); }   // another account starts from nothing agreed
     ls.set(RECORD, { ...r, on: true, email: u.email || "" });
-    const adapter = cloud.adapter(u.uid, joinCopies);
+    adapter = cloud.adapter(u.uid, joinCopies);
     sync = createSync({ adapter, sections, base, active, onStatus: (s) => setState("data", s), onError: (name, e) => failed(name, e) });
     setState("data", "saving");
     try {
@@ -362,12 +363,27 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     return `<span id="sync-chip" class="sync-chip ${state}" title="${esc(`${text}${why} · ${user.email || ""}`)}" role="status">${icon(ic, "icon-sm")}<span class="label">${state === "saved" ? "В аккаунте" : esc(text.split(" — ")[0])}</span></span>`;
   }
 
+  // Answers here and in each place of the account: one look at the menu on each device says where
+  // an answer stopped on its way.
+  const answers = (v) => (v && typeof v === "object" ? Object.keys(v).filter((k) => k !== GONE).length : 0);
+  function checkLine() {
+    const here = answers(data.progress?.read());
+    const seen = adapter?.seen?.();
+    const c = seen?.copies?.progress;
+    if (!seen?.at || !c) return `Ответов: здесь ${here}, аккаунт ещё не прочитан`;
+    const at = new Date(seen.at);
+    const hhmm = `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`;
+    return `Ответов: здесь ${here}, в аккаунте ${answers(joinCopies("progress", c.sync, c.state))} (новое место ${answers(c.sync)}, старое ${answers(c.state)}) · проверено в ${hhmm}`;
+  }
+
   function menuHtml() {
     if (!enabled()) return "";
     const version = document.querySelector('meta[name="app-version"]')?.content || "";
     if (user) return `<div class="menu-note">${icon("cloudCheck", "icon-sm")} ${esc(user.email || "Аккаунт Google")}${version ? ` · версия ${esc(version)}` : ""}</div>
       ${state === "error" ? `<div class="menu-note sync-why">${icon("cloudOff", "icon-sm")} Не сохранилось${lastError ? `: ${esc(lastError.part)} — ${esc(lastError.why)}` : ""}</div>
       <button role="menuitem" data-action="sync-retry">${icon("rotate")} Сохранить ещё раз</button>` : ""}
+      <div class="menu-note">${icon("list", "icon-sm")} ${esc(checkLine())}</div>
+      <button role="menuitem" data-action="sync-reload">${icon("rotate")} Перечитать аккаунт</button>
       <button role="menuitem" data-action="sign-out">${icon("x")} Выйти из аккаунта</button><hr>`;
     return `<button role="menuitem" data-action="sign-in">${icon("cloud")} Войти через Google — прогресс на всех устройствах</button><hr>`;
   }
@@ -386,6 +402,9 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
     suspend: () => { suspended = true; stopAll(); },
     notify: (section) => { if (!applying) sync?.notify(section); },
     signedIn: () => !!user,
-    actions: { "sign-in": signIn, "sign-out": signOut, "sync-retry": () => { retries = 0; retry(); } },
+    actions: {
+      "sign-in": signIn, "sign-out": signOut, "sync-retry": () => { retries = 0; retry(); },
+      "sync-reload": () => { if (user && !suspended) { retries = 0; begin(user); } },
+    },
   };
 }

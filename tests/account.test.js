@@ -230,3 +230,21 @@ test("back on the page after a minute away, the account is read afresh", async (
   eq(reads > before, true, "read again");
   await cloud.signOut();
 });
+
+// One screenshot of the menu from each device says where answers are lost: here, or in which place.
+test("the menu shows the answers here and in both places of the account", async () => {
+  const cloud = cloudWith({ get: async () => undefined, set: async () => {} });
+  cloud.adapter = () => ({
+    get: async (n) => (n === "progress" ? { q1: { t: 1 }, q2: { t: 2 } } : undefined),
+    set: async () => {}, watch: () => () => {}, online: () => true,
+    seen: () => ({ at: new Date(2026, 10, 15, 19, 5).getTime(), copies: { progress: { sync: { q1: { t: 1 } }, state: { q1: { t: 1 }, q2: { t: 2 } } } } }),
+  });
+  const account = accountWith(cloud, {
+    data: { progress: { read: () => ({ q1: { t: 1 }, "~gone": {} }), write: () => {} } },
+  });
+  await account.actions["sign-in"]();
+  const menu = account.menuHtml();
+  eq([/здесь 1\b/.test(menu), /в аккаунте 2\b/.test(menu), /новое место 1, старое 2/.test(menu), /19:05/.test(menu)], [true, true, true, true]);
+  eq(typeof account.actions["sync-reload"], "function", "a way to read the account again by hand");
+  await cloud.signOut();
+});

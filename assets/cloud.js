@@ -60,6 +60,7 @@ export function makeAdapter(F, db, uid, join = (name, a, b) => a ?? b) {
   const parse = (snap) => (snap.exists() ? JSON.parse(snap.data().json) : undefined);
   const both = (name, a, b) => (a === undefined ? b : b === undefined ? a : join(name, a, b));
   const heard = {};   // name -> { sync, state } as last heard from the server
+  let heardAt = 0;    // when, for the check line in the menu
   const doc = (value) => ({ json: JSON.stringify(value), at: F.serverTimestamp() });
   return {
     // From the server only: a cached reply can say "no such document" just because the cache is
@@ -67,6 +68,7 @@ export function makeAdapter(F, db, uid, join = (name, a, b) => a ?? b) {
     async get(name) {
       const [a, b] = await Promise.all([F.getDocFromServer(ref(uid, "sync", name)), F.getDocFromServer(ref(uid, "state", name))]);
       heard[name] = { sync: parse(a), state: parse(b) };
+      heardAt = Date.now();
       return both(name, heard[name].sync, heard[name].state);
     },
     set: (name, value) => Promise.all([F.setDoc(ref(uid, "sync", name), doc(value)), F.setDoc(ref(uid, "state", name), doc(value))]),
@@ -78,6 +80,8 @@ export function makeAdapter(F, db, uid, join = (name, a, b) => a ?? b) {
       const latest = both(name, a, b);
       const value = fn(latest === undefined ? undefined : JSON.parse(JSON.stringify(latest)));
       const target = value !== undefined ? value : latest;
+      heard[name] = { sync: target ?? a, state: target ?? b };   // the last run is the one committed
+      heardAt = Date.now();
       if (target !== undefined) {
         if (JSON.stringify(a) !== JSON.stringify(target)) tx.set(ref(uid, "sync", name), doc(target));
         if (JSON.stringify(b) !== JSON.stringify(target)) tx.set(ref(uid, "state", name), doc(target));
@@ -89,6 +93,7 @@ export function makeAdapter(F, db, uid, join = (name, a, b) => a ?? b) {
         // our own write is not news, and a reply from the cache is not the account's word
         if (snap.metadata.hasPendingWrites || snap.metadata.fromCache || !snap.exists()) return;
         heard[name] = { ...heard[name], [where]: JSON.parse(snap.data().json) };
+        heardAt = Date.now();
         const v = both(name, heard[name].sync, heard[name].state);
         if (v !== undefined) cb(v);
       }, (e) => console.warn("watch", where, name, e));
@@ -96,5 +101,6 @@ export function makeAdapter(F, db, uid, join = (name, a, b) => a ?? b) {
       return () => stops.forEach((s) => s());
     },
     online: () => navigator.onLine,
+    seen: () => ({ at: heardAt, copies: heard }),
   };
 }

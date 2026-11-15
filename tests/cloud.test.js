@@ -65,3 +65,16 @@ test("nothing new to write leaves both places as they are", async () => {
   const res = await a.update("progress", () => undefined);
   eq([res.value, fs.read("users/u1/sync/progress"), fs.read("users/u1/state/progress")], [undefined, same, same]);
 });
+
+test("the adapter tells what it last heard from each place, for the menu's check line", async () => {
+  const fs = fakeFirestore();
+  fs.put("users/u1/sync/progress", { q1: { t: 1 } });
+  fs.put("users/u1/state/progress", { q1: { t: 1 }, q2: { t: 2 } });
+  const a = makeAdapter(fs.F, null, "u1", joinCopies);
+  eq(a.seen().at, 0, "nothing read yet");
+  await a.get("progress");
+  const s = a.seen();
+  eq([s.at > 0, s.copies.progress], [true, { sync: { q1: { t: 1 } }, state: { q1: { t: 1 }, q2: { t: 2 } } }]);
+  await a.update("progress", (latest) => ({ ...latest, q3: { t: 3 } }));
+  eq(Object.keys(a.seen().copies.progress.sync), ["q1", "q2", "q3"], "after a write: what was written");
+});
