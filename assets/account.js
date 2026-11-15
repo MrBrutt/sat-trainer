@@ -96,6 +96,15 @@ function signInError(e) {
 // data: { [section]: { read(), write(value) } } — the trainer's own copy of each section.
 // sets: { current() → {list, numbers} | null, have() → {ids, numbers}, stored(id), store(id, bytes), install(list, numbers) }
 //   — the questions on this device, the PDFs behind them, and building them from PDFs.
+// The account keeps each section in two places: users/{uid}/sync/ (since 12 November) and state/ (before).
+// A page still running older code reads and writes only state/; the new code reads both, joins them with
+// nothing agreed (a union: nothing is taken as deleted, the newer record wins) and writes both.
+export function joinCopies(name, a, b) {
+  if (a === undefined) return b;
+  if (b === undefined) return a;
+  return MERGE[name] ? MERGE[name](undefined, a, b) : a;
+}
+
 export function createAccount({ ls, icon, esc, toast, data, sets, changed, openCloud = () => import("./cloud.js").then((m) => m.loadCloud(firebaseConfig)), retryMs = [15_000, 30_000, 60_000, 120_000], active = () => true }) {
   const enabled = () => !!firebaseConfig && !window.claude;   // asked each time: claude.ai may set window.claude after load
   let cloudP = null;
@@ -111,6 +120,7 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   let retries = 0;
   let lastError = null;       // { part, why }: shown on the chip, so a failure says what failed
   let suspended = false;      // another window of the trainer works now: this one syncs nothing
+  let startedAt = 0;          // the last full read of the account
 
   // A device signed in under v1 stays signed in; what it had agreed with the account is not carried over.
   function record() {
@@ -251,10 +261,11 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
 
   async function startFor(u) {
     stopAll();
+    startedAt = Date.now();
     let r = record();
     if (!r || r.uid !== u.uid) { r = { uid: u.uid, base: {} }; uploaded.clear(); }   // another account starts from nothing agreed
     ls.set(RECORD, { ...r, on: true, email: u.email || "" });
-    const adapter = cloud.adapter(u.uid);
+    const adapter = cloud.adapter(u.uid, joinCopies);
     sync = createSync({ adapter, sections, base, active, onStatus: (s) => setState("data", s), onError: (name, e) => failed(name, e) });
     setState("data", "saving");
     try {
@@ -338,6 +349,8 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") { sync?.flush(); sourcesSync?.flush(); }
     else if (user && (state === "error" || state === "offline")) retry();
+    // back after a while (a phone takes its connections away in the background): read everything afresh
+    else if (user && started && !suspended && Date.now() - startedAt > 60_000) begin(user);
   });
 
   // ---------------------------------------------------------------- screens
@@ -351,7 +364,8 @@ export function createAccount({ ls, icon, esc, toast, data, sets, changed, openC
 
   function menuHtml() {
     if (!enabled()) return "";
-    if (user) return `<div class="menu-note">${icon("cloudCheck", "icon-sm")} ${esc(user.email || "Аккаунт Google")}</div>
+    const version = document.querySelector('meta[name="app-version"]')?.content || "";
+    if (user) return `<div class="menu-note">${icon("cloudCheck", "icon-sm")} ${esc(user.email || "Аккаунт Google")}${version ? ` · версия ${esc(version)}` : ""}</div>
       ${state === "error" ? `<div class="menu-note sync-why">${icon("cloudOff", "icon-sm")} Не сохранилось${lastError ? `: ${esc(lastError.part)} — ${esc(lastError.why)}` : ""}</div>
       <button role="menuitem" data-action="sync-retry">${icon("rotate")} Сохранить ещё раз</button>` : ""}
       <button role="menuitem" data-action="sign-out">${icon("x")} Выйти из аккаунта</button><hr>`;

@@ -191,3 +191,42 @@ test("a device signed in before the sync record moved stays signed in, and agree
   const now = JSON.parse(stored.get("sat-trainer:sync:v2") || "null");
   eq([opened, now?.uid, now?.on, now?.base], [1, "u1", true, {}]);
 });
+
+// Pages still running the code from before 12 November read and write the account's old place; the
+// new code joins both copies, so neither side stops seeing the other.
+import { joinCopies } from "../assets/account.js";
+
+test("an old page's copy of the answers is joined with the new one, nothing dropped", () => {
+  eq(joinCopies("progress", { q1: { t: 1 }, q2: { t: 5 } }, { q2: { t: 3 }, q3: { t: 7 } }), { q1: { t: 1 }, q2: { t: 5 }, q3: { t: 7 } });
+});
+
+test("a day's counts from both copies keep the larger", () => {
+  eq(joinCopies("activity", { days: { "2026-11-15": { q: 2, w: 9 } } }, { days: { "2026-11-15": { q: 6, w: 3 } } }).days["2026-11-15"], { q: 6, w: 9 });
+});
+
+test("a copy missing on one side is the other side's", () => {
+  eq([joinCopies("progress", undefined, { q1: { t: 1 } }), joinCopies("review", { q1: { last: 1 } }, undefined)], [{ q1: { t: 1 } }, { q1: { last: 1 } }]);
+});
+
+// A phone in the background loses its connection to the account and may not hear what the computer
+// wrote meanwhile; coming back to the page after a while reads everything afresh.
+test("back on the page after a minute away, the account is read afresh", async () => {
+  const store = {};
+  let reads = 0;
+  const cloud = cloudWith({ get: async (n) => { reads++; return store[n]; }, set: async (n, v) => { store[n] = v; } });
+  const account = accountWith(cloud);
+  await account.actions["sign-in"]();
+  for (let i = 0; i < 20 && store.progress === undefined; i++) await tick();
+  const before = reads;
+  document.dispatchEvent(new Event("visibilitychange"));
+  await tick(20);
+  eq(reads, before, "a moment later: nothing to read again");
+  const now = Date.now;
+  Date.now = () => now() + 61_000;
+  try {
+    document.dispatchEvent(new Event("visibilitychange"));
+    for (let i = 0; i < 20 && reads === before; i++) await tick();
+  } finally { Date.now = now; }
+  eq(reads > before, true, "read again");
+  await cloud.signOut();
+});
