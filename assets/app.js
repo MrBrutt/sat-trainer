@@ -7,7 +7,7 @@ import { createTimer, fmtTime, paceFor, rushed } from "./timer.js";
 import { createPrep } from "./prep.js";
 import { toB64, fromB64 } from "./bytes.js";
 import { createAccount } from "./account.js";
-import { outline, inFocus, domainOf } from "./domains.js";
+import { outline, inFocus, domainOf, skillColor } from "./domains.js";
 import { createThink } from "./think.js";
 import { createMock } from "./mock.js";
 import { createOneTab } from "./one-tab.js";
@@ -244,7 +244,6 @@ const prep = createPrep({
 const think = createThink({
   esc, icon,
   answerOf: (q) => answerOf(q),
-  isOriginal: (q) => isOriginal(q),
   // the next step, or the choices, may be below the fold on a phone
   refresh: () => {
     if (!S.set || !$("#main") || S.ui.view !== "questions") return;
@@ -434,6 +433,8 @@ function normalizeSet(set) {
   if (!set.sources) {
     set.sources = [{ id: LEGACY, fileName: set.fileName, importedAt: set.importedAt, count: set.questions.length, added: set.questions.length }];
   }
+  // a set stored before the colours were fixed carries this device's own ones
+  for (const sk of set.skills || []) sk.color = skillColor(sk.name) || sk.color;
   return set;
 }
 
@@ -442,8 +443,8 @@ function finishSet(questions, sources, oldSkills = []) {
   const uniq = (k) => [...new Set(questions.map((q) => q[k]).filter(Boolean))];
   const first = new Map();
   questions.forEach((q, i) => { if (!first.has(q.skill)) first.set(q.skill, i); });
-  // keep the colour a skill already had; new skills take colours nobody uses yet
-  const colors = new Map(oldSkills.map((sk) => [sk.name, sk.color]));
+  // a known skill has its fixed colour; another keeps the one it had, or takes one nobody uses yet
+  const colors = new Map([...oldSkills.map((sk) => [sk.name, sk.color]), ...uniq("skill").filter(skillColor).map((n) => [n, skillColor(n)])]);
   const free = PALETTE.filter((c) => ![...colors.values()].includes(c));
   const skills = uniq("skill")
     .sort((a, b) => skillRank(a, first) - skillRank(b, first))
@@ -1172,10 +1173,7 @@ function renderQuestion(scrollTop = false) {
     </div>
   </div>`;
   S.anim = null;
-  // while the student looks for the clue a tap on a word is their answer, so hard words wait
-  const tapping = think.decorate(q, main);
-  if (!orig && !tapping) vocab.decoratePassage(q, main.querySelector(".passage"));
-  if (!matchMedia("(pointer: coarse)").matches) $("#think-own")?.focus();
+  if (!orig) vocab.decoratePassage(q, main.querySelector(".passage"));
   timerTick();
   ai.follow();
   fillOriginals(q);
@@ -1459,7 +1457,6 @@ document.addEventListener("keydown", (e) => {
   }
   if (inField) {
     if (e.key === "Enter" && e.target.id === "spr") checkSpr();
-    if (e.key === "Enter" && e.target.id === "think-own") think.go();
     return;
   }
   if (cur() && prep.locked(cur())) {
@@ -1483,7 +1480,7 @@ document.addEventListener("keydown", (e) => {
   e.preventDefault();
 });
 
-document.addEventListener("input", (e) => { if (S.set && !think.onInput(e)) vocab.onInput(e); });
+document.addEventListener("input", (e) => { if (S.set) vocab.onInput(e); });
 document.addEventListener("change", (e) => { if (S.set && S.ui.view === "today") today.onChange(e); });
 document.addEventListener("submit", (e) => { if (S.set) vocab.onSubmit(e); });
 

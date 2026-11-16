@@ -17,6 +17,16 @@ export function skillName(skill) {
   return DOMAINS.flatMap((d) => d.skills).find((s) => low(s) === key) || skill;
 }
 
+// One colour per skill, the same on every device: the ones the student's Mac showed on 2026-11-16.
+// (Devices used to hand colours out in the order skills reached them, so the phone's differed.)
+const SKILL_COLORS = {
+  "Central Ideas and Details": "#f59e0b", "Command of Evidence": "#ec4899", "Inferences": "#22c55e",
+  "Words in Context": "#3b82f6", "Text Structure and Purpose": "#14b8a6", "Cross-Text Connections": "#8b5cf6",
+  "Rhetorical Synthesis": "#a855f7", "Transitions": "#84cc16",
+  "Boundaries": "#ef4444", "Form, Structure, and Sense": "#0ea5e9",
+};
+export const skillColor = (skill) => SKILL_COLORS[skillName(skill)] || null;
+
 export function domainOf(q) {
   const skill = skillName(q.skill);
   return DOMAINS.find((d) => d.skills.includes(skill))?.name

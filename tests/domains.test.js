@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { DOMAINS, domainOf, outline, inFocus } from "../assets/domains.js";
+import { DOMAINS, domainOf, outline, inFocus, skillColor } from "../assets/domains.js";
 
 const q = (id, skill, domain = "") => ({ id, skill, domain });
 const names = (tree) => tree.map((d) => d.name);
@@ -76,4 +76,13 @@ test("grammar questions do not ask to learn the words of their choices", async (
   eq(choiceWords(withChoices("Boundaries", "Standard English Conventions"), 4.6), []);
   eq(choiceWords(withChoices("Form, Structure, and Sense", ""), 4.6), []);
   eq(choiceWords(withChoices("Central Ideas and Details", "Information and Ideas"), 4.6).includes("assess"), true);
+});
+
+// Each device used to hand out colours in the order skills reached it, so the phone and the Mac differed.
+test("every skill has one colour of its own, the same on every device (the Mac's of 2026-11-16)", () => {
+  eq([skillColor("Command of Evidence"), skillColor("Command of Evidence: Quantitative"), skillColor("Inferences"), skillColor("Boundaries")],
+    ["#ec4899", "#ec4899", "#22c55e", "#ef4444"]);
+  const all = DOMAINS.flatMap((d) => d.skills).map(skillColor);
+  eq([all.every(Boolean), new Set(all).size], [true, 10]);
+  eq(skillColor("Algebra"), null);
 });
