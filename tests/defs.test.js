@@ -52,3 +52,12 @@ test("every word has a short example of its own, with the word in it", () => {
   const bad = rows.filter((r) => !r.example || r.example.length > 120 || !r.example.toLowerCase().includes(stem(r.key)));
   eq(bad.map((r) => r.key), []);
 });
+
+// "most nearly mean" questions often ask for the second sense of a common word: a card with only the
+// first one teaches half the word (hide is also an animal's skin, brief also means to inform).
+const SENSES = /(?:^|;\s*)2\)|^(?:adj|n|v|adv)\.\s.*;\s*(?:adj|n|v|adv)\.\s/;
+test("words with a second common sense show it too", () => {
+  const byKey = new Map(rows.map((r) => [r.key, r]));
+  const words = ["hide", "brief", "approximate", "coordinate", "refer", "speculative", "dense"];
+  eq(words.filter((w) => !SENSES.test(byKey.get(w)?.def || "")), []);
+});
