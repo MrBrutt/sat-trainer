@@ -954,8 +954,10 @@ function renderSidebar() {
     const bad = sq.filter((q) => S.progress[q.id] && !S.progress[q.id].ok).length;
     const pct = ok + bad ? Math.round((ok / (ok + bad)) * 100) + "%" : "—";
     const t = avgTime((q) => q.skill === s.name);
-    return `<div class="stat-row"><div class="top"><span class="dot" style="--c:${s.color}"></span><span class="name">${esc(s.name)}</span><span class="num">${ok + bad}/${sq.length} · ${pct}${t ? ` · ⌀${fmtTime(t)}` : ""}</span></div>
-      <div class="split-bar"><span class="ok" style="width:${(ok / sq.length) * 100}%"></span><span class="bad" style="width:${(bad / sq.length) * 100}%"></span></div></div>`;
+    // a row takes you to its skill at the top of the list (data-action "stat-skill")
+    return `<button class="stat-row" data-action="stat-skill" data-domain="${esc(domainOf({ skill: s.name, domain: s.domain }))}" data-skill="${esc(s.name)}" title="Показать вопросы навыка">
+      <span class="top"><span class="dot" style="--c:${s.color}"></span><span class="name">${esc(s.name)}</span><span class="num">${ok + bad}/${sq.length} · ${pct}${t ? ` · ⌀${fmtTime(t)}` : ""}</span></span>
+      <span class="split-bar"><span class="ok" style="width:${(ok / sq.length) * 100}%"></span><span class="bad" style="width:${(bad / sq.length) * 100}%"></span></span></button>`;
   }).join("");
   const date = new Date(S.set.importedAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 
@@ -1336,6 +1338,14 @@ const ACTIONS = {
     setFocus(name, "all");
   },
   skill: (el) => setFocus(el.dataset.domain, el.dataset.skill),
+  // from the statistics at the bottom: choose the skill, then show it chosen at the top, with a flash
+  "stat-skill": (el) => {
+    setFocus(el.dataset.domain, el.dataset.skill);
+    const item = $(".skill-item.sub.active");
+    if (!item) return;
+    item.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    item.classList.add("flash");
+  },
   diff: (el) => setFilter("diff", el.dataset.diff),
   status: (el) => setFilter("status", el.dataset.status),
   "clear-filters": () => { S.ui.status = "all"; S.ui.diff = "all"; setFocus("all", "all"); },
