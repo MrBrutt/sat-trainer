@@ -3,7 +3,7 @@
 // of the question bank. A list, not a rule: a rule on word parts would also take "hardship" and "overlook".
 // Names, foreign words of a passage and broken forms are here too: they are no vocabulary to learn.
 export const OBVIOUS = new Set(`
-  eleventh twelfth thirteen thirteenth fourteen fourteenth fifteen fifteenth sixteen sixteenth seventeen
+  sixth tenth twelve fifty eleventh twelfth thirteen thirteenth fourteen fourteenth fifteen fifteenth sixteen sixteenth seventeen
   seventeenth eighteen eighteenth nineteen nineteenth twentieth thirtieth fortieth fiftieth sixtieth
   seventieth eightieth ninetieth hundredth thousandth
 
@@ -34,7 +34,7 @@ export const OBVIOUS = new Set(`
   mosquito mosquitoes northeastern organize pig pleasant pond popularity pork puzzle rocky rubber
   salty saltiness shark shiny shout snake treasure tuna tunnel weakness whale worm
 
-  aristotle plato thailand utah hanoi cherokee navajo guinea cupid
+  aristotle plato thailand utah hanoi cherokee navajo guinea cupid nigeria seneca lulu
   meng mengsedih serga ikaah bree choy parachinensi explicacione mimesi mimos poema robota mtorolite fregata thale
   bufo jorō sōsaku hanga ukiyo styrene ethylene butylene raffinose bufadienolide jasmonic
 `.trim().split(/\s+/));

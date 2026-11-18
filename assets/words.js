@@ -99,15 +99,15 @@ export function lemma(word) {
   };
   let r = null;
   if (/ie[sd]$/.test(w)) r = pick(w.slice(0, -3) + "y", /s$/.test(w) ? w.slice(0, -1) : "");
-  else if (/(?:ss|x|z|ch|sh)es$/.test(w)) r = pick(w.slice(0, -2), w.slice(0, -1));   // classes, boxes
+  else if (/(?:ss|us|x|z|ch|sh)es$/.test(w)) r = pick(w.slice(0, -2), w.slice(0, -1));   // classes, boxes, buses
   else if (/ses$/.test(w)) r = pick(w.slice(0, -1), w.slice(0, -2));                   // senses → sense
   else if (/[^su']s$/.test(w)) r = pick(w.slice(0, -1));                              // not "glass", "virus"
   else if (/ed$/.test(w)) r = verb(w.slice(0, -2));
   else if (/ing$/.test(w)) r = verb(w.slice(0, -3));
-  // a rare plural the list does not know: "exoplanets", "magpies"
+  // a rare plural the list does not know: "exoplanets", "magpies", "platypuses"
   if (!r && w.length > 5 && !freq.has(w)) {
     r = /[ctrglnmd]ies$/.test(w) ? w.slice(0, -3) + "y"            // insufficiencies; but magpies, wrasses
-      : /(?:x|z|ch|sh)es$/.test(w) ? w.slice(0, -2) : /[^su']s$|sses$/.test(w) ? w.slice(0, -1) : null;
+      : /(?:us|x|z|ch|sh)es$/.test(w) ? w.slice(0, -2) : /[^su']s$|sses$/.test(w) ? w.slice(0, -1) : null;
   }
   return r || w;
 }
@@ -126,6 +126,15 @@ function hardness(form) {
   const z = OBVIOUS.has(low) ? Infinity : Math.min(...parts.map(common));
   return { low, lem: parts.length > 1 ? low : lem, z };
 }
+
+// A hyphenated word is learned by its hard parts: "subduction-like" by "subduction", "whitefly-infested"
+// by "whitefly" and "infest" (2026-11-18: a card of its own only repeated the word's card). Set
+// expressions, whose meaning is not their hard part's ("tailor-made" is not about tailors), keep a
+// card of their own; so do words whose hard part is too short to be a card ("awe-inspiring").
+const WHOLE = new Set(["tailor-made", "fully-fledged", "full-fledged", "hunter-gatherer", "hunter-gatherers", "peer-reviewed",
+  "hook-and-eye", "dare-devil", "smooth-hound", "look-alike", "terra-cotta", "orb-weaver", "awe-inspiring"]);
+// Prefixes are no words of their own: "socio-political", "non-indigenous", "self-governance".
+const PREFIX = /^(?:anti|semi|multi|inter|intra|ultra|pseudo|quasi|proto|micro|macro|mega|socio|trans|neo|mid|non|pre|post|self|cross|counter|over|under|super|sub|extra|bio|geo|eco)$/i;
 
 function sentenceAround(text, i) {
   const start = Math.max(text.lastIndexOf(". ", i), text.lastIndexOf("? ", i), text.lastIndexOf("! ", i), text.lastIndexOf("\n", i));
@@ -171,10 +180,25 @@ export function hardWordsIn(text, threshold, skip = new Set(), context = text) {
     const genus = before && /^\p{Lu}/u.test(before[0]) && text.slice(before.index + before[0].length, m.index) === " "
       && (names.has(before[0].toLowerCase()) || !freq.has(before[0].toLowerCase()));
     if (unknown && (genus || /\b[A-Z]\.\s+$/.test(text.slice(Math.max(0, m.index - 4), m.index)))) continue;
-    const { lem, z } = hardness(form);
-    if (z >= threshold || skip.has(lem) || out.has(lem)) continue;
-    const { from, to } = sentenceAround(text, m.index);
-    out.set(lem, { key: lem, form, zipf: z, before: text.slice(from, m.index), after: text.slice(m.index + form.length, to) });
+    const whole = hardness(form);
+    if (skip.has(whole.lem)) continue;
+    // [text, where it starts]: the word itself, or the hard parts of a hyphenated one
+    const pieces = !form.includes("-") || WHOLE.has(whole.low) ? [[form, m.index]] : [];
+    if (!pieces.length) {
+      let at = m.index;
+      for (const [k, part] of form.split("-").entries()) {
+        const i = at;
+        at += part.length + 1;
+        if (part.length < 4 || PREFIX.test(part) || (k > 0 && /^\p{Lu}/u.test(part)) || names.has(part.toLowerCase())) continue;
+        pieces.push([part, i]);
+      }
+    }
+    for (const [piece, i] of pieces) {
+      const { lem, z } = piece === form ? whole : hardness(piece);
+      if (z >= threshold || skip.has(lem) || out.has(lem)) continue;
+      const { from, to } = sentenceAround(text, i);
+      out.set(lem, { key: lem, form: piece, zipf: z, before: text.slice(from, i), after: text.slice(i + piece.length, to) });
+    }
   }
   return [...out.values()];
 }
