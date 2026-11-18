@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { hardWordsIn, choiceWords, loadFrequencies } from "../assets/words.js";
+import { hardWordsIn, choiceWords, loadFrequencies, DERIVED } from "../assets/words.js";
 import { OBVIOUS } from "../assets/obvious-words.js";
 
 const hard = async (text) => { await loadFrequencies(); return hardWordsIn(text, 4.23).map((h) => h.key); };
@@ -62,14 +62,32 @@ test("false friends of a Russian speaker stay cards", () => {
   eq(FALSE.filter((w) => OBVIOUS.has(w)), []);
 });
 
+test("a word made from another card's word is learned on that card", async () => {
+  await loadFrequencies();
+  const hs = hardWordsIn("The loss is not attributable to the attribute of ice.", 4.23);
+  eq(hs.map((h) => [h.key, h.form]), [["attribute", "attributable"]]);
+});
+
+test("several forms of one word are learned on its card", async () => {
+  eq(await hard("with precision, precisely and vigorously"), ["precise", "vigor"]);
+});
+
+test("a Words in Context choice keeps its exact form: no family moves it to a base word", () => {
+  eq(["predatory", "probability", "situated", "discernible"].filter((w) => DERIVED[w]), []);
+});
+
+test("a family whose meanings part stays two cards", async () => {
+  eq(await hard("a high elevation; to elevate the mood"), ["elevation", "elevate"]);
+});
+
 test("real vocabulary stays, even when built from common parts", async () => {
-  eq(await hard("the drawback and hardship of scholarly work will alter it"), ["drawback", "hardship", "scholarly", "alter"]);
+  eq(await hard("the drawback and hardship of scholarly work will alter it"), ["drawback", "hardship", "scholar", "alter"]);   // scholarly is learned on scholar
 });
 
 test("the check before a question skips plain words of a sentence choice", async () => {
   await loadFrequencies();
   const q = { skill: "Command of Evidence", stem: [], choices: [choice("The researcher found a scholarly error.")] };
-  eq(choiceWords(q, 4.23), ["scholarly"]);
+  eq(choiceWords(q, 4.23), ["scholar"]);
 });
 
 test("a choice of Words in Context is asked even if it is plain", async () => {

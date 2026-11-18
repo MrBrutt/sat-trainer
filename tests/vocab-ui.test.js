@@ -141,6 +141,37 @@ test("the way back closes once the next card is done", async () => {
   eq(S.vocab.known, ["adorn"]);
 });
 
+test("K on a new word uses up one of the day's new words; «Вернуть» gives it back", async () => {
+  const { S, v } = await cardsOf();
+  v.onKey({ key: "k" });
+  eq(S.vocab.daily.newCount, 1);
+  v.onKey({ key: "z" });
+  eq(S.vocab.daily.newCount, 0);
+});
+
+test("new words marked «знаю» are not made up for when the page reloads", async () => {
+  const q = question("q1", "Words in Context", ["adorn", "cogent", "terse", "prudent"]);
+  const { S, v } = setup([q], { newPerDay: 2 });
+  v.rebuild();
+  await wordsIn(v, q);
+  S.ui.view = "vocab";
+  eq(v.dueTotal(), 2);
+  v.onKey({ key: "k" });
+  v.onKey({ key: "k" });
+  eq(v.dueTotal(), 0);
+  S.session = null;
+  eq(v.dueTotal(), 0);
+});
+
+test("progress on a word now learned on its base word's card carries over to it", async () => {
+  const q = reading("q1", "Their admiration for the depiction grew.");
+  const st = learned();
+  const { S, v } = setup([q], { srs: { admiration: st }, known: ["depiction"] });
+  v.rebuild();
+  await wordsIn(v, q);
+  eq([S.vocab.srs.admire, v.card("admire")?.status, S.vocab.known.includes("depict")], [st, "learning", true]);
+});
+
 test("a new word seen a minute ago and recalled goes to tomorrow, without ease lost", async () => {
   const t = Date.now();
   const { S, v } = await cardsOf({ adorn: { last: t - 2 * MIN, due: t - MIN, ivl: 0, ease: 2.5, reps: 0, lapses: 0 } });

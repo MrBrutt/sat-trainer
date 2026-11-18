@@ -1,7 +1,7 @@
 // Vocabulary screens: flashcards with spaced repetition, word list, and "add word from text".
 import { buildDeck, schedule, answerCard, readyIndex, requeue, statusOf, isMastered, termKey, lookup, makeExample, startOfDay, fmtDays } from "./vocab.js";
 import { createSizeTest } from "./size-test.js";
-import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords } from "./words.js";
+import { LEVELS, levelZipf, loadFrequencies, loadDefs, defOf, defsPool, wordsReady, hardWordsIn, spoilerWords, passageText, buildTextDeck, choiceWords, DERIVED } from "./words.js";
 import { inFocus } from "./domains.js";
 import { noStyles } from "./meanings.js";
 
@@ -78,7 +78,20 @@ export function createVocab(ctx) {
   const threshold = () => (S.vocab.level === "test" && S.vocab.test?.zipf) || levelZipf(S.vocab.level);
 
   // Words that depend on the learner's level: hard words of the texts and of the choices.
+  // A word now learned on its base word's card (attributable → attribute) brings its progress along:
+  // the base word takes the record if it has none of its own; «знаю» carries over too.
+  function adoptDerived() {
+    let changed = false;
+    const known = new Set(S.vocab.known);
+    for (const [d, b] of Object.entries(DERIVED)) {
+      if (S.vocab.srs[d] && !S.vocab.srs[b]) { S.vocab.srs[b] = S.vocab.srs[d]; changed = true; }
+      if (known.has(d) && !known.has(b)) { known.add(b); changed = true; }
+    }
+    if (changed) { S.vocab.known = [...known]; save(); }
+  }
+
   function rebuildWords() {
+    adoptDerived();
     const level = threshold();
     builtFor = level;
     textDeck = buildTextDeck(S.set.questions, level);
@@ -345,7 +358,7 @@ export function createVocab(ctx) {
 
   // After K: which word left, and the way to bring it back.
   function undoHtml() {
-    const key = S.session?.undo;
+    const key = S.session?.undo?.key;
     if (!key) return "";
     return `<div class="vwrap"><div class="undo-bar" role="status">
       <span>«${esc(cardMap().get(key)?.term || key)}» — в «Знаю», из повторений убрано</span>
@@ -801,18 +814,23 @@ export function createVocab(ctx) {
       const s = S.session;
       if (!s?.queue.length) return;
       const key = s.queue.shift();
+      // a new word marked known uses up one of the day's new words, or a reload would bring another
+      // in its place (2026-11-18: 24 new words after «all done»); own words never count
+      const counted = !S.vocab.srs[key]?.last && !S.vocab.user[key];
+      if (counted) daily().newCount++;
       markKnown(key, true);
       s.revealed = false;
-      s.undo = key;
+      s.undo = { key, counted };
       ctx.onWordDone?.();
       renderMain(); renderSidebar(); ctx.refreshChrome();
     },
     // K pressed by mistake (2026-11-18): the word comes back first, as it was, until the next card is done
     "v-undo-known": () => {
       const s = S.session;
-      const key = s?.undo;
+      const { key, counted } = s?.undo || {};
       if (!key) return;
       s.undo = null;
+      if (counted) daily().newCount = Math.max(0, daily().newCount - 1);
       markKnown(key, false);
       s.queue.unshift(key);
       s.revealed = false;
@@ -965,6 +983,7 @@ export function createVocab(ctx) {
   function accountChanged() {
     cache = null;
     S.session = null;
+    if (loaded) adoptDerived();
     if (loaded && threshold() !== builtFor) rebuildWords();
   }
 

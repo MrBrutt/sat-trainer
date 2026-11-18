@@ -136,6 +136,32 @@ const WHOLE = new Set(["tailor-made", "fully-fledged", "full-fledged", "hunter-g
 // Prefixes are no words of their own: "socio-political", "non-indigenous", "self-governance".
 const PREFIX = /^(?:anti|semi|multi|inter|intra|ultra|pseudo|quasi|proto|micro|macro|mega|socio|trans|neo|mid|non|pre|post|self|cross|counter|over|under|super|sub|extra|bio|geo|eco)$/i;
 
+// A word made from another word of the deck is learned on that word's card: attributable on attribute,
+// precisely and precision on precise (2026-11-18: two cards repeated one word). The question's sentence
+// keeps the form it has. Families whose meanings part stay two cards: elevation (height) and elevate,
+// sustainable and sustain, tension and tense, proposition and propose, obligation and oblige.
+// A Words in Context choice keeps its exact form, so pairs whose derived word is such a choice
+// (predatory, probability, situated, discernible) are left out: the base would be a second card.
+export const DERIVED = Object.fromEntries(`
+  precision,precisely>precise plausibility,plausibly>plausible spatiality,spatially>spatial deliberately,deliberation>deliberate
+  posited,positing>posit vigorous,vigorously>vigor acceleration>accelerate accomplishment>accomplish admiration>admire
+  adoption>adopt adviser>advise alignment>align alteration>alter alternately>alternate approximation>approximate assertion>assert
+  attraction>attract attributable>attribute breezy>breeze carver>carve comparably>comparable comparatively>comparative
+  complication>complicate conclusively>conclusive conspicuously>conspicuous conversely>converse delicately>delicate
+  departure>depart dependence>depend depiction>depict deposition>deposit descendant>descend deviation>deviate
+  dismissive>dismiss disproportionately>disproportionate disruption>disrupt emergence>emerge
+  employer>employ endurance>endure evaluation>evaluate extinction>extinct fittingly>fitting flexibility>flexible
+  generalism>generalist governance>govern healer>heal herbivory>herbivorous inconsistency>inconsistent indirectly>indirect
+  inherently>inherent insightful>insight insufficiency>insufficient irreversibility>irreversible mildness>mild notably>notable
+  outcompeting>outcompete partially>partial persistent>persist porous>pore prediction>predict
+  preservation>preserve prevalence>prevalent promptly>prompt protogynous>protogyny
+  reevaluated>reevaluate refinement>refine refutation>refute rejection>reject reluctance>reluctant resemblance>resemble
+  resilience>resilient restrictive>restrict robustness>robust scholarly>scholar simultaneously>simultaneous
+  speculative>speculate stiffer>stiff subduct>subduction superficially>superficial susceptibility>susceptible
+  sustainably>sustainable torsional>torsion tribal>tribe
+`.trim().split(/\s+/)
+  .flatMap((pair) => { const [forms, base] = pair.split(">"); return forms.split(",").map((f) => [f, base]); }));
+
 function sentenceAround(text, i) {
   const start = Math.max(text.lastIndexOf(". ", i), text.lastIndexOf("? ", i), text.lastIndexOf("! ", i), text.lastIndexOf("\n", i));
   let end = text.slice(i).search(/[.!?](\s|$)|\n/);
@@ -195,9 +221,10 @@ export function hardWordsIn(text, threshold, skip = new Set(), context = text) {
     }
     for (const [piece, i] of pieces) {
       const { lem, z } = piece === form ? whole : hardness(piece);
-      if (z >= threshold || skip.has(lem) || out.has(lem)) continue;
+      const key = DERIVED[lem] || lem;
+      if (z >= threshold || skip.has(lem) || skip.has(key) || out.has(key)) continue;
       const { from, to } = sentenceAround(text, i);
-      out.set(lem, { key: lem, form: piece, zipf: z, before: text.slice(from, i), after: text.slice(i + piece.length, to) });
+      out.set(key, { key, form: piece, zipf: z, before: text.slice(from, i), after: text.slice(i + piece.length, to) });
     }
   }
   return [...out.values()];
