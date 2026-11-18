@@ -8,13 +8,13 @@ const question = (id, skill, words, n = 1) => ({
   choices: ["A", "B", "C", "D"].map((letter, i) => ({ letter, runs: [{ t: words[i] }] })), correct: "A", rationale: [],
 });
 
-function setup(questions, vocab = {}) {
+function setup(questions, vocab = {}, more = {}) {
   const S = { set: { questions }, vocab: { ...VOCAB_DEFAULT(), ...vocab }, progress: {}, ui: { view: "today" }, session: null };
   const v = createVocab({
     S, $: (s) => document.querySelector(s), icon: () => "", esc: (s) => String(s), toast: () => {}, plural: (n, a) => a,
     ls: { get: (k, d) => d, set: () => {} }, KEY: {}, confirmDialog: async () => true,
     saveUi: () => {}, current: () => null, openQuestion: () => {}, refreshChrome: () => {}, ai: () => null, inClaude: () => false,
-    onWordDone: () => {}, refreshQuestion: () => {}, refreshTrainer: () => {},
+    onWordDone: () => {}, refreshQuestion: () => {}, refreshTrainer: () => {}, ...more,
   });
   return { S, v };
 }
@@ -79,9 +79,9 @@ test("K on the waiting screen does not mark a word nobody is looking at", async 
 // ---------------------------------------------------------------- a card: see a new word, then recall it
 
 const MIN = 60_000;
-async function cardsOf(srs = {}) {
+async function cardsOf(srs = {}, more = {}) {
   const q = question("q1", "Words in Context", ["adorn", "cogent", "terse", "prudent"]);
-  const { S, v } = setup([q], { srs });
+  const { S, v } = setup([q], { srs }, more);
   v.rebuild();
   await wordsIn(v, q);
   S.ui.view = "vocab";
@@ -113,6 +113,32 @@ test("← is «Не вспомнил»: the word comes back a few cards later", 
   v.onKey({ key: " " });
   v.onKey({ key: "ArrowLeft" });
   eq([S.vocab.srs.adorn.reps, S.vocab.srs.adorn.ease < 2.5, S.session.queue.indexOf("adorn")], [0, true, 3]);
+});
+
+test("K pressed by mistake is taken back: the word is first again and no longer «знаю»", async () => {
+  const count = { done: 0, undone: 0 };
+  const { S, v } = await cardsOf({}, { onWordDone: () => count.done++, onWordUndone: () => count.undone++ });
+  v.onKey({ key: "k" });
+  eq([S.vocab.known, S.session.queue[0]], [["adorn"], "cogent"]);
+  eq(v.onKey({ key: "z" }), true);
+  eq([S.vocab.known, S.session.queue[0], count], [[], "adorn", { done: 1, undone: 1 }]);
+});
+
+test("the way back after K is a button too, and it stays after the last card", async () => {
+  const { S, v } = await cardsOf();
+  S.session.queue = ["adorn"];
+  v.onKey({ key: "k" });
+  eq(S.session.queue, []);
+  v.actions["v-undo-known"]();
+  eq([S.vocab.known, S.session.queue], [[], ["adorn"]]);
+});
+
+test("the way back closes once the next card is done", async () => {
+  const { S, v } = await cardsOf();
+  v.onKey({ key: "k" });
+  v.onKey({ key: " " });
+  eq(v.onKey({ key: "z" }), false);
+  eq(S.vocab.known, ["adorn"]);
 });
 
 test("a new word seen a minute ago and recalled goes to tomorrow, without ease lost", async () => {

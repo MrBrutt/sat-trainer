@@ -153,6 +153,13 @@ export function createToday(ctx) {
     checkAchievements();
   }
 
+  // A word counted by mistake (K pressed by accident) comes off today's count.
+  function unlogWord() {
+    const d = day();
+    if (d.w > 0) d.w--;
+    save();
+  }
+
   function log(kind, ok, ms = 0) {
     const d = day();
     if (ms > 0 && kind !== "w") { d.ms = (d.ms || 0) + ms; d.tq = (d.tq || 0) + 1; }
@@ -532,7 +539,7 @@ export function createToday(ctx) {
 
   return {
     onChange,
-    log, check, tasks, streak, isClosed, renderMain, renderSidebar, actions, merge,
+    log, unlogWord, check, tasks, streak, isClosed, renderMain, renderSidebar, actions, merge,
     remaining: () => (S.set ? tasks().filter((t) => !t.done).length : 0),
   };
 }

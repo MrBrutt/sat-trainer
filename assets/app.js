@@ -232,6 +232,7 @@ const vocab = createVocab({
   ai: () => ai,
   inClaude: () => !!window.claude,   // inside claude.ai the page cannot reach other sites
   onWordDone: () => today.log("w"),
+  onWordUndone: () => today.unlogWord(),
   refreshQuestion: () => { if (S.set && $("#main") && S.ui.view === "questions") renderQuestion(); },
   refreshTrainer: () => { if (S.set && $("#main") && S.ui.view === "questions") { renderSidebar(); renderQuestion(); } },
 });

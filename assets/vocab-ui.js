@@ -337,10 +337,20 @@ export function createVocab(ctx) {
       <button class="${tab === "study" ? "active" : ""}" data-action="v-tab" data-tab="study">${icon("cards", "icon-sm")} Карточки</button>
       <button class="${tab === "list" ? "active" : ""}" data-action="v-tab" data-tab="list">${icon("list", "icon-sm")} Все слова</button>
     </div>`;
-    main.innerHTML = tab === "test" ? sizeTest.html() : seg + (tab === "list" ? listHtml() : studyHtml());
+    main.innerHTML = tab === "test" ? sizeTest.html() : seg + (tab === "list" ? listHtml() : undoHtml() + studyHtml());
     if (document.getElementById("v-wait")) startWait();
     if (scrollTop) window.scrollTo({ top: 0 });
     ctx.ai()?.follow();
+  }
+
+  // After K: which word left, and the way to bring it back.
+  function undoHtml() {
+    const key = S.session?.undo;
+    if (!key) return "";
+    return `<div class="vwrap"><div class="undo-bar" role="status">
+      <span>«${esc(cardMap().get(key)?.term || key)}» — в «Знаю», из повторений убрано</span>
+      <button class="btn btn-outline btn-sm" data-action="v-undo-known">${icon("rotate", "icon-sm")} Вернуть <kbd>Z</kbd></button>
+    </div></div>`;
   }
 
   function studyHtml() {
@@ -740,6 +750,7 @@ export function createVocab(ctx) {
     const s = S.session;
     const key = s?.queue[0];
     if (!key || S.vocab.srs[key]?.last) return;
+    s.undo = null;
     record(key, answerCard(S.vocab.srs[key], false), true);
     refreshAll();
   }
@@ -749,6 +760,7 @@ export function createVocab(ctx) {
     const s = S.session;
     const key = s?.queue[0];
     if (!key || !s.revealed || !S.vocab.srs[key]?.last) return;
+    s.undo = null;
     record(key, answerCard(S.vocab.srs[key], ok), !ok);
     s.revealed = false;
     refreshAll();
@@ -791,9 +803,21 @@ export function createVocab(ctx) {
       const key = s.queue.shift();
       markKnown(key, true);
       s.revealed = false;
+      s.undo = key;
       ctx.onWordDone?.();
       renderMain(); renderSidebar(); ctx.refreshChrome();
-      toast("Слово убрано из повторений");
+    },
+    // K pressed by mistake (2026-11-18): the word comes back first, as it was, until the next card is done
+    "v-undo-known": () => {
+      const s = S.session;
+      const key = s?.undo;
+      if (!key) return;
+      s.undo = null;
+      markKnown(key, false);
+      s.queue.unshift(key);
+      s.revealed = false;
+      ctx.onWordUndone?.();
+      renderMain(); renderSidebar(); ctx.refreshChrome();
     },
     "v-more": () => { daily().extra = (daily().extra || 0) + 10; save(); S.session = null; renderMain(); renderSidebar(); ctx.refreshChrome(); },
     "v-row": (el) => {
@@ -898,6 +922,7 @@ export function createVocab(ctx) {
   function onKey(e) {
     if (S.ui.vtab === "test") return sizeTest.onKey(e);
     const s = S.session;
+    if (e.key.toLowerCase() === "z" && s?.undo && (S.ui.vtab || "study") === "study") { actions["v-undo-known"](); return true; }
     if ((S.ui.vtab || "study") !== "study" || !s?.queue.length) return false;
     const k = e.key.toLowerCase();
     const fresh = !S.vocab.srs[s.queue[0]]?.last;

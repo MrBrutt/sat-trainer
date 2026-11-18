@@ -1,5 +1,6 @@
 import { test, eq } from "./run.js";
 import { hardWordsIn, choiceWords, loadFrequencies } from "../assets/words.js";
+import { OBVIOUS } from "../assets/obvious-words.js";
 
 const hard = async (text) => { await loadFrequencies(); return hardWordsIn(text, 4.23).map((h) => h.key); };
 const choice = (t) => ({ runs: [{ t }] });
@@ -43,11 +44,22 @@ test("set expressions keep a card of their own", async () => {
 });
 
 test("names and numbers a passage starts with are no words to learn", async () => {
-  eq(await hard("Seneca sculptor Marie Watt and musings on tenth-century life"), ["sculptor", "musing"]);
+  eq(await hard("Seneca weaver Marie Watt and musings on tenth-century life"), ["weaver", "musing"]);
 });
 
 test("a rare plural in -uses comes back to its word", async () => {
   eq(await hard("the platypuses"), ["platypus"]);
+});
+
+test("an international word a Russian speaker reads at sight is no card", async () => {
+  eq(await hard("the automation of the archive"), []);
+});
+
+test("false friends of a Russian speaker stay cards", () => {
+  const FALSE = ["accurate", "accurately", "sympathetic", "sympathy", "fabric", "decade", "concrete", "conductor", "anecdote",
+    "speculate", "speculative", "utilize", "occupation", "prospect", "sophisticated", "silicon", "sensation", "render",
+    "dramatically", "diverse", "obligation", "translate", "personage", "palm", "temperamental", "observe", "qualify", "vocal"];
+  eq(FALSE.filter((w) => OBVIOUS.has(w)), []);
 });
 
 test("real vocabulary stays, even when built from common parts", async () => {
