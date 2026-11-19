@@ -121,5 +121,21 @@ export const INTERNATIONAL = new Set(`
   zoologist zooplankton
 `.trim().split(/\s+/));
 
-export const OBVIOUS = new Set([...PLAIN.trim().split(/\s+/), ...INTERNATIONAL]);
+// Narrow science and craft terms a passage uses and explains, never asked for by the SAT: species,
+// minerals, lab words (pteropod, periostracum, acidification, teleost, breccia). The student asked for
+// them to leave the deck on 2026-11-18; general science words a question may lean on (erosion,
+// predator, sediment, fertile) stay cards.
+export const JARGON = new Set(`
+  abiotic accrete acidification alumina antinutrient aqueous arachnid auks auroral baleen barnacle bioswale
+  blackchin breccia bristlemouth brome caribou chondrite chondrule ciliate circumgalactic conjugated conjugation
+  coupler cownose cress crustacean cryptocrystalline ctenophore dephlogisticated diadromous duckweed elephantid
+  euryhaline fixative forewing frigatebird güiro huipil hycean insectivore intertidal kombu krill lactic lander
+  magnetosensation magpie malapportionment marsquake monotreme muckraker muscovite nebulae nematode nissologist
+  ocellated outgassing pellicle periostracum perovskite platypus pomfret prawn primrose protogyny pteropod
+  retroflex roundworm salinity salps seagrass sedimentary sessile silversword sistrum smooth-hound spherule
+  stomata stratigraphic tarweed teleost torsion uniaxial watermilfoil whitefly wrasse orcas spacetime chiefdom
+  quadruped batik subspecies subspecy aspen axel genera genus silica anterior orb-weaver
+`.trim().split(/\s+/));
+
+export const OBVIOUS = new Set([...PLAIN.trim().split(/\s+/), ...INTERNATIONAL, ...JARGON]);
 

@@ -24,7 +24,7 @@ test("the example keeps the whole hyphenated word around the hard part", async (
 });
 
 test("every hard part of a hyphenated word is learned", async () => {
-  eq(await hard("whitefly-infested leaves"), ["whitefly", "infested"]);
+  eq(await hard("moss-laden branches"), ["moss", "laden"]);
 });
 
 test("a word met alone is not met again inside a hyphenated one", async () => {
@@ -48,7 +48,7 @@ test("names and numbers a passage starts with are no words to learn", async () =
 });
 
 test("a rare plural in -uses comes back to its word", async () => {
-  eq(await hard("the platypuses"), ["platypus"]);
+  eq(await hard("the octopuses"), ["octopus"]);
 });
 
 test("an international word a Russian speaker reads at sight is no card", async () => {
@@ -78,6 +78,39 @@ test("a Words in Context choice keeps its exact form: no family moves it to a ba
 
 test("a family whose meanings part stays two cards", async () => {
   eq(await hard("a high elevation; to elevate the mood"), ["elevation", "elevate"]);
+});
+
+test("narrow science terms are no cards: the passage needs them, the SAT does not", async () => {
+  eq(await hard("ocean acidification harms pteropods and their periostracum"), []);
+});
+
+test("a word the passage explains in parentheses is no card there", async () => {
+  eq(await hard("They saw cygnets (young birds) near a woman in a huipil (a long shirt)."), []);
+});
+
+test("a word explained between two dashes, or after «known as», is no card there", async () => {
+  eq(await hard("White dwarfs—small, heavy stars—cool slowly. It is a feeling known as nostalgia."), []);
+});
+
+test("«that is» after a word explains it", async () => {
+  eq(await hard("The rocks are undifferentiated—that is, they never changed."), []);
+});
+
+test("an aside or a Latin name in parentheses explains nothing", async () => {
+  eq(await hard("Their merits (as is often the case) grew; the black swan (Cygnus atratus) lives here."), ["merit", "swan"]);
+});
+
+test("units, examples and qualifiers in parentheses explain nothing", async () => {
+  eq(await hard("distance from the cave (meters); endurance (e.g., their pace); curves (rather than angles); the legislature (the Storting)"),
+    ["cave", "endure", "curve", "legislature"]);
+});
+
+test("a word explained in one place is still a card where it is not", async () => {
+  eq(await hard("Cygnets (young birds) went out. Later the cygnets grew."), ["cygnet"]);
+});
+
+test("an adverb is learned on its adjective's card, also when that came from a choice", async () => {
+  eq(await hard("It inevitably happened, substantially and exclusively."), ["inevitable", "substantial", "exclusive"]);
 });
 
 test("real vocabulary stays, even when built from common parts", async () => {

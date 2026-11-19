@@ -159,8 +159,27 @@ export const DERIVED = Object.fromEntries(`
   resilience>resilient restrictive>restrict robustness>robust scholarly>scholar simultaneously>simultaneous
   speculative>speculate stiffer>stiff subduct>subduction superficially>superficial susceptibility>susceptible
   sustainably>sustainable torsional>torsion tribal>tribe
+  inevitably>inevitable exclusively>exclusive substantially>substantial inexplicably>inexplicable
+  appropriateness>appropriate corroboration>corroborate diverged>diverge unpretentiousness>unpretentious
 `.trim().split(/\s+/)
   .flatMap((pair) => { const [forms, base] = pair.split(">"); return forms.split(",").map((f) => [f, base]); }));
+
+// Words the passage explains where they stand are no cards there (2026-11-18): a definition in
+// parentheses right after the word, «cygnets (young swans)»; one between two dashes, «dwarfs—small,
+// dense remnants of past stars—»; «—that is,» after it; «known as» or «called» before it. An aside
+// in parentheses, «(as is often the case)», «(e.g., …)», or a Latin name, «(Cygnus atratus)», explains
+// nothing. Only that place is skipped: where the word stands unexplained, it is a card as before.
+const NOT_A_DEFINITION = new RegExp(String.raw`^(?:e\.\s?g\.|i\.\s?e\.|\d)|^(?:as|such|see|which|who|whose|where|reported|including|especially|often|sometimes|usually|for|in|at|on|about|approximately|roughly|around|and|or|but|if|though|although|despite|not|also|now|then|from|by|with|between|this|that|these|those|its|their|his|her|our|more|less|only|some|many|all|nearly|perhaps|so|unlike|relative|rather|genus|species|family)\b|^(?:the|an?)\s+\p{Lu}|\betc\.|^(?:\w+\s)?(?:meters?|kilometers?|centimeters?|millimeters?|grams?|kilograms?|nanograms?|micrograms?|pounds?|ounces?|percent|degrees?|years?|days?|hours?|minutes?|seconds?|kit)\b`, "iu");
+export function explainedAt(text, i, len) {
+  const after = text.slice(i + len, i + len + 160);
+  const before = text.slice(Math.max(0, i - 30), i);
+  const paren = after.match(/^s?\s*\(([^()]{2,120})\)/);
+  if (paren && /^\p{Ll}/u.test(paren[1]) && !NOT_A_DEFINITION.test(paren[1]) && paren[1].split(/\s+/).length <= 15) return true;
+  const dashes = after.match(/^s?\s*[—–]\s*([^—–.;!?]{3,120}?)\s*[—–]/);
+  if (dashes && /^\p{Ll}/u.test(dashes[1]) && !NOT_A_DEFINITION.test(dashes[1])) return true;
+  if (/^s?\s*[—–,(]\s*(?:that is|i\.\s?e\.)/i.test(after)) return true;
+  return /(?:\bknown as|(?<!so-)\bcalled|\btermed|\breferred to as|\bdubbed)\s+(?:the\s+|an?\s+)?["“]?$/i.test(before);
+}
 
 function sentenceAround(text, i) {
   const start = Math.max(text.lastIndexOf(". ", i), text.lastIndexOf("? ", i), text.lastIndexOf("! ", i), text.lastIndexOf("\n", i));
@@ -222,7 +241,7 @@ export function hardWordsIn(text, threshold, skip = new Set(), context = text) {
     for (const [piece, i] of pieces) {
       const { lem, z } = piece === form ? whole : hardness(piece);
       const key = DERIVED[lem] || lem;
-      if (z >= threshold || skip.has(lem) || skip.has(key) || out.has(key)) continue;
+      if (z >= threshold || skip.has(lem) || skip.has(key) || out.has(key) || explainedAt(text, i, piece.length)) continue;
       const { from, to } = sentenceAround(text, i);
       out.set(key, { key, form: piece, zipf: z, before: text.slice(from, i), after: text.slice(i + piece.length, to) });
     }
