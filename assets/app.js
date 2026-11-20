@@ -12,6 +12,9 @@ import { createThink } from "./think.js";
 import { createMock } from "./mock.js";
 import { createOneTab } from "./one-tab.js";
 import { GONE, withGone, splitGone } from "./merge.js";
+import { applyThemeColor } from "./theme.js";
+
+applyThemeColor(document.documentElement.dataset.theme);   // the theme chosen before, set in index.html
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -1376,6 +1379,7 @@ const ACTIONS = {
     const next = isDark() ? "light" : "dark";
     try { localStorage.setItem(KEY.theme, next); } catch { /* storage unavailable */ }
     document.documentElement.dataset.theme = next;
+    applyThemeColor(next);
     renderTopbar();
     if (cur() && isOriginal(cur())) renderQuestion();
   },
