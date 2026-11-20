@@ -100,7 +100,31 @@ export function historyEntry({ at, route, modules }, byId) {
   const r = resultOf(modules, byId);
   const onlyFirst = modules.length < 2;
   return { at, correct: r.correct, total: r.total, perModule: r.perModule, route, onlyFirst,
-    range: onlyFirst ? null : scoreRange(r.correct, r.total), skills: r.skills, wrong: r.wrong };
+    range: onlyFirst ? null : scoreRange(r.correct, r.total), skills: r.skills, wrong: r.wrong,
+    ids: modules.map((m) => m.ids), answers: Object.assign({}, ...modules.map((m) => m.answers)) };
+}
+
+// Every question of a mock, module by module: [[{id, n, state: "ok" | "bad" | "blank"}]]. Mocks saved
+// before 2026-11-20 kept only the mistakes; their other questions come from the trainer's records of
+// that mock (a first answer carries the mock's id), in the exam's order of types.
+export function mockQuestions(h, mockId, progress, byId) {
+  if (h.ids) {
+    return h.ids.map((ids) => ids.filter((id) => byId.has(id)).map((id) => {
+      const a = h.answers?.[id];
+      return { id, n: byId.get(id).n, state: !a ? "blank" : a === byId.get(id).correct ? "ok" : "bad" };
+    }));
+  }
+  const order = BLUEPRINT.flatMap((b) => b.skills.map(([skill]) => skill));
+  const rank = (id) => order.indexOf(skillName(byId.get(id).skill));
+  const ids = [...new Set([...Object.keys(progress).filter((id) => progress[id]?.mock === mockId), ...(h.wrong || [])])]
+    .filter((id) => byId.has(id))
+    .sort((x, y) => rank(x) - rank(y) || byId.get(x).n - byId.get(y).n);
+  return [ids.map((id) => {
+    const p = progress[id];
+    // a mistake with no record of this mock: blank if never answered, wrong if answered before the mock
+    const state = p?.mock === mockId ? (p.ok ? "ok" : "bad") : p ? "bad" : "blank";
+    return { id, n: byId.get(id).n, state };
+  })];
 }
 
 // The last mock in one line, for «Сегодня».
@@ -367,7 +391,7 @@ export function createMock(ctx) {
   // A finished mock reopened: its result, and the other mocks to switch to.
   function pastHtml(id) {
     const others = pastMocks(history);
-    return `<div class="qwrap">${resultBody(history[id])}
+    return `<div class="qwrap">${resultBody(history[id], id)}
       ${others.length > 1 ? `<section class="card today-block"><div class="block-head"><h3>Все пробники</h3><span>${others.length}</span></div>
         <div class="mock-past">${others.map((o) => `<button class="btn ${o.id === id ? "btn-outline" : "btn-ghost"} btn-sm" data-action="mock-show" data-id="${esc(o.id)}" ${o.id === id ? 'aria-current="true"' : ""}>${o.label}</button>`).join("")}</div>
       </section>` : ""}
@@ -377,11 +401,11 @@ export function createMock(ctx) {
   function resultHtml() {
     const r = history[state.id];
     if (!r) return `<div class="empty"><h3>Результат не найден</h3><button class="btn btn-outline" data-action="mock-close">Закрыть</button></div>`;
-    return `<div class="qwrap">${resultBody(r)}
+    return `<div class="qwrap">${resultBody(r, state.id)}
       <div class="row" style="justify-content:center;margin-top:18px"><button class="btn btn-primary btn-lg" data-action="mock-close">Готово</button></div></div>`;
   }
 
-  function resultBody(r) {
+  function resultBody(r, mockId) {
     const map = byId();
     const wrong = r.wrong.map((id) => map.get(id)).filter(Boolean);
     const date = new Date(r.at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
@@ -389,13 +413,27 @@ export function createMock(ctx) {
         <div class="mock-score"><b>${r.correct} из ${r.total}</b><span>верно · только модуль 1</span></div>
         <p>Второй модуль был бы ${r.route === "harder" ? "<b>трудным</b>: верно две трети или больше" : "<b>полегче</b>: верно меньше двух третей"}. Оценки из 800 нет: по одному модулю её не посчитать.</p>
         <p class="muted">${date}</p>
-      </section>${detailsHtml(r, wrong)}`;
+      </section>${detailsHtml(r, wrong)}${allHtml(r, mockId)}`;
     return `<section class="card mock-panel mock-result">
         <div class="mock-score"><b>${r.range[0]}–${r.range[1]}</b><span>из 800 · оценка</span></div>
         <p>Верно <b>${r.correct} из ${r.total}</b> · модуль 1: ${r.perModule[0] ?? 0} · модуль 2 (${r.route === "harder" ? "трудный" : "полегче"}): ${r.perModule[1] ?? 0}</p>
         <p class="muted">Пересчёт по официальной таблице College Board для бумажной версии пробника: верные ответы переводятся в число из 66 и в диапазон. Точный балл даёт только Bluebook.${r.route === "harder" ? "" : " Второй модуль был полегче: на настоящем SAT это ограничивает балл (по неофициальным оценкам — около 560–630)."}</p>
         <p class="muted">${date}</p>
-      </section>${detailsHtml(r, wrong)}`;
+      </section>${detailsHtml(r, wrong)}${allHtml(r, mockId)}`;
+  }
+
+  function allHtml(r, mockId) {
+    const groups = mockQuestions(r, mockId, S.progress, byId()).filter((g) => g.length);
+    if (!groups.length) return "";
+    const missing = r.total - groups.reduce((n, g) => n + g.length, 0);
+    const title = { ok: "верно", bad: "ошибка", blank: "без ответа" };
+    return `<section class="card today-block">
+        <div class="block-head"><h3>Все вопросы</h3><span>нажмите, чтобы открыть с вашим ответом</span></div>
+        ${groups.map((g, i) => `${groups.length > 1 ? `<div class="side-label">Модуль ${i + 1}</div>` : ""}
+          <div class="mock-wrong mock-all">${g.map((x) => `<button class="qcell ${x.state}" data-action="mock-open" data-id="${esc(x.id)}" title="${title[x.state]}">${x.n}</button>`).join("")}</div>`).join("")}
+        <div class="mock-legend"><span><i class="qcell ok"></i> верно</span><span><i class="qcell bad"></i> ошибка</span><span><i class="qcell blank"></i> без ответа</span></div>
+        ${missing > 0 ? `<p class="muted" style="font-size:13px;margin:10px 0 0">${missing === 1 ? `Не нашёлся 1 вопрос из ${r.total}: его` : `Не нашлось ${missing} из ${r.total}: их`} вы решали ещё до пробника, а этот пробник сохранён раньше, чем тренажёр начал хранить список вопросов.</p>` : ""}
+      </section>`;
   }
 
   function detailsHtml(r, wrong) {

@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { buildModule, routeOf, scoreRange, resultOf, BLUEPRINT, historyEntry, lastLine, pastMocks } from "../assets/mock.js";
+import { buildModule, routeOf, scoreRange, resultOf, BLUEPRINT, historyEntry, lastLine, pastMocks, mockQuestions } from "../assets/mock.js";
 
 const SKILLS = BLUEPRINT.flatMap((b) => b.skills.map(([skill]) => ({ domain: b.domain, skill })));
 let seq = 0;
@@ -114,4 +114,20 @@ test("past mocks are listed newest first, each with its date and result", () => 
     { id: "b", label: "20 ноября · верно 20 из 27 · только модуль 1" },
     { id: "a", label: "16 ноября · верно 40 из 54 · 580–640" },
   ]);
+});
+
+test("a mock's every question is kept: right, wrong or left blank, in module order", () => {
+  const a = q("Words in Context"), b = q("Inferences"), c = q("Transitions");
+  const modules = [{ ids: [a.id, b.id], answers: { [a.id]: "A", [b.id]: "C" }, ms: {} }, { ids: [c.id], answers: {}, ms: {} }];
+  const h = historyEntry({ at: 1, route: "harder", modules }, byId([a, b, c]));
+  eq(mockQuestions(h, "m1", {}, byId([a, b, c])).map((m) => m.map((x) => [x.n, x.state])),
+    [[[a.n, "ok"], [b.n, "bad"]], [[c.n, "blank"]]]);
+});
+
+test("a mock saved before the list was kept is put together from the trainer's records", () => {
+  const a = q("Inferences"), b = q("Words in Context"), c = q("Transitions"), other = q("Boundaries");
+  const progress = { [a.id]: { ok: false, mock: "m1" }, [b.id]: { ok: true, mock: "m1" }, [other.id]: { ok: true } };
+  const h = { at: 1, correct: 1, total: 3, onlyFirst: true, wrong: [a.id, c.id] };
+  eq(mockQuestions(h, "m1", progress, byId([a, b, c, other])).map((m) => m.map((x) => [x.n, x.state])),
+    [[[b.n, "ok"], [a.n, "bad"], [c.n, "blank"]]]);
 });
