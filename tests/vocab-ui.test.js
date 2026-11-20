@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { createVocab, VOCAB_DEFAULT, gateRanks } from "../assets/vocab-ui.js";
+import { createVocab, VOCAB_DEFAULT, gateRanks, swipeOutcome, trimAround } from "../assets/vocab-ui.js";
 import { createPrep } from "../assets/prep.js";
 
 const run = (t) => ({ runs: [{ t }] });
@@ -226,4 +226,30 @@ test("the block in focus comes first", () => {
   const r = ranks([Q("a", 1, { skill: "Transitions" }), Q("b", 200, { skill: "Command of Evidence" })], { a: ["opaque"], b: ["shrewd"] },
     { focus: (q) => q.skill === "Command of Evidence" });
   eq(r.shrewd.n < r.opaque.n, true);
+});
+
+// ---------------------------------------------------------------- swiping a card on a phone
+
+test("a swipe across the card counts; a short or slow nudge does not", () => {
+  eq(swipeOutcome({ dx: 150, dy: 10, ms: 400, width: 360 }), "right");
+  eq(swipeOutcome({ dx: -150, dy: 5, ms: 400, width: 360 }), "left");
+  eq(swipeOutcome({ dx: 50, dy: 0, ms: 400, width: 360 }), null);
+});
+
+test("a quick flick counts even when short", () => {
+  eq(swipeOutcome({ dx: 60, dy: 5, ms: 80, width: 360 }), "right");
+});
+
+test("scrolling up or down is no swipe", () => {
+  eq(swipeOutcome({ dx: 120, dy: 200, ms: 300, width: 360 }), null);
+});
+
+// ---------------------------------------------------------------- a question's sentence on a card, made short
+
+test("a long sentence from a question is cut to the words around the word", () => {
+  eq(trimAround("one two three four five six ", " seven eight nine ten eleven.", 3), { before: "…four five six ", after: " seven eight nine…", cut: true });
+});
+
+test("a short sentence stays whole", () => {
+  eq(trimAround("A ", " ran.", 10), { before: "A ", after: " ran.", cut: false });
 });

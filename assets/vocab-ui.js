@@ -29,6 +29,25 @@ export function gateRanks(questions, gates, { progress, review, focus }) {
   return ranks;
 }
 
+// A finger's move across a card (2026-11-20, phones and iPads): "right", "left" or null. It counts when
+// it goes far enough (a quarter of the card) or is a quick flick, and goes more across than down,
+// so scrolling the page is never taken for a swipe.
+export function swipeOutcome({ dx, dy, ms, width }) {
+  if (Math.abs(dx) < 1.5 * Math.abs(dy)) return null;
+  const far = Math.abs(dx) >= Math.max(70, width * 0.28);
+  const flick = Math.abs(dx) >= 40 && Math.abs(dx) / Math.max(ms, 1) >= 0.6;
+  return far || flick ? (dx > 0 ? "right" : "left") : null;
+}
+
+// A question's sentence on a card, cut to the words around the word: a whole passage sentence made
+// cards slow on a phone (2026-11-20). A tap shows it whole.
+export function trimAround(before, after, words = 10) {
+  const b = before.match(new RegExp(`(?:\\S+\\s+){0,${words}}\\S*$`))[0];   // "…risk-" + disclosure keeps its part
+  const a = after.match(new RegExp(`^\\s*(?:\\S+(?:\\s+|$)){0,${words}}`))[0].replace(/\s+$/, "");
+  const cutB = b.trim().length < before.trim().length, cutA = a.trim().length < after.trim().length;
+  return { before: (cutB ? "…" : "") + b, after: a + (cutA ? "…" : ""), cut: cutB || cutA };
+}
+
 export const VOCAB_DEFAULT = () => ({ srs: {}, user: {}, edits: {}, known: [], daily: { date: "", newCount: 0, extra: 0 }, newPerDay: 20, level: "middle" });
 
 export function createVocab(ctx) {
@@ -253,14 +272,30 @@ export function createVocab(ctx) {
     return `через ${fmtDays(days)}`;
   }
 
+  const laterHtml = (c) => (c.hiddenExamples ? `<p class="ex-later">${icon("lock", "icon-sm")} Пример из вопроса появится, когда вы его решите — чтобы слово не подсказывало ответ.</p>` : "");
+  const sourceHtml = (e) => `${e.kind === "rationale" ? "из разбора" : "из текста"}${e.n ? ` · <button class="linkish" data-action="v-open-q" data-id="${esc(e.qid)}">вопрос ${e.n} →</button>` : ""}`;
+
   function examplesHtml(c, limit = 2) {
-    const later = c.hiddenExamples ? `<p class="ex-later">${icon("lock", "icon-sm")} Пример из вопроса появится, когда вы его решите — чтобы слово не подсказывало ответ.</p>` : "";
+    const later = laterHtml(c);
     if (!c.examples.length) return later;
     return `${later}<div class="examples">${c.examples.slice(0, limit).map((e) => `
       <figure class="ex">
         <blockquote>${esc(e.before)}<mark>${esc(e.term || c.term)}</mark>${esc(e.after)}</blockquote>
-        <figcaption>${e.kind === "rationale" ? "из разбора" : "из текста"}${e.n ? ` · <button class="linkish" data-action="v-open-q" data-id="${esc(e.qid)}">вопрос ${e.n} →</button>` : ""}</figcaption>
+        <figcaption>${sourceHtml(e)}</figcaption>
       </figure>`).join("")}</div>`;
+  }
+
+  // On a card being studied: one sentence from a question, cut to the words around the word; a tap
+  // shows the sentences whole (2026-11-20: whole passage sentences made cards slow on a phone).
+  function cardExamplesHtml(c, s) {
+    if (s.fullEx === c.key || !c.examples.length) return examplesHtml(c);
+    const e = c.examples[0];
+    const t = trimAround(e.before, e.after);
+    const more = t.cut || c.examples.length > 1;
+    return `${laterHtml(c)}<div class="examples"><figure class="ex">
+        <blockquote>${esc(t.before)}<mark>${esc(e.term || c.term)}</mark>${esc(t.after)}</blockquote>
+        <figcaption>${sourceHtml(e)}${more ? ` · <button class="linkish" data-action="v-ex-full">${t.cut ? "целиком" : "ещё пример"}</button>` : ""}</figcaption>
+      </figure></div>`;
   }
 
   function defHtml(c) {
@@ -384,13 +419,15 @@ export function createVocab(ctx) {
     const pct = Math.round((s.reviewed / (s.reviewed + left)) * 100);
     const qs = c.practiced ? [...new Set(c.examples.filter((e) => e.n).map((e) => e.n))] : [];
     const recalled = !fresh && s.revealed ? fmtDays(answerCard(c.st, true).ivl) : "";
+    const flipped = justFlipped;
+    justFlipped = false;
     return `<div class="vwrap">
       <div class="sess-top">
         <span class="sess-count">Осталось <b>${left}</b></span>
         <div class="bar"><span style="width:${pct}%"></span></div>
         <span class="sess-mix">${left - newInQueue} повтор · ${newInQueue} новых</span>
       </div>
-      <article class="card flash">
+      <article class="card flash ${flipped ? "flip-in" : ""} ${open ? "swipeable" : ""}" ${open ? `data-swipe="${fresh ? "learn" : "grade"}"` : `data-action="v-flip" title="Нажмите, чтобы перевернуть"`}>
         <div class="flash-meta">
           <span class="badge">${c.mine && !auto.some((x) => x.key === c.key) && !textDeck.some((x) => x.key === c.key) ? ROLE_LABEL.mine : c.role === "text" || c.role === "choice" ? ROLE_LABEL[c.role] : c.practiced ? ROLE_LABEL[c.role] || "" : c.role === "target" ? ROLE_LABEL.target : ROLE_LABEL.choice}</span>
           ${statusBadge(c)}
@@ -400,12 +437,13 @@ export function createVocab(ctx) {
         <div class="flash-term">${esc(c.term)}</div>
         ${open ? `
           ${defHtml(c)}
-          ${examplesHtml(c)}
-          <label class="field"><span>Мой перевод / заметка</span>
+          ${cardExamplesHtml(c, s)}
+          <label class="field note-field ${c.note || s.noteOpen ? "open" : ""}"><span>Мой перевод / заметка</span>
             <input data-note="${esc(c.key)}" value="${esc(c.note)}" placeholder="например, своими словами" autocomplete="off"></label>
+          ${c.note || s.noteOpen ? "" : `<button class="btn btn-ghost btn-sm note-toggle" data-action="v-note">${icon("plus", "icon-sm")} Заметка</button>`}
           ${fresh ? `<p class="flash-hint learn-hint">Новое слово: прочитайте значение и пример. Через несколько карточек его нужно будет вспомнить.</p>
             <button class="btn btn-primary btn-lg" data-action="v-learn">Дальше <kbd>Пробел</kbd></button>` : ""}`
-        : `<p class="flash-hint">Вспомните значение, потом откройте карточку</p>
+        : `<p class="flash-hint">Вспомните значение, потом переверните карточку</p>
            <button class="btn btn-primary btn-lg" data-action="v-reveal">Показать значение <kbd>Пробел</kbd></button>`}
       </article>
       ${!fresh && s.revealed ? `<div class="grades two" role="group" aria-label="Вспомнили значение?">
@@ -420,6 +458,7 @@ export function createVocab(ctx) {
         <span class="hints">${fresh
           ? `<span><kbd>Пробел</kbd> дальше</span><span><kbd>K</kbd> знаю</span>`
           : `<span><kbd>Пробел</kbd> показать</span><span><kbd>←</kbd> не вспомнил</span><span><kbd>→</kbd> вспомнил</span><span><kbd>K</kbd> знаю</span>`}</span>
+        <span class="swipe-hint">${fresh ? "смахните вправо — дальше" : s.revealed ? "вправо — вспомнил, влево — не вспомнил" : "нажмите на карточку, чтобы перевернуть"}</span>
       </div>
     </div>`;
   }
@@ -742,6 +781,7 @@ export function createVocab(ctx) {
   // at the earliest).
   function record(key, st, missed) {
     const s = S.session;
+    s.noteOpen = false;
     s.queue = s.queue.filter((k) => k !== key);
     const prev = S.vocab.srs[key];
     if (!prev?.last) {
@@ -759,6 +799,59 @@ export function createVocab(ctx) {
   const refreshAll = () => { renderMain(); renderSidebar(); ctx.refreshChrome(); };
 
   // A new word, read: it is asked a few cards later. Not knowing a word never learned costs no ease.
+  // The meaning shows on the back of the card: the front turns away, the back turns in. Without a card
+  // on screen (tests, the waiting screen) or with reduced motion, it just shows.
+  let justFlipped = false;
+  function flipReveal() {
+    const s = S.session;
+    if (!s?.queue.length || s.revealed) return;
+    const show = () => { s.revealed = true; s.noteOpen = false; renderMain(); };
+    const card = document.querySelector("article.flash");
+    if (!card || matchMedia("(prefers-reduced-motion: reduce)").matches) { show(); return; }
+    card.classList.add("flip-out");
+    setTimeout(() => { justFlipped = true; show(); }, 150);
+  }
+
+  // Swiping a card on a phone or an iPad: right — «Вспомнил» (or «Дальше» on a new word), left —
+  // «Не вспомнил». The card follows the finger; scrolling up or down is left to the page.
+  let drag = null;
+  const resetCard = (card) => { card.style.transform = ""; card.classList.remove("swipe-ok", "swipe-bad"); };
+  document.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse") return;
+    const card = e.target.closest?.("article.flash.swipeable");
+    if (!card || e.target.closest("input, textarea, button, a")) return;
+    drag = { card, id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), axis: null };
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.axis) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      drag.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (drag.axis !== "x") return;
+    const grading = drag.card.dataset.swipe === "grade";
+    drag.card.style.transition = "none";
+    drag.card.style.transform = `translateX(${dx}px) rotate(${dx / 30}deg)`;
+    drag.card.classList.toggle("swipe-ok", dx > 30);
+    drag.card.classList.toggle("swipe-bad", grading && dx < -30);
+  });
+  const endDrag = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const { card, x, y, t, axis } = drag;
+    drag = null;
+    if (axis !== "x") return;
+    card.style.transition = "transform .18s ease-out";
+    const out = e.type === "pointerup" ? swipeOutcome({ dx: e.clientX - x, dy: e.clientY - y, ms: performance.now() - t, width: card.offsetWidth }) : null;
+    const grading = card.dataset.swipe === "grade";
+    const act = out === "right" ? () => (grading ? grade(true) : learn()) : out === "left" && grading ? () => grade(false) : null;
+    if (!act) { resetCard(card); return; }
+    card.style.transform = `translateX(${out === "right" ? 120 : -120}%) rotate(${out === "right" ? 8 : -8}deg)`;
+    setTimeout(act, 170);
+  };
+  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointercancel", endDrag);
+
   function learn() {
     const s = S.session;
     const key = s?.queue[0];
@@ -807,7 +900,11 @@ export function createVocab(ctx) {
     },
     "v-filter": (el) => { S.ui.vfilter = el.dataset.filter; S.ui.vtab = "list"; ctx.saveUi(); renderSidebar(); renderMain(true); document.body.classList.remove("sidebar-open"); },
     "v-perday": (el) => { S.vocab.newPerDay = +el.dataset.n; save(); S.session = null; renderSidebar(); renderMain(); ctx.refreshChrome(); },
-    "v-reveal": () => { if (S.session?.queue.length) { S.session.revealed = true; renderMain(); } },
+    "v-reveal": () => flipReveal(),
+    // a tap on a card with its meaning hidden turns it over; selecting a word to add it does not
+    "v-flip": () => { if (window.getSelection?.()?.isCollapsed !== false) flipReveal(); },
+    "v-ex-full": () => { if (S.session?.queue.length) { S.session.fullEx = S.session.queue[0]; renderMain(); } },
+    "v-note": () => { if (!S.session) return; S.session.noteOpen = true; renderMain(); document.querySelector("[data-note]")?.focus(); },
     "v-grade": (el) => grade(el.dataset.ok === "1"),
     "v-learn": () => learn(),
     "v-known": () => {
@@ -949,7 +1046,7 @@ export function createVocab(ctx) {
       if (k === "k") { actions["v-known"](); return true; }
       return false;
     }
-    if ((k === " " || k === "enter") && !s.revealed) { actions["v-reveal"](); return true; }
+    if ((k === " " || k === "enter") && !s.revealed) { flipReveal(); return true; }
     if (s.revealed && (k === "arrowleft" || k === "1")) { grade(false); return true; }
     if (s.revealed && (k === "arrowright" || k === "2")) { grade(true); return true; }
     if (k === "k" && (s.revealed || !s.waitUntil)) { actions["v-known"](); return true; }

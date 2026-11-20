@@ -486,6 +486,25 @@ button.sync-chip { background: none; border: 1px solid currentColor; border-radi
 .sess-top .bar { flex: 1; }
 .sess-top b { color: var(--text); font-variant-numeric: tabular-nums; }
 .flash { padding: 26px 30px 28px; text-align: left; }
+.flash[data-action="v-flip"] { cursor: pointer; }
+.flash.swipeable { touch-action: pan-y; }
+.flash.swipe-ok { box-shadow: 0 0 0 2px var(--ok-border), var(--shadow); }
+.flash.swipe-bad { box-shadow: 0 0 0 2px var(--bad-border), var(--shadow); }
+.flash.flip-out { animation: flip-out .15s ease-in forwards; }
+.flash.flip-in { animation: flip-in .2s ease-out; }
+@keyframes flip-out { to { transform: perspective(900px) rotateY(90deg); } }
+@keyframes flip-in { from { transform: perspective(900px) rotateY(-90deg); } }
+@media (prefers-reduced-motion: reduce) { .flash.flip-out, .flash.flip-in { animation: none; } }
+.note-toggle, .swipe-hint { display: none; }
+.swipe-hint { color: var(--muted); font-size: 13px; }
+@media (max-width: 640px) {
+  .flash .note-field:not(.open) { display: none; }
+  .flash .note-toggle { display: inline-flex; margin-bottom: 14px; }
+}
+@media (hover: none) and (pointer: coarse) {
+  .flash-foot .hints { display: none; }
+  .flash-foot .swipe-hint { display: inline; }
+}
 .flash-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
 .flash-meta .spacer { flex: 1; }
 .flash-term { font: 600 clamp(32px, 6vw, 44px)/1.15 var(--font-read); letter-spacing: -0.01em; margin-bottom: 14px; overflow-wrap: anywhere; }
