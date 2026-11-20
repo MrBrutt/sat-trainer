@@ -25,6 +25,7 @@ const KEY = {
   flags: "sat-trainer:flags:v1",
   ui: "sat-trainer:ui:v1",
   theme: "sat-trainer:theme",
+  cardFront: "sat-trainer:card-front",   // the word card on screen, kept first when the day's cards are rebuilt
   vocab: "sat-trainer:vocab:v1",
   dict: "sat-trainer:dict:v1",
   chats: "sat-trainer:chats:v1",

@@ -199,6 +199,18 @@ export function createVocab(ctx) {
     return { all, due, fresh, mineFresh, autoFresh, newLeft, newToday: mineFresh.length + Math.min(newLeft, autoFresh.length) };
   }
 
+  // The card on screen stays first when today's cards are put together again (2026-11-20: a reload
+  // after an update, or words from another device, rebuilt the session with a word that had come due
+  // in front, and the card being read went back). Kept on this device for the day, turned as it was.
+  let front = (ctx.KEY?.cardFront && ls.get(ctx.KEY.cardFront, null)) || null;   // { day, key, revealed }
+  function rememberFront(s) {
+    if (!loaded) return;   // the first screen, drawn before the word lists, is a stand-in: it says nothing
+    const next = { day: today(), key: s.queue[0] || null, revealed: !!s.revealed };
+    if (front && front.day === next.day && front.key === next.key && front.revealed === next.revealed) return;
+    front = next;
+    if (ctx.KEY?.cardFront) ls.set(ctx.KEY.cardFront, front);
+  }
+
   // Today's cards: the open session, plus words that came due after it started (a word missed in a
   // check before a question comes back a minute later). Every counter on screen reads from here.
   function todayCards() {
@@ -217,6 +229,7 @@ export function createVocab(ctx) {
       if (i > 0) s.queue.unshift(...s.queue.splice(i, 1));
       s.waitUntil = i < 0 && s.queue.length ? Math.min(...s.queue.map((k) => byKey.get(k).st.due)) : 0;
     }
+    rememberFront(s);
     const fresh = s.queue.filter((k) => !byKey.get(k).st?.last).length;
     return { s, all, byKey, fresh, review: s.queue.length - fresh };
   }
@@ -233,10 +246,18 @@ export function createVocab(ctx) {
     const rank = new Map(autoFresh.map((c) => [c.key, rankOf(c, ranks)]));
     autoFresh.sort((a, b) => rank.get(a.key).tier - rank.get(b.key).tier || rank.get(a.key).n - rank.get(b.key).n
       || (b.zipf || 0) - (a.zipf || 0) || mix(a.key) - mix(b.key));
-    S.session = {
-      queue: [...due.map((c) => c.key), ...mineFresh.map((c) => c.key), ...autoFresh.slice(0, newLeft).map((c) => c.key)],
-      revealed: false, reviewed: 0, learnedNew: 0, day: today(),
-    };
+    const fresh = autoFresh.slice(0, newLeft).map((c) => c.key);
+    let queue = [...due.map((c) => c.key), ...mineFresh.map((c) => c.key), ...fresh];
+    // the card that was on screen goes first again, if it is still to be studied today
+    const keep = front?.day === today() ? front.key : null;
+    const c = keep && cardMap().get(keep);
+    let revealed = false;
+    if (c && !c.known && (queue.includes(keep) || !c.st?.last || c.st.due < startOfDay() + DAY)) {
+      if (!queue.includes(keep) && !c.st?.last && fresh.length) queue.splice(queue.lastIndexOf(fresh[fresh.length - 1]), 1);   // a new word in place of another, not on top
+      queue = [keep, ...queue.filter((k) => k !== keep)];
+      revealed = !!front.revealed && !!c.st?.last;
+    }
+    S.session = { queue, revealed, reviewed: 0, learnedNew: 0, day: today() };
   }
 
   // Words the trainer has no definition for: Wiktionary, or Claude inside claude.ai (the page cannot

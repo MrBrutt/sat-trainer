@@ -253,3 +253,63 @@ test("a long sentence from a question is cut to the words around the word", () =
 test("a short sentence stays whole", () => {
   eq(trimAround("A ", " ran.", 10), { before: "A ", after: " ran.", cut: false });
 });
+
+// ---------------------------------------------------------------- the card on screen stays put
+
+const dueNow = () => ({ last: Date.now() - 120_000, due: Date.now() - 60_000, ivl: 0, ease: 2.5, reps: 0, lapses: 0 });
+const mapLs = () => { const m = new Map(); return { get: (k, d) => (m.has(k) ? JSON.parse(m.get(k)) : d), set: (k, v) => m.set(k, JSON.stringify(v)) }; };
+
+test("the card on screen stays first when today's cards are put together again", async () => {
+  const { S, v } = await cardsOf({ adorn: dueNow() });
+  S.session = { queue: ["terse", "adorn", "cogent", "prudent"], revealed: false, reviewed: 3, learnedNew: 1, day: new Date().toDateString() };
+  v.dueTotal();
+  v.accountChanged();
+  v.dueTotal();
+  eq(S.session.queue[0], "terse");
+});
+
+test("after a reload the same card is first, turned over as it was", async () => {
+  const ls = mapLs(), KEY = { cardFront: "front" };
+  const q = question("q1", "Words in Context", ["adorn", "cogent", "terse", "prudent"]);
+  const one = setup([q], { srs: { adorn: dueNow(), terse: { ...dueNow(), due: Date.now() - 10_000 } } }, { ls, KEY });
+  one.v.rebuild();
+  await wordsIn(one.v, q);
+  one.S.ui.view = "vocab";
+  one.S.session = { queue: ["terse", "adorn", "cogent", "prudent"], revealed: true, reviewed: 3, learnedNew: 1, day: new Date().toDateString() };
+  one.v.dueTotal();
+  const two = setup([q], one.S.vocab, { ls, KEY });
+  two.v.rebuild();
+  await wordsIn(two.v, q);
+  two.S.ui.view = "vocab";
+  two.v.dueTotal();
+  eq([two.S.session.queue[0], two.S.session.revealed], ["terse", true]);
+});
+
+test("a card finished on another device is not held on screen", async () => {
+  const { S, v } = await cardsOf({ adorn: dueNow() });
+  S.session = { queue: ["terse", "adorn", "cogent", "prudent"], revealed: false, reviewed: 3, learnedNew: 1, day: new Date().toDateString() };
+  v.dueTotal();
+  S.vocab.known = ["terse"];
+  v.accountChanged();
+  v.dueTotal();
+  eq(S.session.queue.includes("terse"), false);
+});
+
+test("a reload keeps the card even when the page draws before the word lists are in", async () => {
+  const ls = mapLs(), KEY = { cardFront: "front" };
+  const q = question("q1", "Words in Context", ["adorn", "cogent", "terse", "prudent"]);
+  const srs = { adorn: dueNow(), terse: { ...dueNow(), due: Date.now() - 10_000 } };
+  const one = setup([q], { srs }, { ls, KEY });
+  one.v.rebuild();
+  await wordsIn(one.v, q);
+  one.S.ui.view = "vocab";
+  one.S.session = { queue: ["terse", "adorn", "cogent", "prudent"], revealed: true, reviewed: 3, learnedNew: 1, day: new Date().toDateString() };
+  one.v.dueTotal();
+  const two = setup([q], one.S.vocab, { ls, KEY });
+  two.S.ui.view = "vocab";
+  two.v.dueTotal();            // the first screen, before the lists
+  two.v.rebuild();
+  await wordsIn(two.v, q);
+  two.v.dueTotal();
+  eq([two.S.session.queue[0], two.S.session.revealed], ["terse", true]);
+});
