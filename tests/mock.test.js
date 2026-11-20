@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { buildModule, routeOf, scoreRange, resultOf, BLUEPRINT } from "../assets/mock.js";
+import { buildModule, routeOf, scoreRange, resultOf, BLUEPRINT, historyEntry, lastLine } from "../assets/mock.js";
 
 const SKILLS = BLUEPRINT.flatMap((b) => b.skills.map(([skill]) => ({ domain: b.domain, skill })));
 let seq = 0;
@@ -90,4 +90,17 @@ test("the result counts unanswered as wrong and adds up per type", () => {
   eq([r.correct, r.total, r.perModule], [1, 3, [1, 0]]);
   eq(r.skills.find((s) => s.skill === "Words in Context"), { skill: "Words in Context", n: 2, ok: 1, rushed: 0, slow: 0 });
   eq(r.wrong, [w2.id, t1.id]);
+});
+
+test("a mock stopped after the first module keeps that module's result, without a score from 800", () => {
+  const w1 = q("Words in Context"), w2 = q("Words in Context");
+  const modules = [{ ids: [w1.id, w2.id], answers: { [w1.id]: "A", [w2.id]: "B" }, ms: {} }];
+  const h = historyEntry({ at: 5, route: "harder", modules }, byId([w1, w2]));
+  eq([h.correct, h.total, h.onlyFirst, h.range, h.wrong], [1, 2, true, null, [w2.id]]);
+});
+
+test("the line on «Сегодня» tells a full mock from one stopped after the first module", () => {
+  const at = new Date(2026, 10, 20).getTime();
+  eq(lastLine({ at, correct: 40, total: 54, range: [580, 640] }), "Последний: <b>580–640</b> · верно 40 из 54 · 20 ноября");
+  eq(lastLine({ at, correct: 20, total: 27, range: null, onlyFirst: true }), "Последний: <b>только модуль 1</b> · верно 20 из 27 · 20 ноября");
 });

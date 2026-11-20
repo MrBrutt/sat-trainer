@@ -94,6 +94,21 @@ export function resultOf(modules, byId) {
   return { correct: perModule.reduce((a, b) => a + b, 0), total: modules.reduce((n, m) => n + m.ids.length, 0), perModule, skills, wrong };
 }
 
+// What the history keeps of a finished mock. One stopped after the first module (2026-11-20) keeps
+// that module's result, without a score from 800: one module cannot give one.
+export function historyEntry({ at, route, modules }, byId) {
+  const r = resultOf(modules, byId);
+  const onlyFirst = modules.length < 2;
+  return { at, correct: r.correct, total: r.total, perModule: r.perModule, route, onlyFirst,
+    range: onlyFirst ? null : scoreRange(r.correct, r.total), skills: r.skills, wrong: r.wrong };
+}
+
+// The last mock in one line, for «Сегодня».
+export function lastLine(r) {
+  const date = new Date(r.at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  return `Последний: <b>${r.onlyFirst ? "только модуль 1" : `${r.range[0]}–${r.range[1]}`}</b> · верно ${r.correct} из ${r.total} · ${date}`;
+}
+
 // ---------------------------------------------------------------- screens
 
 export function createMock(ctx) {
@@ -182,7 +197,6 @@ export function createMock(ctx) {
 
   function finishMock() {
     const map = byId();
-    const r = resultOf(state.modules, map);
     // first answers go to the trainer: statistics, the day's plan, mistakes to review
     for (const m of state.modules) {
       for (const id of m.ids) {
@@ -191,9 +205,17 @@ export function createMock(ctx) {
         ctx.recordFirst(q, { c, ok: c === q.correct, t: Date.now(), ms: m.ms[id] || 0, mock: state.id });
       }
     }
-    history[state.id] = { at: state.at, correct: r.correct, total: r.total, perModule: r.perModule, route: state.route, range: scoreRange(r.correct, r.total), skills: r.skills, wrong: r.wrong };
+    history[state.id] = historyEntry(state, map);
     saveHistory();
     state.stage = "done";
+  }
+
+  // No wish for the second module: the first one's result, as the full mock's would be.
+  function stopAtFirst() {
+    if (state?.stage !== "break") return;
+    finishMock();
+    save();
+    refresh(true);
   }
 
   function go(i) {
@@ -324,6 +346,8 @@ export function createMock(ctx) {
       <p>Второй модуль — <b>${harder ? "трудный" : "полегче"}</b>: ${harder ? "в первом модуле верно две трети вопросов или больше, как на SAT, дальше вопросы труднее." : "в первом модуле верно меньше двух третей, поэтому вопросы будут полегче — на SAT такой модуль ограничивает балл."}</p>
       <p class="muted">На экзамене второй модуль начинается сразу. На него снова ${MODULE_MINUTES} минуты.</p>
       <button class="btn btn-primary btn-lg" data-action="mock-second">Начать модуль 2</button>
+      <div class="mock-stop"><button class="btn btn-ghost btn-sm" data-action="mock-stop-first">Закончить на первом модуле</button>
+        <p class="muted">Покажет результат первого модуля; ошибки уйдут в повтор. Оценки из 800 не будет: по одному модулю её не посчитать.</p></div>
     </section></div>`;
   }
 
@@ -338,12 +362,21 @@ export function createMock(ctx) {
     const map = byId();
     const wrong = r.wrong.map((id) => map.get(id)).filter(Boolean);
     const date = new Date(r.at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+    if (r.onlyFirst) return `<section class="card mock-panel mock-result">
+        <div class="mock-score"><b>${r.correct} из ${r.total}</b><span>верно · только модуль 1</span></div>
+        <p>Второй модуль был бы ${r.route === "harder" ? "<b>трудным</b>: верно две трети или больше" : "<b>полегче</b>: верно меньше двух третей"}. Оценки из 800 нет: по одному модулю её не посчитать.</p>
+        <p class="muted">${date}</p>
+      </section>${detailsHtml(r, wrong)}`;
     return `<section class="card mock-panel mock-result">
         <div class="mock-score"><b>${r.range[0]}–${r.range[1]}</b><span>из 800 · оценка</span></div>
         <p>Верно <b>${r.correct} из ${r.total}</b> · модуль 1: ${r.perModule[0] ?? 0} · модуль 2 (${r.route === "harder" ? "трудный" : "полегче"}): ${r.perModule[1] ?? 0}</p>
         <p class="muted">Пересчёт по официальной таблице College Board для бумажной версии пробника: верные ответы переводятся в число из 66 и в диапазон. Точный балл даёт только Bluebook.${r.route === "harder" ? "" : " Второй модуль был полегче: на настоящем SAT это ограничивает балл (по неофициальным оценкам — около 560–630)."}</p>
         <p class="muted">${date}</p>
-      </section>
+      </section>${detailsHtml(r, wrong)}`;
+  }
+
+  function detailsHtml(r, wrong) {
+    return `
       <section class="card today-block">
         <div class="block-head"><h3>По типам вопросов</h3><span>спешка — ошибка быстрее 60% нормы</span></div>
         <table class="mock-table"><thead><tr><th>Тип</th><th>Верно</th><th>В спешке</th><th>Дольше нормы</th></tr></thead><tbody>
@@ -361,7 +394,7 @@ export function createMock(ctx) {
   function card() {
     if (!S.set) return "";
     const done = Object.values(history).sort((a, b) => b.at - a.at);
-    const lastLine = done.length ? `Последний: <b>${done[0].range[0]}–${done[0].range[1]}</b> · верно ${done[0].correct} из ${done[0].total} · ${new Date(done[0].at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}${done.length > 1 ? ` · всего ${done.length}` : ""}` : "В конце — оценка балла из 800 по таблице College Board.";
+    const last = done.length ? `${lastLine(done[0])}${done.length > 1 ? ` · всего ${done.length}` : ""}` : "В конце — оценка балла из 800 по таблице College Board.";
     if (running()) {
       return `<section class="card task mock-card"><div class="task-icon">${icon("timer")}</div>
         <div class="task-body"><div class="task-title">Пробник идёт</div><div class="task-sub">Модуль ${state.stage + 1} из 2 · осталось ${fmtTime(left())}</div></div>
@@ -374,7 +407,7 @@ export function createMock(ctx) {
     }
     return `<section class="card task mock-card"><div class="task-icon">${icon("timer")}</div>
       <div class="task-body"><div class="task-title">Пробник Reading and Writing</div>
-        <div class="task-sub">2 модуля по 27 вопросов и 32 минуты, как на SAT, без подсказок. ${lastLine}</div></div>
+        <div class="task-sub">2 модуля по 27 вопросов и 32 минуты, как на SAT, без подсказок. ${last}</div></div>
       <button class="btn btn-outline btn-sm" data-action="mock-start">Начать ${icon("right", "icon-sm")}</button></section>`;
   }
 
@@ -401,6 +434,7 @@ export function createMock(ctx) {
     "mock-timer": () => { S.ui.mockTimerHidden = !S.ui.mockTimerHidden; ctx.saveUi(); ctx.renderAll(); },
     "mock-finish": askFinish,
     "mock-second": startSecond,
+    "mock-stop-first": stopAtFirst,
     "mock-close": () => { state = null; save(); S.ui.view = "today"; ctx.saveUi(); ctx.renderAll(true); },
     "mock-open": (el) => ctx.openQuestion(el.dataset.id),
     "mock-quit": async () => {
