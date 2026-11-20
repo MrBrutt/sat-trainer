@@ -1,5 +1,5 @@
 import { test, eq } from "./run.js";
-import { buildModule, routeOf, scoreRange, resultOf, BLUEPRINT, historyEntry, lastLine } from "../assets/mock.js";
+import { buildModule, routeOf, scoreRange, resultOf, BLUEPRINT, historyEntry, lastLine, pastMocks } from "../assets/mock.js";
 
 const SKILLS = BLUEPRINT.flatMap((b) => b.skills.map(([skill]) => ({ domain: b.domain, skill })));
 let seq = 0;
@@ -103,4 +103,15 @@ test("the line on «Сегодня» tells a full mock from one stopped after th
   const at = new Date(2026, 10, 20).getTime();
   eq(lastLine({ at, correct: 40, total: 54, range: [580, 640] }), "Последний: <b>580–640</b> · верно 40 из 54 · 20 ноября");
   eq(lastLine({ at, correct: 20, total: 27, range: null, onlyFirst: true }), "Последний: <b>только модуль 1</b> · верно 20 из 27 · 20 ноября");
+});
+
+test("past mocks are listed newest first, each with its date and result", () => {
+  const h = {
+    a: { at: new Date(2026, 10, 16).getTime(), correct: 40, total: 54, range: [580, 640] },
+    b: { at: new Date(2026, 10, 20).getTime(), correct: 20, total: 27, range: null, onlyFirst: true },
+  };
+  eq(pastMocks(h), [
+    { id: "b", label: "20 ноября · верно 20 из 27 · только модуль 1" },
+    { id: "a", label: "16 ноября · верно 40 из 54 · 580–640" },
+  ]);
 });

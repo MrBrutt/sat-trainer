@@ -109,11 +109,19 @@ export function lastLine(r) {
   return `Последний: <b>${r.onlyFirst ? "только модуль 1" : `${r.range[0]}–${r.range[1]}`}</b> · верно ${r.correct} из ${r.total} · ${date}`;
 }
 
+// Finished mocks, newest first, for reopening their results (2026-11-20).
+export function pastMocks(history) {
+  return Object.entries(history || {}).sort(([, a], [, b]) => b.at - a.at).map(([id, r]) => ({
+    id, label: `${new Date(r.at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })} · верно ${r.correct} из ${r.total} · ${r.onlyFirst ? "только модуль 1" : `${r.range[0]}–${r.range[1]}`}`,
+  }));
+}
+
 // ---------------------------------------------------------------- screens
 
 export function createMock(ctx) {
   const { S, $, icon, esc, toast, ls, KEY, plural, confirmDialog } = ctx;
   let state = ls.get(KEY.mock, null);        // the mock in progress, or finished and not closed yet
+  let shown = null;                           // a past mock reopened from «Сегодня»
   let history = ls.get(KEY.mocks, {});       // finished mocks by id
   let ticker = null;
   let warned = false;
@@ -285,6 +293,11 @@ export function createMock(ctx) {
   function renderMain(scrollTop = false) {
     const main = $("#main");
     if (!main) return;
+    if (shown && history[shown] && (!state || state.stage === "done")) {
+      main.innerHTML = pastHtml(shown);
+      if (scrollTop) window.scrollTo({ top: 0 });
+      return;
+    }
     if (!state) { S.ui.view = "today"; ctx.saveUi(); ctx.renderAll(true); return; }
     if (running() && left() <= 0) { finishModule(true); return; }
     if (state.stage === "break") main.innerHTML = breakHtml();
@@ -351,6 +364,16 @@ export function createMock(ctx) {
     </section></div>`;
   }
 
+  // A finished mock reopened: its result, and the other mocks to switch to.
+  function pastHtml(id) {
+    const others = pastMocks(history);
+    return `<div class="qwrap">${resultBody(history[id])}
+      ${others.length > 1 ? `<section class="card today-block"><div class="block-head"><h3>Все пробники</h3><span>${others.length}</span></div>
+        <div class="mock-past">${others.map((o) => `<button class="btn ${o.id === id ? "btn-outline" : "btn-ghost"} btn-sm" data-action="mock-show" data-id="${esc(o.id)}" ${o.id === id ? 'aria-current="true"' : ""}>${o.label}</button>`).join("")}</div>
+      </section>` : ""}
+      <div class="row" style="justify-content:center;margin-top:18px"><button class="btn btn-primary btn-lg" data-action="mock-close">Готово</button></div></div>`;
+  }
+
   function resultHtml() {
     const r = history[state.id];
     if (!r) return `<div class="empty"><h3>Результат не найден</h3><button class="btn btn-outline" data-action="mock-close">Закрыть</button></div>`;
@@ -408,7 +431,10 @@ export function createMock(ctx) {
     return `<section class="card task mock-card"><div class="task-icon">${icon("timer")}</div>
       <div class="task-body"><div class="task-title">Пробник Reading and Writing</div>
         <div class="task-sub">2 модуля по 27 вопросов и 32 минуты, как на SAT, без подсказок. ${last}</div></div>
-      <button class="btn btn-outline btn-sm" data-action="mock-start">Начать ${icon("right", "icon-sm")}</button></section>`;
+      <div class="row mock-card-actions">
+        ${done.length ? `<button class="btn btn-ghost btn-sm" data-action="mock-show" data-id="${esc(Object.keys(history).find((k) => history[k] === done[0]))}">Результат</button>` : ""}
+        <button class="btn btn-outline btn-sm" data-action="mock-start">Начать ${icon("right", "icon-sm")}</button>
+      </div></section>`;
   }
 
   function onKey(e) {
@@ -435,7 +461,8 @@ export function createMock(ctx) {
     "mock-finish": askFinish,
     "mock-second": startSecond,
     "mock-stop-first": stopAtFirst,
-    "mock-close": () => { state = null; save(); S.ui.view = "today"; ctx.saveUi(); ctx.renderAll(true); },
+    "mock-close": () => { if (!shown) { state = null; save(); } shown = null; S.ui.view = "today"; ctx.saveUi(); ctx.renderAll(true); },
+    "mock-show": (el) => { if (!history[el.dataset.id]) return; shown = el.dataset.id; S.ui.view = "mock"; ctx.saveUi(); ctx.renderAll(true); },
     "mock-open": (el) => ctx.openQuestion(el.dataset.id),
     "mock-quit": async () => {
       if (!(await confirmDialog("Прервать пробник?", "Ответы этого пробника не сохранятся, вопросы останутся нерешёнными.", "Прервать", true))) return;
