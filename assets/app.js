@@ -13,6 +13,7 @@ import { createMock } from "./mock.js";
 import { createOneTab } from "./one-tab.js";
 import { GONE, withGone, splitGone } from "./merge.js";
 import { applyThemeColor } from "./theme.js";
+import { chime } from "./sound.js";
 
 applyThemeColor(document.documentElement.dataset.theme);   // the theme chosen before, set in index.html
 
@@ -904,6 +905,8 @@ function renderTopbar() {
         <button role="menuitem" data-action="load-new">${icon("upload")} Добавить ещё PDF</button>
         <button role="menuitem" data-action="load-replace">${icon("file")} Начать заново с другим PDF</button>
         <hr>
+        <button role="menuitem" data-action="sound" aria-pressed="${S.ui.sound !== false}">${icon("bell")} Звук при верном ответе: ${S.ui.sound !== false ? "вкл" : "выкл"}</button>
+        <hr>
         <button role="menuitem" data-action="backup">${icon("download")} Сохранить прогресс в файл</button>
         <button role="menuitem" data-action="restore">${icon("history")} Восстановить прогресс из файла</button>
         <hr>
@@ -1260,6 +1263,7 @@ function answer(letter) {
   const q = cur();
   if (!q || answerOf(q) || prep.locked(q) || think.locked(q) || !q.choices.some((c) => c.letter === letter)) return;
   record(q, { c: letter, ok: letter === q.correct, t: Date.now(), ...think.take(q) });
+  if (letter === q.correct && S.ui.sound !== false) chime();
   S.anim = { id: q.id, letter };
   S.explainOpen[q.id] = true;
   renderAll();
@@ -1273,6 +1277,7 @@ function checkSpr() {
   const norm = (s) => s.replace(/\s+/g, "").replace(/^\+/, "").toLowerCase();
   const ok = String(q.correctText || "").split(/[,;]| or /).map(norm).filter(Boolean).includes(norm(val));
   record(q, { c: val, ok, t: Date.now() });
+  if (ok && S.ui.sound !== false) chime();
   renderAll();
 }
 
@@ -1385,6 +1390,14 @@ const ACTIONS = {
     if (cur() && isOriginal(cur())) renderQuestion();
   },
   menu: () => { account.prefetch(); toggleMenu(); },
+  // the chime for a right answer: on by default, this device only; turning it on plays it once
+  sound: () => {
+    S.ui.sound = S.ui.sound === false;
+    saveUi();
+    if (S.ui.sound) chime();
+    renderTopbar();
+    toast(S.ui.sound ? "Звук при верном ответе включён" : "Звук выключен");
+  },
   "load-new": () => { toggleMenu(false); S.importMode = "add"; $("#file2").click(); },
   "load-replace": async () => {
     toggleMenu(false);
