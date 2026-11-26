@@ -313,3 +313,37 @@ test("a reload keeps the card even when the page draws before the word lists are
   two.v.dueTotal();
   eq([two.S.session.queue[0], two.S.session.revealed], ["terse", true]);
 });
+
+// ---------------------------------------------------------------- arrows on a Mac: the card slides away
+
+test("an arrow slides the card away and grades it once, even when pressed again during the slide", async () => {
+  const { S, v } = await cardsOf({ adorn: learned(), cogent: learned() });
+  const card = document.createElement("article");
+  card.className = "card flash";
+  document.body.append(card);
+  try {
+    S.session.revealed = true;
+    v.onKey({ key: "ArrowRight" });
+    eq([card.classList.contains("slide-right"), S.vocab.srs.adorn.reps], [true, 2], "sliding: not graded yet");
+    v.onKey({ key: "ArrowRight" });            // pressed again before the slide is over
+    await new Promise((r) => setTimeout(r, 250));
+    eq([S.vocab.srs.adorn.reps, S.session.queue.includes("adorn")], [3, false]);
+  } finally {
+    card.remove();
+  }
+});
+
+test("Space and at once an arrow: the arrow counts, though the card was still turning over", async () => {
+  const { S, v } = await cardsOf({ adorn: learned() });
+  const card = document.createElement("article");
+  card.className = "card flash";
+  document.body.append(card);
+  try {
+    v.onKey({ key: " " });                     // turning over
+    v.onKey({ key: "ArrowRight" });            // before the turn is over
+    await new Promise((r) => setTimeout(r, 250));
+    eq([S.vocab.srs.adorn.reps, S.session.queue.includes("adorn")], [3, false]);
+  } finally {
+    card.remove();
+  }
+});

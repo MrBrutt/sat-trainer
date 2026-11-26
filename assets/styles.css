@@ -494,7 +494,14 @@ button.sync-chip { background: none; border: 1px solid currentColor; border-radi
 .flash.flip-in { animation: flip-in .2s ease-out; }
 @keyframes flip-out { to { transform: perspective(900px) rotateY(90deg); } }
 @keyframes flip-in { from { transform: perspective(900px) rotateY(-90deg); } }
-@media (prefers-reduced-motion: reduce) { .flash.flip-out, .flash.flip-in { animation: none; } }
+.flash.slide-right { animation: slide-right .17s ease-in forwards; box-shadow: 0 0 0 2px var(--ok-border), var(--shadow); }
+.flash.slide-left { animation: slide-left .17s ease-in forwards; box-shadow: 0 0 0 2px var(--bad-border), var(--shadow); }
+.flash.slide-next { animation: slide-right .17s ease-in forwards; }
+.flash.slide-in { animation: slide-in .18s ease-out; }
+@keyframes slide-right { to { transform: translateX(45%) rotate(5deg); opacity: 0; } }
+@keyframes slide-left { to { transform: translateX(-45%) rotate(-5deg); opacity: 0; } }
+@keyframes slide-in { from { transform: translateY(10px) scale(.98); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .flash.flip-out, .flash.flip-in, .flash.slide-right, .flash.slide-left, .flash.slide-next, .flash.slide-in { animation: none; } }
 .note-toggle, .swipe-hint { display: none; }
 .swipe-hint { color: var(--muted); font-size: 13px; }
 @media (max-width: 640px) {

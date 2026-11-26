@@ -440,15 +440,16 @@ export function createVocab(ctx) {
     const pct = Math.round((s.reviewed / (s.reviewed + left)) * 100);
     const qs = c.practiced ? [...new Set(c.examples.filter((e) => e.n).map((e) => e.n))] : [];
     const recalled = !fresh && s.revealed ? fmtDays(answerCard(c.st, true).ivl) : "";
-    const flipped = justFlipped;
+    const flipped = justFlipped, enters = entering && !flipped;
     justFlipped = false;
+    entering = false;
     return `<div class="vwrap">
       <div class="sess-top">
         <span class="sess-count">Осталось <b>${left}</b></span>
         <div class="bar"><span style="width:${pct}%"></span></div>
         <span class="sess-mix">${left - newInQueue} повтор · ${newInQueue} новых</span>
       </div>
-      <article class="card flash ${flipped ? "flip-in" : ""} ${open ? "swipeable" : ""}" ${open ? `data-swipe="${fresh ? "learn" : "grade"}"` : `data-action="v-flip" title="Нажмите, чтобы перевернуть"`}>
+      <article class="card flash ${flipped ? "flip-in" : enters ? "slide-in" : ""} ${open ? "swipeable" : ""}" ${open ? `data-swipe="${fresh ? "learn" : "grade"}"` : `data-action="v-flip" title="Нажмите, чтобы перевернуть"`}>
         <div class="flash-meta">
           <span class="badge">${c.mine && !auto.some((x) => x.key === c.key) && !textDeck.some((x) => x.key === c.key) ? ROLE_LABEL.mine : c.role === "text" || c.role === "choice" ? ROLE_LABEL[c.role] : c.practiced ? ROLE_LABEL[c.role] || "" : c.role === "target" ? ROLE_LABEL.target : ROLE_LABEL.choice}</span>
           ${statusBadge(c)}
@@ -823,14 +824,42 @@ export function createVocab(ctx) {
   // The meaning shows on the back of the card: the front turns away, the back turns in. Without a card
   // on screen (tests, the waiting screen) or with reduced motion, it just shows.
   let justFlipped = false;
+  let flipping = null;   // { show, timer }: a key pressed meanwhile finishes the turn first
+  function finishFlip() {
+    if (!flipping) return;
+    const { show, timer } = flipping;
+    flipping = null;
+    clearTimeout(timer);
+    show();
+  }
   function flipReveal() {
     const s = S.session;
-    if (!s?.queue.length || s.revealed) return;
+    if (!s?.queue.length || s.revealed || flipping) return;
     const show = () => { s.revealed = true; s.noteOpen = false; renderMain(); };
     const card = document.querySelector("article.flash");
     if (!card || matchMedia("(prefers-reduced-motion: reduce)").matches) { show(); return; }
     card.classList.add("flip-out");
-    setTimeout(() => { justFlipped = true; show(); }, 150);
+    flipping = { show: () => { justFlipped = true; show(); }, timer: setTimeout(finishFlip, 150) };
+  }
+
+  // Arrows and buttons on a Mac (2026-11-26): the card slides away — right with green for
+  // «Вспомнил», left with red for «Не вспомнил», right for «Дальше» — and the next one comes in. The
+  // answer counts when the slide ends; a key pressed meanwhile first finishes it, so none is lost.
+  let sliding = null;   // { act, timer }
+  let entering = false;
+  function finishSlide() {
+    if (!sliding) return;
+    const { act, timer } = sliding;
+    sliding = null;
+    clearTimeout(timer);
+    act();
+  }
+  function slideOut(dir, act) {
+    finishSlide();
+    const card = document.querySelector("article.flash");
+    if (!card || matchMedia("(prefers-reduced-motion: reduce)").matches) { act(); return; }
+    card.classList.add(`slide-${dir}`);
+    sliding = { act: () => { entering = true; act(); }, timer: setTimeout(finishSlide, 170) };
   }
 
   // Swiping a card on a phone or an iPad: right — «Вспомнил» (or «Дальше» on a new word), left —
@@ -926,8 +955,8 @@ export function createVocab(ctx) {
     "v-flip": () => { if (window.getSelection?.()?.isCollapsed !== false) flipReveal(); },
     "v-ex-full": () => { if (S.session?.queue.length) { S.session.fullEx = S.session.queue[0]; renderMain(); } },
     "v-note": () => { if (!S.session) return; S.session.noteOpen = true; renderMain(); document.querySelector("[data-note]")?.focus(); },
-    "v-grade": (el) => grade(el.dataset.ok === "1"),
-    "v-learn": () => learn(),
+    "v-grade": (el) => slideOut(el.dataset.ok === "1" ? "right" : "left", () => grade(el.dataset.ok === "1")),
+    "v-learn": () => slideOut("next", learn),
     "v-known": () => {
       const s = S.session;
       if (!s?.queue.length) return;
@@ -1057,19 +1086,21 @@ export function createVocab(ctx) {
 
   function onKey(e) {
     if (S.ui.vtab === "test") return sizeTest.onKey(e);
+    finishSlide();
+    finishFlip();
     const s = S.session;
     if (e.key.toLowerCase() === "z" && s?.undo && (S.ui.vtab || "study") === "study") { actions["v-undo-known"](); return true; }
     if ((S.ui.vtab || "study") !== "study" || !s?.queue.length) return false;
     const k = e.key.toLowerCase();
     const fresh = !S.vocab.srs[s.queue[0]]?.last;
     if (fresh && !s.waitUntil) {
-      if (k === " " || k === "enter" || k === "arrowright") { learn(); return true; }
+      if (k === " " || k === "enter" || k === "arrowright") { slideOut("next", learn); return true; }
       if (k === "k") { actions["v-known"](); return true; }
       return false;
     }
     if ((k === " " || k === "enter") && !s.revealed) { flipReveal(); return true; }
-    if (s.revealed && (k === "arrowleft" || k === "1")) { grade(false); return true; }
-    if (s.revealed && (k === "arrowright" || k === "2")) { grade(true); return true; }
+    if (s.revealed && (k === "arrowleft" || k === "1")) { slideOut("left", () => grade(false)); return true; }
+    if (s.revealed && (k === "arrowright" || k === "2")) { slideOut("right", () => grade(true)); return true; }
     if (k === "k" && (s.revealed || !s.waitUntil)) { actions["v-known"](); return true; }
     return false;
   }
