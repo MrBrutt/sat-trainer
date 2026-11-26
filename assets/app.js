@@ -13,9 +13,14 @@ import { createMock } from "./mock.js";
 import { createOneTab } from "./one-tab.js";
 import { GONE, withGone, splitGone } from "./merge.js";
 import { applyThemeColor } from "./theme.js";
-import { chime } from "./sound.js";
+import { chime, warmAudio, soundOf, nextSound, soundLabel } from "./sound.js";
 
 applyThemeColor(document.documentElement.dataset.theme);   // the theme chosen before, set in index.html
+
+// the answer's sound must not wait for the audio to start: wake it on the first touch or key
+for (const ev of ["pointerdown", "keydown"]) {
+  document.addEventListener(ev, () => { if (soundOf(S.ui?.sound) !== "off") warmAudio(); }, { capture: true, passive: true, once: true });
+}
 
 const app = document.getElementById("app");
 const $ = (s, el = document) => el.querySelector(s);
@@ -905,7 +910,7 @@ function renderTopbar() {
         <button role="menuitem" data-action="load-new">${icon("upload")} Добавить ещё PDF</button>
         <button role="menuitem" data-action="load-replace">${icon("file")} Начать заново с другим PDF</button>
         <hr>
-        <button role="menuitem" data-action="sound" aria-pressed="${S.ui.sound !== false}">${icon("bell")} Звук при верном ответе: ${S.ui.sound !== false ? "вкл" : "выкл"}</button>
+        <button role="menuitem" data-action="sound" aria-pressed="${soundOf(S.ui.sound) !== "off"}">${icon("bell")} Звук при верном ответе: ${soundLabel(soundOf(S.ui.sound))}</button>
         <hr>
         <button role="menuitem" data-action="backup">${icon("download")} Сохранить прогресс в файл</button>
         <button role="menuitem" data-action="restore">${icon("history")} Восстановить прогресс из файла</button>
@@ -1262,8 +1267,8 @@ function recordFirst(q, result) {
 function answer(letter) {
   const q = cur();
   if (!q || answerOf(q) || prep.locked(q) || think.locked(q) || !q.choices.some((c) => c.letter === letter)) return;
+  if (letter === q.correct && soundOf(S.ui.sound) !== "off") chime(soundOf(S.ui.sound));   // first: before the page redraws
   record(q, { c: letter, ok: letter === q.correct, t: Date.now(), ...think.take(q) });
-  if (letter === q.correct && S.ui.sound !== false) chime();
   S.anim = { id: q.id, letter };
   S.explainOpen[q.id] = true;
   renderAll();
@@ -1276,8 +1281,8 @@ function checkSpr() {
   if (!q || !val || prep.locked(q)) return;
   const norm = (s) => s.replace(/\s+/g, "").replace(/^\+/, "").toLowerCase();
   const ok = String(q.correctText || "").split(/[,;]| or /).map(norm).filter(Boolean).includes(norm(val));
+  if (ok && soundOf(S.ui.sound) !== "off") chime(soundOf(S.ui.sound));
   record(q, { c: val, ok, t: Date.now() });
-  if (ok && S.ui.sound !== false) chime();
   renderAll();
 }
 
@@ -1391,12 +1396,14 @@ const ACTIONS = {
   },
   menu: () => { account.prefetch(); toggleMenu(); },
   // the chime for a right answer: on by default, this device only; turning it on plays it once
+  // the next sound, played at once so it can be heard; after the last one, off
   sound: () => {
-    S.ui.sound = S.ui.sound === false;
+    S.ui.sound = nextSound(S.ui.sound);
     saveUi();
-    if (S.ui.sound) chime();
+    if (S.ui.sound !== "off") chime(S.ui.sound);
     renderTopbar();
-    toast(S.ui.sound ? "Звук при верном ответе включён" : "Звук выключен");
+    toggleMenu(true);
+    toast(S.ui.sound === "off" ? "Звук выключен" : `Звук: ${soundLabel(S.ui.sound)}`);
   },
   "load-new": () => { toggleMenu(false); S.importMode = "add"; $("#file2").click(); },
   "load-replace": async () => {
