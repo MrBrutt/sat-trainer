@@ -823,43 +823,39 @@ export function createVocab(ctx) {
   // A new word, read: it is asked a few cards later. Not knowing a word never learned costs no ease.
   // The meaning shows on the back of the card: the front turns away, the back turns in. Without a card
   // on screen (tests, the waiting screen) or with reduced motion, it just shows.
+  // 2026-11-26: the meaning showed only after the front had turned away (0.15 s), and Space felt
+  // stuck. The back shows at once and only turns in.
   let justFlipped = false;
-  let flipping = null;   // { show, timer }: a key pressed meanwhile finishes the turn first
-  function finishFlip() {
-    if (!flipping) return;
-    const { show, timer } = flipping;
-    flipping = null;
-    clearTimeout(timer);
-    show();
-  }
+  const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
   function flipReveal() {
     const s = S.session;
-    if (!s?.queue.length || s.revealed || flipping) return;
-    const show = () => { s.revealed = true; s.noteOpen = false; renderMain(); };
-    const card = document.querySelector("article.flash");
-    if (!card || matchMedia("(prefers-reduced-motion: reduce)").matches) { show(); return; }
-    card.classList.add("flip-out");
-    flipping = { show: () => { justFlipped = true; show(); }, timer: setTimeout(finishFlip, 150) };
+    if (!s?.queue.length || s.revealed) return;
+    justFlipped = !!document.querySelector("article.flash") && !still();
+    s.revealed = true;
+    s.noteOpen = false;
+    renderMain();
   }
 
   // Arrows and buttons on a Mac (2026-11-26): the card slides away — right with green for
   // «Вспомнил», left with red for «Не вспомнил», right for «Дальше» — and the next one comes in. The
-  // answer counts when the slide ends; a key pressed meanwhile first finishes it, so none is lost.
-  let sliding = null;   // { act, timer }
+  // answer counts at once and the next card is there at once: what slides away is a picture of the
+  // old card laid over it (waiting for the slide made Space feel stuck).
   let entering = false;
-  function finishSlide() {
-    if (!sliding) return;
-    const { act, timer } = sliding;
-    sliding = null;
-    clearTimeout(timer);
-    act();
-  }
   function slideOut(dir, act) {
-    finishSlide();
     const card = document.querySelector("article.flash");
-    if (!card || matchMedia("(prefers-reduced-motion: reduce)").matches) { act(); return; }
-    card.classList.add(`slide-${dir}`);
-    sliding = { act: () => { entering = true; act(); }, timer: setTimeout(finishSlide, 170) };
+    if (card && !still()) {
+      const r = card.getBoundingClientRect();
+      const ghost = card.cloneNode(true);
+      ghost.classList.remove("flip-in", "slide-in", "swipeable");
+      ghost.classList.add("ghost", `slide-${dir}`);
+      ghost.removeAttribute("data-action");
+      ghost.setAttribute("aria-hidden", "true");
+      Object.assign(ghost.style, { position: "fixed", left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: "0", pointerEvents: "none", zIndex: "20" });
+      document.body.append(ghost);
+      setTimeout(() => ghost.remove(), 220);
+      entering = true;
+    }
+    act();
   }
 
   // Swiping a card on a phone or an iPad: right — «Вспомнил» (or «Дальше» on a new word), left —
@@ -1086,8 +1082,6 @@ export function createVocab(ctx) {
 
   function onKey(e) {
     if (S.ui.vtab === "test") return sizeTest.onKey(e);
-    finishSlide();
-    finishFlip();
     const s = S.session;
     if (e.key.toLowerCase() === "z" && s?.undo && (S.ui.vtab || "study") === "study") { actions["v-undo-known"](); return true; }
     if ((S.ui.vtab || "study") !== "study" || !s?.queue.length) return false;

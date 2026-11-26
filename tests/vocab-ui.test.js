@@ -316,7 +316,7 @@ test("a reload keeps the card even when the page draws before the word lists are
 
 // ---------------------------------------------------------------- arrows on a Mac: the card slides away
 
-test("an arrow slides the card away and grades it once, even when pressed again during the slide", async () => {
+test("an arrow counts at once; a picture of the card slides away over the next one", async () => {
   const { S, v } = await cardsOf({ adorn: learned(), cogent: learned() });
   const card = document.createElement("article");
   card.className = "card flash";
@@ -324,10 +324,23 @@ test("an arrow slides the card away and grades it once, even when pressed again 
   try {
     S.session.revealed = true;
     v.onKey({ key: "ArrowRight" });
-    eq([card.classList.contains("slide-right"), S.vocab.srs.adorn.reps], [true, 2], "sliding: not graded yet");
-    v.onKey({ key: "ArrowRight" });            // pressed again before the slide is over
-    await new Promise((r) => setTimeout(r, 250));
-    eq([S.vocab.srs.adorn.reps, S.session.queue.includes("adorn")], [3, false]);
+    eq([S.vocab.srs.adorn.reps, S.session.queue.includes("adorn")], [3, false], "counted at once");
+    eq(!!document.querySelector(".flash.ghost.slide-right"), true, "the picture slides away");
+    await new Promise((r) => setTimeout(r, 300));
+    eq(!!document.querySelector(".flash.ghost"), false, "and is gone");
+  } finally {
+    card.remove();
+  }
+});
+
+test("Space shows the meaning at once", async () => {
+  const { S, v } = await cardsOf({ adorn: learned() });
+  const card = document.createElement("article");
+  card.className = "card flash";
+  document.body.append(card);
+  try {
+    v.onKey({ key: " " });
+    eq(S.session.revealed, true);
   } finally {
     card.remove();
   }
