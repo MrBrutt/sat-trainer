@@ -468,7 +468,7 @@ export function createVocab(ctx) {
         : `<p class="flash-hint">Вспомните значение, потом переверните карточку</p>
            <button class="btn btn-primary btn-lg" data-action="v-reveal">Показать значение <kbd>Пробел</kbd></button>`}
       </article>
-      ${!fresh && s.revealed ? `<div class="grades two" role="group" aria-label="Вспомнили значение?">
+      ${!fresh && s.revealed ? `<div class="grades two ${flipped ? "grades-in" : ""}" role="group" aria-label="Вспомнили значение?">
           <button class="grade g1" data-action="v-grade" data-ok="0"><span>Не вспомнил</span><small>ещё раз сегодня</small><kbd>←</kbd></button>
           <button class="grade g3" data-action="v-grade" data-ok="1"><span>Вспомнил</span><small>${recalled}</small><kbd>→</kbd></button>
         </div>` : ""}
@@ -823,14 +823,31 @@ export function createVocab(ctx) {
   // A new word, read: it is asked a few cards later. Not knowing a word never learned costs no ease.
   // The meaning shows on the back of the card: the front turns away, the back turns in. Without a card
   // on screen (tests, the waiting screen) or with reduced motion, it just shows.
-  // 2026-11-26: the meaning showed only after the front had turned away (0.15 s), and Space felt
-  // stuck. The back shows at once and only turns in.
+  // 2026-11-26: waiting for the front to turn away made Space feel stuck; showing the back at once
+  // felt abrupt. Now the card is turned at once (keys go on at once) while a picture of the front
+  // turns away over it and the back then turns in.
   let justFlipped = false;
   const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // A picture of the card on screen, laid over the page while it animates away.
+  function ghostOf(card, cls, ms) {
+    const r = card.getBoundingClientRect();
+    const ghost = card.cloneNode(true);
+    ghost.classList.remove("flip-in", "slide-in", "swipeable");
+    ghost.classList.add("ghost", cls);
+    ghost.removeAttribute("data-action");
+    ghost.setAttribute("aria-hidden", "true");
+    Object.assign(ghost.style, { position: "fixed", left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: "0", pointerEvents: "none", zIndex: "20" });
+    document.body.append(ghost);
+    setTimeout(() => ghost.remove(), ms);
+  }
+
   function flipReveal() {
     const s = S.session;
     if (!s?.queue.length || s.revealed) return;
-    justFlipped = !!document.querySelector("article.flash") && !still();
+    const card = document.querySelector("article.flash");
+    justFlipped = !!card && !still();
+    if (justFlipped) ghostOf(card, "flip-out", 170);
     s.revealed = true;
     s.noteOpen = false;
     renderMain();
@@ -844,15 +861,7 @@ export function createVocab(ctx) {
   function slideOut(dir, act) {
     const card = document.querySelector("article.flash");
     if (card && !still()) {
-      const r = card.getBoundingClientRect();
-      const ghost = card.cloneNode(true);
-      ghost.classList.remove("flip-in", "slide-in", "swipeable");
-      ghost.classList.add("ghost", `slide-${dir}`);
-      ghost.removeAttribute("data-action");
-      ghost.setAttribute("aria-hidden", "true");
-      Object.assign(ghost.style, { position: "fixed", left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: "0", pointerEvents: "none", zIndex: "20" });
-      document.body.append(ghost);
-      setTimeout(() => ghost.remove(), 220);
+      ghostOf(card, `slide-${dir}`, 280);
       entering = true;
     }
     act();

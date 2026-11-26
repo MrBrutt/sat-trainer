@@ -341,6 +341,9 @@ test("Space shows the meaning at once", async () => {
   try {
     v.onKey({ key: " " });
     eq(S.session.revealed, true);
+    eq(!!document.querySelector(".flash.ghost.flip-out"), true, "the front turns away as a picture");
+    await new Promise((r) => setTimeout(r, 300));
+    eq(!!document.querySelector(".flash.ghost"), false, "and is gone");
   } finally {
     card.remove();
   }
