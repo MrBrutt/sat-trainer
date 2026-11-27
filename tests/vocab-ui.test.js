@@ -129,7 +129,7 @@ test("the way back after K is a button too, and it stays after the last card", a
   S.session.queue = ["adorn"];
   v.onKey({ key: "k" });
   eq(S.session.queue, []);
-  v.actions["v-undo-known"]();
+  v.actions["v-undo"]();
   eq([S.vocab.known, S.session.queue], [[], ["adorn"]]);
 });
 
@@ -362,4 +362,40 @@ test("Space and at once an arrow: the arrow counts, though the card was still tu
   } finally {
     card.remove();
   }
+});
+
+// ---------------------------------------------------------------- «Вернуть»: a grade pressed by mistake
+
+test("«Вспомнил» pressed by mistake is taken back: the word is first again, turned over, as it was", async () => {
+  const count = { undone: 0 };
+  const st = learned();
+  const { S, v } = await cardsOf({ adorn: st }, { onWordUndone: () => count.undone++ });
+  v.onKey({ key: " " });
+  v.onKey({ key: "ArrowRight" });
+  eq([S.vocab.srs.adorn.reps, S.session.queue.includes("adorn"), S.session.reviewed], [3, false, 1]);
+  eq(v.onKey({ key: "z" }), true);
+  const back = S.vocab.srs.adorn;
+  eq([back.reps, back.ivl, back.due, back.last], [st.reps, st.ivl, st.due, st.last], "its old schedule");
+  eq([S.session.queue[0], S.session.revealed, S.session.reviewed, count.undone], ["adorn", true, 0, 1]);
+  v.onKey({ key: "ArrowLeft" });                                   // and the right grade now
+  eq([S.vocab.srs.adorn.reps, S.vocab.srs.adorn.lapses], [0, 1]);
+});
+
+test("«Не вспомнил» is taken back the same way", async () => {
+  const st = learned();
+  const { S, v } = await cardsOf({ adorn: st });
+  const queue = [...S.session.queue];
+  v.onKey({ key: " " });
+  v.onKey({ key: "ArrowLeft" });
+  v.actions["v-undo"]();
+  eq([S.vocab.srs.adorn.reps, S.vocab.srs.adorn.lapses, S.session.queue], [st.reps, st.lapses, queue]);
+});
+
+test("the way back closes once the next card is answered", async () => {
+  const { S, v } = await cardsOf({ adorn: learned() });
+  v.onKey({ key: " " });
+  v.onKey({ key: "ArrowRight" });
+  v.onKey({ key: " " });                                           // the next card, a new word: «Дальше»
+  eq(v.onKey({ key: "z" }), false);
+  eq(S.vocab.srs.adorn.reps, 3);
 });

@@ -406,21 +406,19 @@ export function createVocab(ctx) {
       <button class="${tab === "study" ? "active" : ""}" data-action="v-tab" data-tab="study">${icon("cards", "icon-sm")} Карточки</button>
       <button class="${tab === "list" ? "active" : ""}" data-action="v-tab" data-tab="list">${icon("list", "icon-sm")} Все слова</button>
     </div>`;
-    main.innerHTML = tab === "test" ? sizeTest.html() : seg + (tab === "list" ? listHtml() : undoHtml() + studyHtml());
+    main.innerHTML = tab === "test" ? sizeTest.html() : seg + (tab === "list" ? listHtml() : studyHtml());
     if (document.getElementById("v-wait")) startWait();
     if (scrollTop) window.scrollTo({ top: 0 });
     ctx.ai()?.follow();
   }
 
-  // After K: which word left, and the way to bring it back.
-  function undoHtml() {
+  // «Вернуть»: small, beside «Уже знаю это слово», for the last answer until the next one.
+  function undoBtn() {
     const key = S.session?.undo?.key;
     if (!key) return "";
-    return `<div class="vwrap"><div class="undo-bar" role="status">
-      <span>«${esc(cardMap().get(key)?.term || key)}» — в «Знаю», из повторений убрано</span>
-      <button class="btn btn-outline btn-sm" data-action="v-undo-known">${icon("rotate", "icon-sm")} Вернуть <kbd>Z</kbd></button>
-    </div></div>`;
+    return `<button class="btn btn-ghost btn-sm" data-action="v-undo" title="Вернуть последний ответ (Z)">${icon("rotate", "icon-sm")} Вернуть «${esc(cardMap().get(key)?.term || key)}»</button>`;
   }
+
 
   function studyHtml() {
     const all = cards();
@@ -475,6 +473,7 @@ export function createVocab(ctx) {
       <div class="flash-foot">
         <span class="row">
           <button class="btn btn-ghost btn-sm" data-action="v-known" title="Убрать из повторений (K)">${icon("check", "icon-sm")} Уже знаю это слово</button>
+          ${undoBtn()}
           ${ctx.ai()?.available() ? `<button class="btn btn-ghost btn-sm ai-only" data-action="ai-ask-word" data-key="${esc(c.key)}">${icon("sparkles", "icon-sm")} Спросить Claude</button>` : ""}
         </span>
         <span class="hints">${fresh
@@ -494,7 +493,7 @@ export function createVocab(ctx) {
       <div class="done-icon wait">${icon("clock")}</div>
       <h2>${n === 1 ? "Слово вернётся" : "Слова вернутся"} через <span id="v-wait">${clock(s.waitUntil - Date.now())}</span></h2>
       <p>${n === 1 ? "Осталось только слово, которое вы сейчас не вспомнили" : `Остались только слова, которые вы сейчас не вспомнили: ${n}`}. Короткая пауза перед повтором помогает запомнить.</p>
-      <div class="row"><button class="btn btn-primary" data-action="v-reveal">Показать сейчас <kbd>Пробел</kbd></button></div>
+      <div class="row"><button class="btn btn-primary" data-action="v-reveal">Показать сейчас <kbd>Пробел</kbd></button>${undoBtn()}</div>
     </div></div>`;
   }
 
@@ -523,6 +522,7 @@ export function createVocab(ctx) {
         ${fresh.length ? `<button class="btn btn-primary" data-action="v-more">${icon("plus", "icon-sm")} Ещё 10 новых слов</button>` : ""}
         <button class="btn btn-outline" data-action="v-tab" data-tab="list">${icon("list", "icon-sm")} Все слова</button>
       </div>
+      ${undoBtn() ? `<div class="row" style="justify-content:center;margin-top:10px">${undoBtn()}</div>` : ""}
     </div></div>`;
   }
 
@@ -820,6 +820,31 @@ export function createVocab(ctx) {
   }
   const refreshAll = () => { renderMain(); renderSidebar(); ctx.refreshChrome(); };
 
+  // «Вернуть» (2026-11-27): the last answer on a card — «Вспомнил», «Не вспомнил» or «Уже знаю» — can
+  // be taken back until the next one. What it changed is kept before it: the word's record, «знаю»,
+  // the queue, the session's and the day's counts.
+  function keepUndo(kind, key) {
+    const s = S.session;
+    s.undo = { kind, key, srs: S.vocab.srs[key] ? { ...S.vocab.srs[key] } : null, known: S.vocab.known.includes(key),
+      queue: [...s.queue], revealed: !!s.revealed, reviewed: s.reviewed, learnedNew: s.learnedNew, newCount: daily().newCount };
+  }
+
+  function undoLast() {
+    const s = S.session;
+    const u = s?.undo;
+    if (!u) return false;
+    s.undo = null;
+    // the old record goes back, marked as edited now, so no other device takes it for stale
+    if (u.srs) S.vocab.srs[u.key] = { ...u.srs, edited: Date.now() };
+    if (!u.known) markKnown(u.key, false);
+    Object.assign(s, { queue: u.queue, revealed: u.revealed, reviewed: u.reviewed, learnedNew: u.learnedNew });
+    daily().newCount = u.newCount;
+    save();
+    ctx.onWordUndone?.();
+    renderMain(); renderSidebar(); ctx.refreshChrome();
+    return true;
+  }
+
   // A new word, read: it is asked a few cards later. Not knowing a word never learned costs no ease.
   // The meaning shows on the back of the card: the front turns away, the back turns in. Without a card
   // on screen (tests, the waiting screen) or with reduced motion, it just shows.
@@ -921,7 +946,7 @@ export function createVocab(ctx) {
     const s = S.session;
     const key = s?.queue[0];
     if (!key || !s.revealed || !S.vocab.srs[key]?.last) return;
-    s.undo = null;
+    keepUndo("grade", key);
     record(key, answerCard(S.vocab.srs[key], ok), !ok);
     s.revealed = false;
     refreshAll();
@@ -965,30 +990,17 @@ export function createVocab(ctx) {
     "v-known": () => {
       const s = S.session;
       if (!s?.queue.length) return;
+      keepUndo("known", s.queue[0]);
       const key = s.queue.shift();
       // a new word marked known uses up one of the day's new words, or a reload would bring another
       // in its place (2026-11-18: 24 new words after «all done»); own words never count
-      const counted = !S.vocab.srs[key]?.last && !S.vocab.user[key];
-      if (counted) daily().newCount++;
+      if (!S.vocab.srs[key]?.last && !S.vocab.user[key]) daily().newCount++;
       markKnown(key, true);
       s.revealed = false;
-      s.undo = { key, counted };
       ctx.onWordDone?.();
       renderMain(); renderSidebar(); ctx.refreshChrome();
     },
-    // K pressed by mistake (2026-11-18): the word comes back first, as it was, until the next card is done
-    "v-undo-known": () => {
-      const s = S.session;
-      const { key, counted } = s?.undo || {};
-      if (!key) return;
-      s.undo = null;
-      if (counted) daily().newCount = Math.max(0, daily().newCount - 1);
-      markKnown(key, false);
-      s.queue.unshift(key);
-      s.revealed = false;
-      ctx.onWordUndone?.();
-      renderMain(); renderSidebar(); ctx.refreshChrome();
-    },
+    "v-undo": () => { undoLast(); },
     "v-more": () => { daily().extra = (daily().extra || 0) + 10; save(); S.session = null; renderMain(); renderSidebar(); ctx.refreshChrome(); },
     "v-row": (el) => {
       openRow = openRow === el.dataset.key ? null : el.dataset.key;
@@ -1092,7 +1104,7 @@ export function createVocab(ctx) {
   function onKey(e) {
     if (S.ui.vtab === "test") return sizeTest.onKey(e);
     const s = S.session;
-    if (e.key.toLowerCase() === "z" && s?.undo && (S.ui.vtab || "study") === "study") { actions["v-undo-known"](); return true; }
+    if (e.key.toLowerCase() === "z" && s?.undo && (S.ui.vtab || "study") === "study") return undoLast();
     if ((S.ui.vtab || "study") !== "study" || !s?.queue.length) return false;
     const k = e.key.toLowerCase();
     const fresh = !S.vocab.srs[s.queue[0]]?.last;

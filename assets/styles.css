@@ -478,10 +478,6 @@ button.sync-chip { background: none; border: 1px solid currentColor; border-radi
 .legend span { display: flex; align-items: center; gap: 6px; }
 .legend i { width: 8px; height: 8px; border-radius: 2px; background: var(--border-strong); }
 
-.undo-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 14px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--primary-soft); font-size: 14px; color: var(--text-2); }
-.undo-bar .btn { flex-shrink: 0; }
 .sess-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; font-size: 13px; color: var(--muted); }
 .sess-top .bar { flex: 1; }
 .sess-top b { color: var(--text); font-variant-numeric: tabular-nums; }

@@ -11,6 +11,13 @@ test("vocab: a card reviewed on both devices keeps the later review; other field
   });
 });
 
+test("vocab: a grade taken back on one device is not brought back by another", () => {
+  const graded = { last: 200, due: 900, reps: 3 };
+  const restored = { last: 100, due: 500, reps: 2, edited: 300 };   // the old record, put back later
+  const b = { srs: { w: graded } };
+  eq(MERGE.vocab(b, { srs: { w: graded } }, { srs: { w: restored } }).srs.w, restored);
+});
+
 test("vocab: the newer size test result wins", () => {
   const b = { test: { at: 1, size: 8000 } };
   eq(MERGE.vocab(b, { test: { at: 3, size: 9900 } }, { test: { at: 2, size: 9000 } }).test, { at: 3, size: 9900 });

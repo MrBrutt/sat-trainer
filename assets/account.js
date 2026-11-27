@@ -35,7 +35,8 @@ export const MERGE = {
   review: (b, l, r) => mergeRecords(b, l, r, (x) => x.last || x.added),
   flags: mergeSet,
   vocab: (b, l, r) => byField(b, l, r, {
-    srs: (b, l, r) => mergeRecords(b, l, r, (x) => x.last),
+    // a card's time is its last review, or a later «Вернуть» that put an older review back (edited)
+    srs: (b, l, r) => mergeRecords(b, l, r, (x) => Math.max(x.last || 0, x.edited || 0)),
     user: (b, l, r) => mergeMap(b, l, r, mine),
     edits: (b, l, r) => mergeMap(b, l, r, mine),
     known: mergeSet,
